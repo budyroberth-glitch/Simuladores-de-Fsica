@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kit de Máquinas Simples</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+            margin-bottom: 20px;
+        }
+
+        .breadcrumb {
+            color: white;
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        .breadcrumb a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .breadcrumb a:hover {
+            opacity: 0.7;
+            text-decoration: underline;
+        }
+
+        .machines-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .machine-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            animation: slideUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .machine-card:nth-child(1) { animation-delay: 0.1s; }
+        .machine-card:nth-child(2) { animation-delay: 0.2s; }
+        .machine-card:nth-child(3) { animation-delay: 0.3s; }
+        .machine-card:nth-child(4) { animation-delay: 0.4s; }
+        .machine-card:nth-child(5) { animation-delay: 0.5s; }
+        .machine-card:nth-child(6) { animation-delay: 0.6s; }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .machine-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-header {
+            padding: 30px 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .card-header.header-1 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .card-header.header-2 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .card-header.header-3 {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .card-header.header-4 {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .card-header.header-5 {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        .card-header.header-6 {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .card-icon {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 1.6em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .card-subtitle {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .description {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            min-height: 60px;
+        }
+
+        .features-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        .features-list li {
+            color: #555;
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 0.9em;
+        }
+
+        .features-list li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .card-footer {
+            padding: 0 20px 20px 20px;
+            text-align: center;
+        }
+
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .btn-disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .badge-soon {
+            display: inline-block;
+            background: #ff9800;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .info-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .info-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.6em;
+        }
+
+        .info-section p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 12px;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            opacity: 0.9;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+
+            .machines-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card-icon {
+                font-size: 2.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="breadcrumb">
+                <a href="index.html">🏠 Inicio</a> / ⚙️ Máquinas Simples
+            </div>
+            <h1>⚙️ Kit de Máquinas Simples</h1>
+            <p>Selecciona la máquina simple que deseas estudiar</p>
+        </header>
+
+        <div class="machines-grid">
+            <!-- 1. Plano Inclinado -->
+            <div class="machine-card">
+                <div class="card-header header-1">
+                    <div class="card-icon">📐</div>
+                    <div class="card-title">Plano Inclinado</div>
+                    <div class="card-subtitle">Máquina Simple Fundamental</div>
+                </div>
+                <div class="card-body">
+                    <div class="description">
+                        Estudia el movimiento de objetos en planos inclinados, descomposición de fuerzas y el efecto de la fricción.
+                    </div>
+                    <ul class="features-list">
+                        <li>Análisis de fuerzas</li>
+                        <li>Cinemática del movimiento</li>
+                        <li>Leyes de Newton</li>
+                        <li>Fricción y rozamiento</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <a href="simulador1.html" class="btn">Abrir Simulador</a>
+                </div>
+            </div>
+
+            <!-- 2. Palancas -->
+            <div class="machine-card">
+                <div class="card-header header-2">
+                    <div class="card-icon">🔧</div>
+                    <div class="card-title">Palancas</div>
+                    <div class="card-subtitle">3 Clases de Palancas</div>
+                </div>
+                <div class="card-body">
+                    <div class="description">
+                        Explora los tres tipos de palancas, ventaja mecánica y aplicaciones en la vida cotidiana.
+                    </div>
+                    <ul class="features-list">
+                        <li>Palanca de 1ª clase</li>
+                        <li>Palanca de 2ª clase</li>
+                        <li>Palanca de 3ª clase</li>
+                        <li>Ventaja mecánica</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-disabled">Próximamente</button>
+                    <div class="badge-soon">EN DESARROLLO</div>
+                </div>
+            </div>
+
+            <!-- 3. Poleas -->
+            <div class="machine-card">
+                <div class="card-header header-3">
+                    <div class="card-icon">🔄</div>
+                    <div class="card-title">Poleas</div>
+                    <div class="card-subtitle">Sistemas de Poleas</div>
+                </div>
+                <div class="card-body">
+                    <div class="description">
+                        Estudia poleas fijas, móviles y sistemas combinados para entender la ventaja mecánica.
+                    </div>
+                    <ul class="features-list">
+                        <li>Poleas fijas</li>
+                        <li>Poleas móviles</li>
+                        <li>Sistemas combinados</li>
+                        <li>Trabajo y energía</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-disabled">Próximamente</button>
+                    <div class="badge-soon">EN DESARROLLO</div>
+                </div>
+            </div>
+
+            <!-- 4. Ruedas y Ejes -->
+            <div class="machine-card">
+                <div class="card-header header-4">
+                    <div class="card-icon">🎡</div>
+                    <div class="card-title">Ruedas y Ejes</div>
+                    <div class="card-subtitle">Rotación y Movimiento Circular</div>
+                </div>
+                <div class="card-body">
+                    <div class="description">
+                        Analiza el movimiento de ruedas, velocidad angular y la ventaja mecánica de sistemas rotatorios.
+                    </div>
+                    <ul class="features-list">
+                        <li>Movimiento circular</li>
+                        <li>Velocidad angular</li>
+                        <li>Torque (Momento)</li>
+                        <li>Sistemas de engranajes</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-disabled">Próximamente</button>
+                    <div class="badge-soon">EN DESARROLLO</div>
+                </div>
+            </div>
+
+            <!-- 5. Cuña -->
+            <div class="machine-card">
+                <div class="card-header header-5">
+                    <div class="card-icon">🪚</div>
+                    <div class="card-title">Cuña</div>
+                    <div class="card-subtitle">Máquina Simple Penetrante</div>
+                </div>
+                <div class="card-body">
+                    <div class="description">
+                        Estudia cómo la cuña transforma movimiento vertical en horizontal para realizar trabajo.
+                    </div>
+                    <ul class="features-list">
+                        <li>Análisis de ángulos</li>
+                        <li>Descomposición de fuerzas</li>
+                        <li>Ventaja mecánica</li>
+                        <li>Aplicaciones prácticas</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-disabled">Próximamente</button>
+                    <div class="badge-soon">EN DESARROLLO</div>
+                </div>
+            </div>
+
+            <!-- 6. Tornillo -->
+            <div class="machine-card">
+                <div class="card-header header-6">
+                    <div class="card-icon">🔩</div>
+                    <div class="card-title">Tornillo</div>
+                    <div class="card-subtitle">Plano Inclinado Enrollado</div>
+                </div>
+                <div class="card-body">
+                    <div class="description">
+                        Comprende cómo el tornillo es un plano inclinado envuelto y su enorme ventaja mecánica.
+                    </div>
+                    <ul class="features-list">
+                        <li>Paso de rosca</li>
+                        <li>Ventaja mecánica</li>
+                        <li>Relación con plano inclinado</li>
+                        <li>Aplicaciones</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-disabled">Próximamente</button>
+                    <div class="badge-soon">EN DESARROLLO</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información Educativa -->
+        <div class="info-section">
+            <h2>📚 ¿Qué son las Máquinas Simples?</h2>
+            <p>
+                Las máquinas simples son dispositivos que utilizan una sola forma de energía para realizar trabajo. 
+                Aunque son muy simples, forman la base de todas las máquinas complejas que usamos en la vida cotidiana.
+            </p>
+            <p>
+                Existen <strong>seis máquinas simples clásicas:</strong> plano inclinado, palanca, polea, rueda con eje, cuña y tornillo. 
+                Cada una tiene características únicas pero comparten un principio fundamental: intercambian fuerza por distancia (o velocidad) 
+                para facilitar el trabajo.
+            </p>
+            <p>
+                El concepto clave en todas ellas es la <strong>ventaja mecánica</strong>, que es la relación entre la fuerza aplicada 
+                y la fuerza resultante. Una máquina simple con gran ventaja mecánica requiere menos esfuerzo para mover un objeto, 
+                pero necesita recorrer una distancia mayor.
+            </p>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 Laboratorio Virtual de Física - Simuladores Educativos</p>
+            <p>Todos los derechos reservados</p>
+        </footer>
+    </div>
+</body>
+</html>
