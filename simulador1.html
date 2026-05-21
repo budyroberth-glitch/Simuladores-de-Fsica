@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Profesional de Plano Inclinado</title>
+    <title>Laboratorio Virtual de Física - Plano Inclinado</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -15,107 +14,257 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1a1a2e;
-            color: #eee;
-            overflow: hidden;
+            background: #f5f5f5;
+            color: #333;
         }
 
-        .container {
-            width: 100vw;
-            height: 100vh;
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            grid-template-rows: 60px 1fr;
-            gap: 5px;
-            padding: 5px;
-            background: #0f0f1e;
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        header {
-            grid-column: 1 / -1;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            z-index: 100;
-        }
-
-        header h1 {
-            font-size: 1.5em;
+        .header h1 {
+            font-size: 1.8em;
             margin: 0;
         }
 
-        .breadcrumb {
-            font-size: 0.85em;
-            opacity: 0.9;
-        }
-
-        .breadcrumb a {
-            color: white;
-            text-decoration: none;
-            margin: 0 5px;
-        }
-
-        .main-content {
+        .container {
             display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 10px;
+            grid-template-columns: 250px 1fr 320px;
+            gap: 15px;
+            padding: 20px;
+            height: calc(100vh - 80px);
+        }
+
+        /* ============ PANEL IZQUIERDO ============ */
+        .left-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+
+        .module-item {
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: #ecf0f1;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85em;
+        }
+
+        .module-item:hover {
+            background: #d5dbdb;
+            transform: translateX(5px);
+        }
+
+        .module-item.active {
+            background: #d6eaf8;
+            border-left-color: #2980b9;
+            color: #2980b9;
+            font-weight: bold;
+        }
+
+        .formula-box {
+            background: #ecf0f1;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border-left: 3px solid #e74c3c;
+        }
+
+        .formula-box h4 {
+            color: #e74c3c;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+
+        .formula {
+            font-family: 'Courier New', monospace;
+            color: #c0392b;
+            font-size: 0.8em;
+            line-height: 1.6;
+        }
+
+        .description {
+            font-size: 0.75em;
+            color: #7f8c8d;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        /* ============ PANEL CENTRAL ============ */
+        .center-panel {
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
 
         #canvas {
-            background: linear-gradient(180deg, #1e3c72 0%, #2a5298 50%, #7aa8d1 100%);
+            width: 100%;
+            height: 100%;
             border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
-        .right-panel {
+        .incline-container {
+            width: 100%;
+            height: 100%;
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            overflow-y: auto;
-            overflow-x: hidden;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .panel {
-            background: #2a2a3e;
-            border: 1px solid #404050;
+        .angle-label {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            color: #2c3e50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ============ PANEL DERECHO ============ */
+        .right-panel {
+            background: white;
             border-radius: 8px;
             padding: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
         }
 
-        .panel h3 {
-            color: #667eea;
-            margin-bottom: 12px;
-            font-size: 1em;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 8px;
+        .section {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ecf0f1;
+            padding-bottom: 15px;
         }
 
-        .control-group {
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #7f8c8d;
             margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        /* Pesas */
+        .weights-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .weight-box {
+            background: #ecf0f1;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            cursor: grab;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .weight-box:hover {
+            background: #d5dbdb;
+            border-color: #3498db;
+        }
+
+        .weight-label {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .weight-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .accesorios {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .accessory-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .accessory-btn:hover {
+            background: #229954;
+        }
+
+        /* Controles */
+        .control-item {
+            margin-bottom: 15px;
         }
 
         .control-label {
+            font-size: 0.85em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
             display: flex;
             justify-content: space-between;
-            font-size: 0.85em;
-            margin-bottom: 6px;
-            color: #ddd;
         }
 
         .control-value {
-            color: #667eea;
+            color: #e74c3c;
             font-weight: bold;
         }
 
         .slider {
             width: 100%;
             height: 6px;
-            border-radius: 5px;
-            background: #404050;
+            border-radius: 3px;
+            background: #bdc3c7;
             outline: none;
             -webkit-appearance: none;
             appearance: none;
@@ -125,244 +274,107 @@
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
         }
 
         .slider::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             cursor: pointer;
             border: none;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
         }
 
-        .dynamometer {
-            background: #1a1a2e;
-            border: 2px solid #667eea;
-            border-radius: 50%;
-            width: 120px;
-            height: 120px;
-            margin: 10px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .dynamometer-value {
-            font-size: 1.8em;
-            color: #00ff00;
-            font-weight: bold;
-            font-family: 'Courier New', monospace;
-            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
-        }
-
-        .dynamometer-unit {
-            font-size: 0.7em;
-            color: #667eea;
-        }
-
-        .data-display {
-            background: #1a1a2e;
-            border-left: 3px solid #667eea;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            line-height: 1.6;
-        }
-
-        .data-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-            border-bottom: 1px solid #404050;
-        }
-
-        .data-row:last-child {
-            border-bottom: none;
-        }
-
-        .data-label {
-            color: #aaa;
-        }
-
-        .data-value {
-            color: #00ff00;
-            font-weight: bold;
-            font-family: 'Courier New', monospace;
-        }
-
-        .weights-grid {
+        /* Datos en vivo */
+        .data-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin: 10px 0;
-        }
-
-        .weight-btn {
-            padding: 8px;
-            border: 2px solid #404050;
-            background: #1a1a2e;
-            color: #ddd;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.85em;
-            font-weight: bold;
-        }
-
-        .weight-btn:hover {
-            border-color: #667eea;
-            background: #2a2a3e;
-        }
-
-        .weight-btn.selected {
-            border-color: #667eea;
-            background: #667eea;
-            color: white;
-            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
-        }
-
-        .components-list {
-            max-height: 150px;
-            overflow-y: auto;
-            background: #1a1a2e;
-            border-radius: 4px;
-            padding: 8px;
-        }
-
-        .component-item {
-            background: #2a2a3e;
-            padding: 6px;
-            margin: 4px 0;
-            border-radius: 4px;
-            font-size: 0.8em;
-            border-left: 3px solid #667eea;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .remove-btn {
-            background: #ff6b6b;
-            color: white;
-            border: none;
-            padding: 2px 8px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 0.75em;
-        }
-
-        .remove-btn:hover {
-            background: #ee5a52;
-        }
-
-        .btn {
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            font-size: 0.85em;
+            gap: 10px;
             margin-top: 10px;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .data-box {
+            background: #ecf0f1;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #3498db;
+            text-align: center;
+        }
+
+        .data-label {
+            font-size: 0.75em;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .data-value {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #2c3e50;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Botones */
+        .buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85em;
+        }
+
+        .btn-start {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-start:hover {
+            background: #229954;
+        }
+
+        .btn-pause {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-pause:hover {
+            background: #e67e22;
+        }
+
+        .btn-reset {
+            background: #e74c3c;
             color: white;
             width: 100%;
+            margin-top: 10px;
         }
 
-        .btn-primary:hover {
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-            transform: translateY(-2px);
+        .btn-reset:hover {
+            background: #c0392b;
         }
 
-        .btn-secondary {
-            background: #404050;
-            color: #ddd;
-            width: 100%;
-        }
-
-        .btn-secondary:hover {
-            background: #505060;
-        }
-
-        .chart-container {
-            background: #1a1a2e;
-            border-radius: 6px;
+        /* Último ensayo */
+        .last-test {
+            background: #ecf0f1;
             padding: 10px;
-            max-height: 200px;
-        }
-
-        .chart-container canvas {
-            max-height: 180px;
-        }
-
-        .status-indicator {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #00ff00;
-            margin-right: 8px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .status-indicator.inactive {
-            background: #ff6b6b;
-            animation: none;
-        }
-
-        .draggable {
-            cursor: grab;
-            user-select: none;
-        }
-
-        .draggable:active {
-            cursor: grabbing;
-        }
-
-        .perilla {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 10px 0;
-        }
-
-        .perilla-visual {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #fff, #666);
-            border: 3px solid #333;
-            position: relative;
-            margin: 10px 0;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .perilla-indicator {
-            position: absolute;
-            width: 2px;
-            height: 20px;
-            background: #667eea;
-            top: 5px;
-            left: 50%;
-            transform: translateX(-50%);
+            border-radius: 6px;
+            font-size: 0.85em;
+            color: #7f8c8d;
         }
 
         ::-webkit-scrollbar {
@@ -370,139 +382,210 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #1a1a2e;
+            background: #f1f1f1;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #667eea;
+            background: #bdc3c7;
             border-radius: 3px;
         }
 
-        @media (max-width: 1024px) {
+        ::-webkit-scrollbar-thumb:hover {
+            background: #95a5a6;
+        }
+
+        @media (max-width: 1200px) {
             .container {
                 grid-template-columns: 1fr;
-            }
-
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-
-            .right-panel {
-                max-height: 300px;
+                height: auto;
             }
         }
     </style>
 </head>
 <body>
+    <div class="header">
+        <h1>Laboratorio Virtual de Física - Mecánica de Sólidos Rígidos</h1>
+    </div>
+
     <div class="container">
-        <header>
-            <div>
-                <h1>📐 Simulador Profesional de Plano Inclinado</h1>
-                <div class="breadcrumb">
-                    <a href="index.html">🏠 Inicio</a> / 
-                    <a href="maquinas-simples.html">⚙️ Máquinas Simples</a> / 
-                    📐 Plano Inclinado
+        <!-- PANEL IZQUIERDO -->
+        <div class="left-panel">
+            <div class="panel-title">MÓDULOS DE ESTUDIO</div>
+            
+            <div class="module-item active" onclick="selectModule(0)">Cinemática (MRUV)</div>
+            <div class="module-item" onclick="selectModule(1)">Descomposición de Fuerzas</div>
+            <div class="module-item" onclick="selectModule(2)">Equilibrio de Traslación</div>
+            <div class="module-item" onclick="selectModule(3)">2da Ley de Newton (F = m·a)</div>
+            <div class="module-item" onclick="selectModule(4)">Fuerza y Coef. de Rozamiento</div>
+
+            <div class="formula-box">
+                <h4 id="formulaTitle">Cinemática (MRUV):</h4>
+                <div class="formula" id="formulaContent">
+                    a = g · sin(θ)<br>
+                    v = a · t
                 </div>
+                <p class="description" id="formulaDesc">
+                    Deslizamiento libre gravitacional sin rozamiento en la rampa.
+                </p>
             </div>
-            <div style="font-size: 0.9em;">
-                <span class="status-indicator"></span>
-                <span id="statusText">Sistema listo</span>
-            </div>
-        </header>
+        </div>
 
-        <div class="main-content">
-            <canvas id="canvas"></canvas>
-
-            <div class="right-panel">
-                <!-- Panel de Control -->
-                <div class="panel">
-                    <h3>⚙️ Controles</h3>
+        <!-- PANEL CENTRAL -->
+        <div class="center-panel">
+            <div class="incline-container" id="inclineContainer">
+                <svg viewBox="0 0 800 600" style="width: 100%; height: 100%; position: relative;">
+                    <!-- Plano inclinado -->
+                    <line id="inclineLine" x1="100" y1="500" x2="700" y2="200" stroke="#2c3e50" stroke-width="8"/>
                     
-                    <div class="control-group">
-                        <div class="control-label">
-                            <span>Ángulo del Plano</span>
-                            <span class="control-value" id="angleValue">30°</span>
-                        </div>
-                        <input type="range" id="angleSlider" class="slider" min="5" max="80" value="30">
-                        <div class="perilla">
-                            <div class="perilla-visual">
-                                <div class="perilla-indicator" id="perillaindicator"></div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Línea de referencia horizontal -->
+                    <line x1="100" y1="500" x2="700" y2="500" stroke="#bdc3c7" stroke-width="2" stroke-dasharray="5,5"/>
+                    
+                    <!-- Ángulo -->
+                    <path id="anglePath" d="M 150 500 Q 160 480 180 475" stroke="#e74c3c" stroke-width="2" fill="none"/>
+                    <text id="angleText" x="165" y="520" font-size="20" font-weight="bold" fill="#e74c3c">25°</text>
+                    
+                    <!-- Carro/Objeto -->
+                    <g id="cartGroup">
+                        <rect id="cartBody" x="150" y="485" width="50" height="30" fill="#3498db" rx="4"/>
+                        <circle id="wheel1" cx="160" cy="520" r="8" fill="#2c3e50"/>
+                        <circle id="wheel2" cx="190" cy="520" r="8" fill="#2c3e50"/>
+                    </g>
+                    
+                    <!-- Pesa colgante -->
+                    <g id="weightGroup" style="display: none;">
+                        <line id="cordString" x1="700" y1="200" x2="700" y2="250" stroke="#34495e" stroke-width="2"/>
+                        <circle id="hangingWeight" cx="700" cy="280" r="12" fill="#f39c12"/>
+                    </g>
+                    
+                    <!-- Polea -->
+                    <circle id="pulley" cx="700" cy="200" r="10" fill="none" stroke="#2c3e50" stroke-width="3"/>
+                </svg>
+                <div class="angle-label" id="angleDisplay">Ángulo: 25°</div>
+            </div>
+        </div>
 
-                    <div class="control-group">
-                        <div class="control-label">
-                            <span>Fricción</span>
-                            <span class="control-value" id="frictionValue">0.20</span>
-                        </div>
-                        <input type="range" id="frictionSlider" class="slider" min="0" max="1" step="0.05" value="0.2">
+        <!-- PANEL DERECHO -->
+        <div class="right-panel">
+            <!-- Pesas y Accesorios -->
+            <div class="section">
+                <div class="section-title">PESAS Y ACCESORIOS</div>
+                <p style="font-size: 0.8em; color: #7f8c8d; margin-bottom: 10px;">Arrastra hacia el carro o gancho:</p>
+                
+                <div class="weights-container">
+                    <div class="weight-box" draggable="true" ondragstart="dragWeight(event, 10)">
+                        <div class="weight-label">Pesa 10g</div>
+                        <div class="weight-value">10g</div>
                     </div>
-
-                    <div class="control-group">
-                        <div class="control-label">
-                            <span>Masa (kg)</span>
-                            <span class="control-value" id="massValue">0.5</span>
-                        </div>
-                        <input type="range" id="massSlider" class="slider" min="0.1" max="3" step="0.1" value="0.5">
+                    <div class="weight-box" draggable="true" ondragstart="dragWeight(event, 20)">
+                        <div class="weight-label">Pesa 20g</div>
+                        <div class="weight-value">20g</div>
                     </div>
-
-                    <div class="dynamometer">
-                        <div class="dynamometer-value" id="forceReading">0.00</div>
-                        <div class="dynamometer-unit">N</div>
+                    <div class="weight-box" draggable="true" ondragstart="dragWeight(event, 50)">
+                        <div class="weight-label">Pesa 50g</div>
+                        <div class="weight-value">50g</div>
                     </div>
-
-                    <div class="btn-group" style="display: flex; gap: 8px;">
-                        <button class="btn btn-primary" onclick="startSimulation()" style="flex: 1;">▶ Simular</button>
-                        <button class="btn btn-secondary" onclick="resetSimulation()" style="flex: 1;">↻ Reset</button>
+                    <div class="weight-box" draggable="true" ondragstart="dragWeight(event, 100)">
+                        <div class="weight-label">Pesa 100g</div>
+                        <div class="weight-value">100g</div>
                     </div>
                 </div>
+                
+                <div class="accesorios">
+                    <button class="accessory-btn" onclick="addHilo()">+ Hilo</button>
+                </div>
+            </div>
 
-                <!-- Panel de Pesas -->
-                <div class="panel">
-                    <h3>⚖️ Pesas</h3>
-                    <div class="weights-grid">
-                        <button class="weight-btn" onclick="selectWeight(10)">10 g</button>
-                        <button class="weight-btn" onclick="selectWeight(20)">20 g</button>
-                        <button class="weight-btn" onclick="selectWeight(50)">50 g</button>
-                        <button class="weight-btn" onclick="selectWeight(100)">100 g</button>
+            <!-- Parámetros del Entorno -->
+            <div class="section">
+                <div class="section-title">PARÁMETROS DEL ENTORNO</div>
+                
+                <div class="control-item">
+                    <div class="control-label">
+                        <span>Gravedad (g):</span>
+                        <span class="control-value" id="gravityValue">9.81 m/s²</span>
                     </div>
-                    <button class="btn btn-primary" onclick="addWeight()">+ Agregar</button>
+                    <input type="range" id="gravitySlider" class="slider" min="5" max="15" step="0.1" value="9.81" oninput="updateGravity()">
                 </div>
 
-                <!-- Panel de Datos -->
-                <div class="panel">
-                    <h3>📊 Datos en Vivo</h3>
-                    <div class="data-display">
-                        <div class="data-row">
-                            <span class="data-label">Velocidad:</span>
-                            <span class="data-value" id="velocityData">0.00 m/s</span>
-                        </div>
-                        <div class="data-row">
-                            <span class="data-label">Aceleración:</span>
-                            <span class="data-value" id="accelerationData">0.00 m/s²</span>
-                        </div>
-                        <div class="data-row">
-                            <span class="data-label">Distancia:</span>
-                            <span class="data-value" id="distanceData">0.00 m</span>
-                        </div>
-                        <div class="data-row">
-                            <span class="data-label">Fuerza Neta:</span>
-                            <span class="data-value" id="netForceData">0.00 N</span>
-                        </div>
-                        <div class="data-row">
-                            <span class="data-label">Friction:</span>
-                            <span class="data-value" id="frictionForceData">0.00 N</span>
-                        </div>
+                <div class="control-item">
+                    <div class="control-label">
+                        <span>Ángulo (θ):</span>
+                        <span class="control-value" id="angleControlValue">25 °</span>
                     </div>
+                    <input type="range" id="angleSlider" class="slider" min="5" max="80" value="25" oninput="updateAngle()">
                 </div>
 
-                <!-- Panel de Componentes -->
-                <div class="panel">
-                    <h3>🔧 Componentes</h3>
-                    <div class="components-list" id="componentsList">
-                        <p style="color: #666; text-align: center; padding: 20px;">Agregados: 0</p>
+                <div class="control-item">
+                    <div class="control-label">
+                        <span>Masa Carro (M):</span>
+                        <span class="control-value" id="massCarValue">200g</span>
                     </div>
+                    <input type="range" id="massCarSlider" class="slider" min="100" max="500" step="10" value="200" oninput="updateMassCar()">
+                </div>
+
+                <div class="control-item">
+                    <div class="control-label">
+                        <span>Masa Gancho (Mj):</span>
+                        <span class="control-value" id="massHookValue">20g</span>
+                    </div>
+                    <input type="range" id="massHookSlider" class="slider" min="10" max="100" step="5" value="20" oninput="updateMassHook()">
+                </div>
+
+                <div class="control-item">
+                    <div class="control-label">
+                        <span>Rugosidad (μ_k):</span>
+                        <span class="control-value" id="frictionValue">0.15</span>
+                    </div>
+                    <input type="range" id="frictionSlider" class="slider" min="0" max="1" step="0.05" value="0.15" oninput="updateFriction()">
+                </div>
+            </div>
+
+            <!-- Datos en Vivo -->
+            <div class="section">
+                <div class="section-title">DATOS EN VIVO</div>
+                <div class="data-grid">
+                    <div class="data-box">
+                        <div class="data-label">Posición (x)</div>
+                        <div class="data-value" id="positionData">1.10 m</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="data-label">Velocidad (v)</div>
+                        <div class="data-value" id="velocityData">0.00 m/s</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="data-label">Aceleración (a)</div>
+                        <div class="data-value" id="accelerationData">4.15 m/s²</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="data-label">F. Rozamiento (Fr)</div>
+                        <div class="data-value" id="frictionForceData">0.00 N</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="data-label">Fuerza Normal (N)</div>
+                        <div class="data-value" id="normalForceData">1.78 N</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="data-label">Tensión (T)</div>
+                        <div class="data-value" id="tensionData">0.00 N</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Control -->
+            <div class="buttons">
+                <button class="btn btn-start" onclick="startSimulation()">▶ Iniciar</button>
+                <button class="btn btn-pause" onclick="pauseSimulation()">⏸ Pausar</button>
+            </div>
+            <button class="btn btn-reset" onclick="resetSimulation()">Reiniciar Todo</button>
+
+            <!-- Último Ensayo Guardado -->
+            <div class="section" style="margin-top: 10px;">
+                <div class="section-title">ÚLTIMO ENSAYO GUARDADO</div>
+                <div class="last-test">
+                    <p><strong>Ángulo:</strong> 25°</p>
+                    <p><strong>Aceleración:</strong> 4.15 m/s²</p>
+                    <p><strong>Distancia:</strong> 1.10 m</p>
+                    <p style="margin-top: 5px; color: #95a5a6;">Última actualización: Ahora</p>
                 </div>
             </div>
         </div>
@@ -510,382 +593,142 @@
 
     <script>
         // ==================== VARIABLES GLOBALES ====================
-        let scene, camera, renderer, incline, cart, pulley, weights = [];
-        let angle = 30;
-        let friction = 0.2;
-        let mass = 0.5;
-        let gravity = 9.8;
-        
         let isSimulating = false;
         let time = 0;
         let position = 0;
         let velocity = 0;
         let acceleration = 0;
         
-        let selectedWeight = null;
-        let addedWeights = [];
-        let totalWeight = 0;
-        let addedComponents = [];
+        let gravity = 9.81;
+        let angle = 25;
+        let massCar = 200; // gramos
+        let massHook = 20; // gramos
+        let friction = 0.15;
+        let addedWeight = 0;
+        
+        let currentModule = 0;
 
-        // ==================== INICIALIZACIÓN ====================
-        function init() {
-            const canvas = document.getElementById('canvas');
-            
-            // Scene setup
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1e3c72);
-            scene.fog = new THREE.Fog(0x1e3c72, 50, 100);
-            
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(10, 10, 10);
-            directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 2048;
-            directionalLight.shadow.mapSize.height = 2048;
-            directionalLight.shadow.camera.left = -20;
-            directionalLight.shadow.camera.right = 20;
-            directionalLight.shadow.camera.top = 20;
-            directionalLight.shadow.camera.bottom = -20;
-            scene.add(directionalLight);
-
-            // Point lights
-            const pointLight1 = new THREE.PointLight(0x667eea, 0.5, 30);
-            pointLight1.position.set(-10, 5, 5);
-            scene.add(pointLight1);
-
-            const pointLight2 = new THREE.PointLight(0x764ba2, 0.5, 30);
-            pointLight2.position.set(10, 5, -5);
-            scene.add(pointLight2);
-
-            // Camera
-            camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-            camera.position.set(0, 3, 4);
-            camera.lookAt(0, 0, 0);
-
-            // Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true, canvas, alpha: false });
-            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFShadowShadowMap;
-
-            // Create scene objects
-            createGround();
-            createIncline();
-            createCart();
-            createPulley();
-
-            // Event listeners
-            document.getElementById('angleSlider').addEventListener('input', updateAngle);
-            document.getElementById('frictionSlider').addEventListener('input', updateFriction);
-            document.getElementById('massSlider').addEventListener('input', updateMass);
-
-            window.addEventListener('resize', onWindowResize);
-
-            updatePhysics();
-            animate();
-        }
-
-        function createGround() {
-            const groundGeometry = new THREE.PlaneGeometry(30, 30);
-            const groundMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0x2a4a3a,
-                roughness: 0.8,
-                metalness: 0.1
-            });
-            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-            ground.rotation.x = -Math.PI / 2;
-            ground.receiveShadow = true;
-            ground.position.y = -0.1;
-            scene.add(ground);
-
-            // Grid helper
-            const gridHelper = new THREE.GridHelper(30, 30, 0x444444, 0x333333);
-            gridHelper.position.y = 0;
-            scene.add(gridHelper);
-        }
-
-        function createIncline() {
-            if (incline) scene.remove(incline);
-
-            const angleRad = THREE.MathUtils.degToRad(angle);
-            const length = 5;
-            const width = 2.5;
-            const thickness = 0.15;
-
-            // Main incline surface
-            const inclineGeometry = new THREE.BoxGeometry(length, thickness, width);
-            const inclineMaterial = new THREE.MeshStandardMaterial({
-                color: 0xb8956a,
-                roughness: 0.6,
-                metalness: 0.1,
-                map: createWoodTexture()
-            });
-
-            incline = new THREE.Mesh(inclineGeometry, inclineMaterial);
-            incline.rotation.z = angleRad;
-            incline.castShadow = true;
-            incline.receiveShadow = true;
-
-            // Add metal rails
-            const railGeometry = new THREE.BoxGeometry(length, 0.05, 0.1);
-            const railMaterial = new THREE.MeshStandardMaterial({
-                color: 0xc0c0c0,
-                roughness: 0.3,
-                metalness: 0.8
-            });
-
-            for (let i = -1; i <= 1; i += 2) {
-                const rail = new THREE.Mesh(railGeometry, railMaterial);
-                rail.position.z = i * (width / 2 + 0.1);
-                rail.rotation.z = angleRad;
-                rail.castShadow = true;
-                rail.receiveShadow = true;
-                incline.add(rail);
+        // Fórmulas y descripciones
+        const modules = [
+            {
+                title: "Cinemática (MRUV):",
+                formula: "a = g · sin(θ)<br>v = a · t<br>x = ½ · a · t²",
+                description: "Deslizamiento libre gravitacional sin rozamiento en la rampa."
+            },
+            {
+                title: "Descomposición de Fuerzas:",
+                formula: "F∥ = m·g·sin(θ)<br>F⊥ = m·g·cos(θ)<br>Fr = μ·F⊥",
+                description: "Las fuerzas se descomponen en componentes paralela y perpendicular."
+            },
+            {
+                title: "Equilibrio de Traslación:",
+                formula: "ΣF = 0<br>F∥ = Fr",
+                description: "El objeto está en equilibrio cuando la suma de fuerzas es cero."
+            },
+            {
+                title: "2da Ley de Newton (F = m·a):",
+                formula: "F_neta = m·a<br>a = F_neta / m",
+                description: "La aceleración es proporcional a la fuerza neta e inversamente proporcional a la masa."
+            },
+            {
+                title: "Fuerza y Coef. de Rozamiento:",
+                formula: "Fr = μ·N<br>N = m·g·cos(θ)<br>μ = Fr/N",
+                description: "El coeficiente de rozamiento es la relación entre la fuerza de fricción y la fuerza normal."
             }
+        ];
 
-            // Support structure
-            const supportGeometry = new THREE.BoxGeometry(0.1, 3, 0.1);
-            const supportMaterial = new THREE.MeshStandardMaterial({
-                color: 0x4a4a4a,
-                roughness: 0.7
+        // ==================== FUNCIONES PRINCIPALES ====================
+        function selectModule(idx) {
+            currentModule = idx;
+            document.querySelectorAll('.module-item').forEach((el, i) => {
+                el.classList.toggle('active', i === idx);
             });
-
-            const support1 = new THREE.Mesh(supportGeometry, supportMaterial);
-            support1.position.set(-length/2 + 0.2, -1.5, -width/2 - 0.2);
-            support1.castShadow = true;
-            incline.add(support1);
-
-            const support2 = new THREE.Mesh(supportGeometry, supportMaterial);
-            support2.position.set(length/2 - 0.2, -1.5, width/2 + 0.2);
-            support2.castShadow = true;
-            incline.add(support2);
-
-            scene.add(incline);
-        }
-
-        function createCart() {
-            if (cart) scene.remove(cart);
-
-            const group = new THREE.Group();
-
-            // Main body
-            const bodyGeometry = new THREE.BoxGeometry(0.7, 0.4, 0.5);
-            const bodyMaterial = new THREE.MeshStandardMaterial({
-                color: 0xff4444,
-                roughness: 0.4,
-                metalness: 0.6
-            });
-            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-            body.position.y = 0.25;
-            body.castShadow = true;
-            body.receiveShadow = true;
-            group.add(body);
-
-            // Wheels with axles
-            const wheelGeometry = new THREE.CylinderGeometry(0.18, 0.18, 0.12, 32);
-            const wheelMaterial = new THREE.MeshStandardMaterial({
-                color: 0x1a1a1a,
-                roughness: 0.5,
-                metalness: 0.7
-            });
-
-            for (let i = -1; i <= 1; i += 2) {
-                const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
-                wheel.rotation.z = Math.PI / 2;
-                wheel.position.set(0, 0.18, i * 0.3);
-                wheel.castShadow = true;
-                wheel.receiveShadow = true;
-                group.add(wheel);
-
-                // Axle
-                const axleGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.5, 16);
-                const axleMaterial = new THREE.MeshStandardMaterial({
-                    color: 0xaaaaaa,
-                    roughness: 0.3,
-                    metalness: 0.8
-                });
-                const axle = new THREE.Mesh(axleGeometry, axleMaterial);
-                axle.rotation.z = Math.PI / 2;
-                axle.position.set(0, 0.18, i * 0.25);
-                group.add(axle);
-            }
-
-            // Connector for string
-            const connectorGeometry = new THREE.BoxGeometry(0.1, 0.15, 0.1);
-            const connectorMaterial = new THREE.MeshStandardMaterial({
-                color: 0xffaa00,
-                roughness: 0.5,
-                metalness: 0.7
-            });
-            const connector = new THREE.Mesh(connectorGeometry, connectorMaterial);
-            connector.position.set(0.4, 0.25, 0);
-            group.add(connector);
-
-            const angleRad = THREE.MathUtils.degToRad(angle);
-            group.rotation.z = angleRad;
-            group.position.set(-1.8 + position, 0, 0);
-
-            cart = group;
-            scene.add(cart);
-        }
-
-        function createPulley() {
-            if (pulley) scene.remove(pulley);
-
-            const group = new THREE.Group();
-
-            // Pulley wheel
-            const pulleyGeometry = new THREE.TorusGeometry(0.3, 0.08, 16, 100);
-            const pulleyMaterial = new THREE.MeshStandardMaterial({
-                color: 0xeeeeee,
-                roughness: 0.3,
-                metalness: 0.8
-            });
-            const pulleyWheel = new THREE.Mesh(pulleyGeometry, pulleyMaterial);
-            pulleyWheel.rotation.y = Math.PI / 2;
-            pulleyWheel.castShadow = true;
-            pulleyWheel.receiveShadow = true;
-            group.add(pulleyWheel);
-
-            // Support bracket
-            const bracketGeometry = new THREE.BoxGeometry(0.15, 0.6, 0.15);
-            const bracketMaterial = new THREE.MeshStandardMaterial({
-                color: 0x4a4a4a,
-                roughness: 0.7,
-                metalness: 0.3
-            });
-            const bracket = new THREE.Mesh(bracketGeometry, bracketMaterial);
-            bracket.position.set(0, -0.3, 0);
-            group.add(bracket);
-
-            const angleRad = THREE.MathUtils.degToRad(angle);
-            const pulleyX = 1.8 * Math.cos(angleRad);
-            const pulleyY = 1.8 * Math.sin(angleRad) + 1;
-
-            group.position.set(pulleyX, pulleyY, 0);
-            pulley = group;
-            scene.add(pulley);
-        }
-
-        function createWoodTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-
-            ctx.fillStyle = '#b8956a';
-            ctx.fillRect(0, 0, 256, 256);
-
-            for (let i = 0; i < 100; i++) {
-                ctx.strokeStyle = `rgba(${Math.random() * 50}, ${Math.random() * 50}, ${Math.random() * 50}, 0.3)`;
-                ctx.beginPath();
-                ctx.moveTo(Math.random() * 256, 0);
-                ctx.lineTo(Math.random() * 256, 256);
-                ctx.stroke();
-            }
-
-            const texture = new THREE.CanvasTexture(canvas);
-            texture.magFilter = THREE.LinearFilter;
-            texture.minFilter = THREE.LinearFilter;
-            return texture;
-        }
-
-        // ==================== FUNCIONES DE ACTUALIZACIÓN ====================
-        function updateAngle(e) {
-            angle = parseFloat(e.target.value);
-            document.getElementById('angleValue').textContent = angle + '°';
             
-            const perilla = document.getElementById('perillaindicator');
-            perilla.style.transform = `rotate(${angle * 2}deg)`;
-            
-            createIncline();
-            createCart();
-            createPulley();
+            const module = modules[idx];
+            document.getElementById('formulaTitle').textContent = module.title;
+            document.getElementById('formulaContent').innerHTML = module.formula;
+            document.getElementById('formulaDesc').textContent = module.description;
+        }
+
+        function updateGravity() {
+            gravity = parseFloat(document.getElementById('gravitySlider').value);
+            document.getElementById('gravityValue').textContent = gravity.toFixed(2) + ' m/s²';
             updatePhysics();
         }
 
-        function updateFriction(e) {
-            friction = parseFloat(e.target.value);
+        function updateAngle() {
+            angle = parseFloat(document.getElementById('angleSlider').value);
+            document.getElementById('angleControlValue').textContent = angle + ' °';
+            document.getElementById('angleDisplay').textContent = 'Ángulo: ' + angle + '°';
+            
+            // Actualizar visualización del ángulo en SVG
+            const angleRad = angle * Math.PI / 180;
+            const inclineLine = document.getElementById('inclineLine');
+            const cartGroup = document.getElementById('cartGroup');
+            
+            const x1 = 100;
+            const y1 = 500;
+            const x2 = 100 + 600 * Math.cos(angleRad);
+            const y2 = 500 - 600 * Math.sin(angleRad);
+            
+            inclineLine.setAttribute('x2', x2);
+            inclineLine.setAttribute('y2', y2);
+            
+            // Rotar grupo del carro
+            cartGroup.setAttribute('transform', `rotate(${-angle} 175 500)`);
+            
+            updatePhysics();
+        }
+
+        function updateMassCar() {
+            massCar = parseFloat(document.getElementById('massCarSlider').value);
+            document.getElementById('massCarValue').textContent = massCar + 'g';
+            updatePhysics();
+        }
+
+        function updateMassHook() {
+            massHook = parseFloat(document.getElementById('massHookSlider').value);
+            document.getElementById('massHookValue').textContent = massHook + 'g';
+            updatePhysics();
+        }
+
+        function updateFriction() {
+            friction = parseFloat(document.getElementById('frictionSlider').value);
             document.getElementById('frictionValue').textContent = friction.toFixed(2);
             updatePhysics();
         }
 
-        function updateMass(e) {
-            mass = parseFloat(e.target.value);
-            document.getElementById('massValue').textContent = mass.toFixed(1);
-            updatePhysics();
-        }
-
         function updatePhysics() {
-            const angleRad = THREE.MathUtils.degToRad(angle);
-            const totalMass = mass + (totalWeight / 1000);
+            const angleRad = angle * Math.PI / 180;
+            const M = massCar / 1000; // convertir a kg
+            const m = (massHook + addedWeight) / 1000;
+            const mu = friction;
             
-            const weight = totalMass * gravity;
-            const normalForce = weight * Math.cos(angleRad);
-            const parallelForce = weight * Math.sin(angleRad);
-            const frictionForce = friction * normalForce;
-            const netForce = Math.max(0, parallelForce - frictionForce);
-            acceleration = netForce / totalMass;
-
-            const force = netForce;
-            document.getElementById('forceReading').textContent = force.toFixed(2);
-            document.getElementById('netForceData').textContent = force.toFixed(2) + ' N';
-            document.getElementById('frictionForceData').textContent = frictionForce.toFixed(2) + ' N';
-            document.getElementById('accelerationData').textContent = acceleration.toFixed(2) + ' m/s²';
-        }
-
-        function selectWeight(weight) {
-            selectedWeight = weight;
-            document.querySelectorAll('.weight-btn').forEach(btn => btn.classList.remove('selected'));
-            event.target.classList.add('selected');
-        }
-
-        function addWeight() {
-            if (!selectedWeight) {
-                alert('Selecciona una pesa primero');
-                return;
-            }
-
-            totalWeight += selectedWeight;
-            addedWeights.push(selectedWeight);
-            updateComponentsList();
-            updatePhysics();
-        }
-
-        function updateComponentsList() {
-            const list = document.getElementById('componentsList');
-            if (addedWeights.length === 0) {
-                list.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">Agregados: 0</p>';
-                return;
-            }
-
-            list.innerHTML = addedWeights.map((w, idx) => `
-                <div class="component-item">
-                    <span>⚖️ Pesa ${w}g</span>
-                    <button class="remove-btn" onclick="removeWeight(${idx})">✕</button>
-                </div>
-            `).join('') + `<p style="color: #999; font-size: 0.75em; margin-top: 8px; text-align: center;">Total: ${totalWeight}g</p>`;
-        }
-
-        function removeWeight(idx) {
-            totalWeight -= addedWeights[idx];
-            addedWeights.splice(idx, 1);
-            updateComponentsList();
-            updatePhysics();
+            // Fuerzas
+            const Fg = M * gravity;
+            const Fpara = Fg * Math.sin(angleRad);
+            const Fperp = Fg * Math.cos(angleRad);
+            const Fr = mu * Fperp;
+            
+            // Aceleración
+            const Fnet = Fpara - Fr;
+            acceleration = Fnet / M;
+            
+            // Mostrar datos
+            document.getElementById('normalForceData').textContent = Fperp.toFixed(2) + ' N';
+            document.getElementById('frictionForceData').textContent = Fr.toFixed(2) + ' N';
+            document.getElementById('accelerationData').textContent = Math.max(0, acceleration).toFixed(2) + ' m/s²';
         }
 
         function startSimulation() {
-            isSimulating = !isSimulating;
-            document.getElementById('statusText').textContent = isSimulating ? 'Simulando...' : 'Detenido';
-            
-            if (isSimulating) {
-                time = 0;
-                position = 0;
-                velocity = 0;
+            if (!isSimulating) {
+                isSimulating = true;
+                simulateMovement();
             }
+        }
+
+        function pauseSimulation() {
+            isSimulating = false;
         }
 
         function resetSimulation() {
@@ -893,49 +736,68 @@
             time = 0;
             position = 0;
             velocity = 0;
-            document.getElementById('statusText').textContent = 'Sistema listo';
+            addedWeight = 0;
             
-            createCart();
-            
+            document.getElementById('positionData').textContent = '0.00 m';
             document.getElementById('velocityData').textContent = '0.00 m/s';
-            document.getElementById('distanceData').textContent = '0.00 m';
+            document.getElementById('cartGroup').setAttribute('transform', `rotate(${-angle} 175 500)`);
         }
 
-        // ==================== ANIMACIÓN ====================
-        function animate() {
-            requestAnimationFrame(animate);
-
-            if (isSimulating) {
-                const dt = 0.016;
-                
-                if (position < 3) {
-                    velocity += acceleration * dt;
-                    position += velocity * dt;
-                    
-                    createCart();
-                    
-                    document.getElementById('velocityData').textContent = velocity.toFixed(2) + ' m/s';
-                    document.getElementById('distanceData').textContent = position.toFixed(2) + ' m';
-                } else {
-                    isSimulating = false;
-                    document.getElementById('statusText').textContent = 'Simulación completada';
-                }
-            }
-
-            renderer.render(scene, camera);
-        }
-
-        function onWindowResize() {
-            const canvas = document.getElementById('canvas');
-            const width = canvas.clientWidth;
-            const height = canvas.clientHeight;
+        function simulateMovement() {
+            if (!isSimulating) return;
             
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-            renderer.setSize(width, height);
+            const dt = 0.05; // Paso de tiempo
+            const angleRad = angle * Math.PI / 180;
+            const M = massCar / 1000;
+            const mu = friction;
+            
+            const Fg = M * gravity;
+            const Fpara = Fg * Math.sin(angleRad);
+            const Fperp = Fg * Math.cos(angleRad);
+            const Fr = mu * Fperp;
+            const Fnet = Fpara - Fr;
+            const a = Math.max(0, Fnet / M);
+            
+            velocity += a * dt;
+            position += velocity * dt;
+            time += dt;
+            
+            // Limitar a 3 metros
+            if (position > 3) {
+                position = 3;
+                isSimulating = false;
+            }
+            
+            // Actualizar datos
+            document.getElementById('positionData').textContent = position.toFixed(2) + ' m';
+            document.getElementById('velocityData').textContent = velocity.toFixed(2) + ' m/s';
+            document.getElementById('accelerationData').textContent = a.toFixed(2) + ' m/s²';
+            
+            // Mover carro
+            const displacement = (position / 3) * 600;
+            const cartGroup = document.getElementById('cartGroup');
+            cartGroup.setAttribute('transform', `translate(${displacement} 0) rotate(${-angle} 175 500)`);
+            
+            if (isSimulating) {
+                requestAnimationFrame(simulateMovement);
+            }
         }
 
-        window.addEventListener('load', init);
+        function dragWeight(e, weight) {
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('weight', weight);
+        }
+
+        function addHilo() {
+            document.getElementById('weightGroup').style.display = 'block';
+            alert('Hilo agregado. Arrastra pesas para colgarlas.');
+        }
+
+        // Inicializar
+        window.addEventListener('load', () => {
+            selectModule(0);
+            updatePhysics();
+        });
     </script>
 </body>
 </html>
