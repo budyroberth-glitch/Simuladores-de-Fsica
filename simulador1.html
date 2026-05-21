@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Plano Inclinado</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        #canvas {
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 100%);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            height: 500px;
+            overflow-y: auto;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .control-group:last-child {
+            border-bottom: none;
+        }
+
+        .control-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-value {
+            color: #667eea;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .data-display {
+            background: #f5f5f5;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            color: #555;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.95em;
+        }
+
+        .data-row:last-child {
+            border-bottom: none;
+        }
+
+        .data-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .data-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .info-panel h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .info-panel p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 12px;
+            font-size: 0.95em;
+        }
+
+        .info-panel ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+
+        .info-panel li {
+            color: #555;
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .info-panel li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            #canvas {
+                height: 400px;
+            }
+
+            .controls {
+                height: auto;
+            }
+        }
+
+        .formula {
+            background: #f9f9f9;
+            border-left: 3px solid #667eea;
+            padding: 12px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #333;
+            border-radius: 4px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📐 Simulador de Plano Inclinado</h1>
+            <p>Explora la física del movimiento en planos inclinados interactivamente</p>
+        </div>
+
+        <div class="content">
+            <div>
+                <canvas id="canvas"></canvas>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Ángulo del Plano</span>
+                        <span class="control-value" id="angleValue">30°</span>
+                    </div>
+                    <input type="range" id="angleSlider" class="slider" min="5" max="80" value="30">
+                    <div style="font-size: 0.85em; color: #999; margin-top: 5px;">5° - 80°</div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Coeficiente de Fricción</span>
+                        <span class="control-value" id="frictionValue">0.2</span>
+                    </div>
+                    <input type="range" id="frictionSlider" class="slider" min="0" max="1" step="0.05" value="0.2">
+                    <div style="font-size: 0.85em; color: #999; margin-top: 5px;">Liso - Rugoso</div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Masa del Carro (kg)</span>
+                        <span class="control-value" id="massValue">2</span>
+                    </div>
+                    <input type="range" id="massSlider" class="slider" min="0.5" max="5" step="0.5" value="2">
+                    <div style="font-size: 0.85em; color: #999; margin-top: 5px;">0.5 - 5 kg</div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Gravedad (m/s²)</span>
+                        <span class="control-value" id="gravityValue">9.8</span>
+                    </div>
+                    <input type="range" id="gravitySlider" class="slider" min="1" max="20" step="0.5" value="9.8">
+                    <div style="font-size: 0.85em; color: #999; margin-top: 5px;">Tierra / Otros Planetas</div>
+                </div>
+
+                <div class="data-display">
+                    <div class="data-row">
+                        <span class="data-label">Peso (N):</span>
+                        <span class="data-value" id="weightData">19.6</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Componente Paralelo (N):</span>
+                        <span class="data-value" id="parallelData">10.1</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Componente Normal (N):</span>
+                        <span class="data-value" id="normalData">16.9</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Fricción (N):</span>
+                        <span class="data-value" id="frictionForceData">3.4</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Fuerza Neta (N):</span>
+                        <span class="data-value" id="netForceData">6.7</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Aceleración (m/s²):</span>
+                        <span class="data-value" id="accelerationData">3.3</span>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="playAnimation()">▶ Simular</button>
+                    <button class="btn btn-secondary" onclick="resetSimulation()">↻ Reiniciar</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h3>📚 Conceptos Físicos</h3>
+            <p>En un plano inclinado, las fuerzas que actúan sobre un objeto se descomponen en:</p>
+            <ul>
+                <li><strong>Componente Paralela (Fp):</strong> Fp = m·g·sin(θ) - Causa el movimiento hacia abajo</li>
+                <li><strong>Componente Normal (N):</strong> N = m·g·cos(θ) - Perpendicular al plano</li>
+                <li><strong>Fricción (f):</strong> f = μ·N - Se opone al movimiento</li>
+                <li><strong>Fuerza Neta:</strong> Fneta = Fp - f = m·a</li>
+            </ul>
+            <div class="formula">
+                a = g(sin(θ) - μ·cos(θ))
+            </div>
+            <p style="margin-top: 15px; font-size: 0.9em; color: #888;">
+                Modifica los controles para ver cómo cambian las fuerzas y la aceleración del carro en el plano inclinado.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Three.js scene setup
+        let scene, camera, renderer, incline, cart, forceArrows;
+        let angle = 30;
+        let friction = 0.2;
+        let mass = 2;
+        let gravity = 9.8;
+        let animating = false;
+        let cartPosition = 0;
+        let cartVelocity = 0;
+
+        function init() {
+            // Scene setup
+            const canvas = document.getElementById('canvas');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87ceeb);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+            scene.add(new THREE.DirectionalLight(0xffffff, 0.6));
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+            camera.position.set(0, 2, 3);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.shadowMap.enabled = true;
+
+            // Ground
+            const groundGeometry = new THREE.BoxGeometry(6, 0.2, 4);
+            const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x8b7355 });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.position.y = -0.1;
+            ground.castShadow = true;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Incline
+            createIncline();
+
+            // Cart
+            createCart();
+
+            // Force arrows
+            forceArrows = {
+                weight: null,
+                parallel: null,
+                normal: null,
+                friction: null,
+                net: null
+            };
+
+            // Event listeners
+            document.getElementById('angleSlider').addEventListener('input', updateAngle);
+            document.getElementById('frictionSlider').addEventListener('input', updateFriction);
+            document.getElementById('massSlider').addEventListener('input', updateMass);
+            document.getElementById('gravitySlider').addEventListener('input', updateGravity);
+
+            // Initial render
+            updatePhysics();
+            animate();
+        }
+
+        function createIncline() {
+            if (incline) scene.remove(incline);
+
+            const length = 4;
+            const width = 2;
+            const angleRad = THREE.MathUtils.degToRad(angle);
+
+            const inclineGeometry = new THREE.BoxGeometry(length, 0.2, width);
+            const inclineMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xc0b080,
+                roughness: 0.7 
+            });
+
+            incline = new THREE.Mesh(inclineGeometry, inclineMaterial);
+            incline.rotation.z = angleRad;
+            incline.position.set(0, 0, 0);
+            incline.castShadow = true;
+            incline.receiveShadow = true;
+
+            scene.add(incline);
+        }
+
+        function createCart() {
+            if (cart) scene.remove(cart);
+
+            const group = new THREE.Group();
+
+            // Main body
+            const bodyGeometry = new THREE.BoxGeometry(0.6, 0.3, 0.4);
+            const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0xff6b6b });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.2;
+            body.castShadow = true;
+            body.receiveShadow = true;
+            group.add(body);
+
+            // Wheels
+            for (let i = -1; i <= 1; i += 2) {
+                const wheelGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.1, 16);
+                const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+                const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+                wheel.rotation.z = Math.PI / 2;
+                wheel.position.set(0, 0.15, i * 0.25);
+                wheel.castShadow = true;
+                wheel.receiveShadow = true;
+                group.add(wheel);
+            }
+
+            const angleRad = THREE.MathUtils.degToRad(angle);
+            group.rotation.z = angleRad;
+            group.position.set(-1.5 + cartPosition, 0, 0);
+
+            cart = group;
+            scene.add(cart);
+        }
+
+        function updateAngle(e) {
+            angle = parseFloat(e.target.value);
+            document.getElementById('angleValue').textContent = angle + '°';
+            createIncline();
+            createCart();
+            updatePhysics();
+        }
+
+        function updateFriction(e) {
+            friction = parseFloat(e.target.value);
+            document.getElementById('frictionValue').textContent = friction.toFixed(2);
+            updatePhysics();
+        }
+
+        function updateMass(e) {
+            mass = parseFloat(e.target.value);
+            document.getElementById('massValue').textContent = mass.toFixed(1);
+            createCart();
+            updatePhysics();
+        }
+
+        function updateGravity(e) {
+            gravity = parseFloat(e.target.value);
+            document.getElementById('gravityValue').textContent = gravity.toFixed(1);
+            updatePhysics();
+        }
+
+        function updatePhysics() {
+            const angleRad = THREE.MathUtils.degToRad(angle);
+
+            // Calculate forces
+            const weight = mass * gravity;
+            const normalForce = mass * gravity * Math.cos(angleRad);
+            const parallelForce = mass * gravity * Math.sin(angleRad);
+            const frictionForce = friction * normalForce;
+            const netForce = parallelForce - frictionForce;
+            const acceleration = netForce / mass;
+
+            // Update display
+            document.getElementById('weightData').textContent = weight.toFixed(2);
+            document.getElementById('parallelData').textContent = parallelForce.toFixed(2);
+            document.getElementById('normalData').textContent = normalForce.toFixed(2);
+            document.getElementById('frictionForceData').textContent = frictionForce.toFixed(2);
+            document.getElementById('netForceData').textContent = netForce.toFixed(2);
+            document.getElementById('accelerationData').textContent = acceleration.toFixed(2);
+
+            // Store for animation
+            window.acceleration = acceleration;
+        }
+
+        function playAnimation() {
+            if (!animating) {
+                animating = true;
+                cartPosition = 0;
+                cartVelocity = 0;
+            }
+        }
+
+        function resetSimulation() {
+            animating = false;
+            cartPosition = 0;
+            cartVelocity = 0;
+            createCart();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (animating) {
+                const dt = 0.016; // ~60fps
+                if (cartPosition < 3) {
+                    cartVelocity += window.acceleration * dt;
+                    cartPosition += cartVelocity * dt;
+                    createCart();
+                } else {
+                    animating = false;
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('canvas');
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        });
+
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
