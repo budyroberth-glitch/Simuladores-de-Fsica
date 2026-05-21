@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Interactivo de Plano Inclinado</title>
+    <title>Simulador Profesional de Plano Inclinado</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -14,75 +15,95 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+            overflow: hidden;
         }
 
         .container {
-            max-width: 1600px;
-            margin: 0 auto;
+            width: 100vw;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            grid-template-rows: 60px 1fr;
+            gap: 5px;
+            padding: 5px;
+            background: #0f0f1e;
         }
 
-        .header {
-            text-align: center;
+        header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 1.5em;
+            margin: 0;
+        }
+
+        .breadcrumb {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+
+        .breadcrumb a {
             color: white;
-            margin-bottom: 30px;
-            animation: fadeIn 0.8s ease-in;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+            text-decoration: none;
+            margin: 0 5px;
         }
 
         .main-content {
             display: grid;
             grid-template-columns: 2fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
+            gap: 10px;
         }
 
         #canvas {
-            width: 100%;
-            height: 600px;
-            background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 100%);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(180deg, #1e3c72 0%, #2a5298 50%, #7aa8d1 100%);
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
-        .sidebar {
+        .right-panel {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 10px;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .panel {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            background: #2a2a3e;
+            border: 1px solid #404050;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
         .panel h3 {
             color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.2em;
+            margin-bottom: 12px;
+            font-size: 1em;
             border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
         }
 
         .control-group {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .control-label {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
+            font-size: 0.85em;
+            margin-bottom: 6px;
+            color: #ddd;
         }
 
         .control-value {
@@ -94,7 +115,7 @@
             width: 100%;
             height: 6px;
             border-radius: 5px;
-            background: #ddd;
+            background: #404050;
             outline: none;
             -webkit-appearance: none;
             appearance: none;
@@ -104,284 +125,296 @@
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
         }
 
         .slider::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             cursor: pointer;
             border: none;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
         }
 
-        .dynamometer-display {
-            background: #f5f5f5;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            margin: 10px 0;
+        .dynamometer {
+            background: #1a1a2e;
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            margin: 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
         }
 
         .dynamometer-value {
             font-size: 1.8em;
-            color: #667eea;
+            color: #00ff00;
             font-weight: bold;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
         }
 
         .dynamometer-unit {
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 5px;
+            font-size: 0.7em;
+            color: #667eea;
         }
 
-        .components-panel {
-            max-height: 400px;
-            overflow-y: auto;
+        .data-display {
+            background: #1a1a2e;
+            border-left: 3px solid #667eea;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            line-height: 1.6;
         }
 
-        .component-item {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 8px;
-            cursor: grab;
-            transition: all 0.3s ease;
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #404050;
+        }
+
+        .data-row:last-child {
+            border-bottom: none;
+        }
+
+        .data-label {
+            color: #aaa;
+        }
+
+        .data-value {
+            color: #00ff00;
             font-weight: bold;
-            text-align: center;
-            user-select: none;
+            font-family: 'Courier New', monospace;
         }
 
-        .component-item:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .component-item:active {
-            cursor: grabbing;
-        }
-
-        .component-item.weight {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-
-        .component-item.instrument {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-
-        .weights-selector {
+        .weights-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
             margin: 10px 0;
         }
 
-        .weight-option {
+        .weight-btn {
             padding: 8px;
-            border: 2px solid #ddd;
+            border: 2px solid #404050;
+            background: #1a1a2e;
+            color: #ddd;
             border-radius: 6px;
-            text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            background: white;
             font-size: 0.85em;
+            font-weight: bold;
         }
 
-        .weight-option:hover {
+        .weight-btn:hover {
             border-color: #667eea;
-            background: #f0f0ff;
+            background: #2a2a3e;
         }
 
-        .weight-option.selected {
+        .weight-btn.selected {
             border-color: #667eea;
             background: #667eea;
             color: white;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
         }
 
-        .added-components {
-            background: #f5f5f5;
-            border-left: 4px solid #43e97b;
-            padding: 12px;
-            border-radius: 8px;
-            min-height: 60px;
+        .components-list {
             max-height: 150px;
             overflow-y: auto;
+            background: #1a1a2e;
+            border-radius: 4px;
+            padding: 8px;
         }
 
-        .added-item {
-            background: white;
-            padding: 8px;
-            margin: 5px 0;
-            border-radius: 5px;
+        .component-item {
+            background: #2a2a3e;
+            padding: 6px;
+            margin: 4px 0;
+            border-radius: 4px;
+            font-size: 0.8em;
+            border-left: 3px solid #667eea;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.9em;
-            border-left: 3px solid #43e97b;
         }
 
         .remove-btn {
             background: #ff6b6b;
             color: white;
             border: none;
-            padding: 4px 10px;
-            border-radius: 4px;
+            padding: 2px 8px;
+            border-radius: 3px;
             cursor: pointer;
-            font-size: 0.8em;
+            font-size: 0.75em;
         }
 
         .remove-btn:hover {
             background: #ee5a52;
         }
 
-        .buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
         .btn {
-            flex: 1;
-            padding: 12px;
+            padding: 10px;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s ease;
-            font-size: 0.9em;
+            font-size: 0.85em;
+            margin-top: 10px;
         }
 
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            width: 100%;
         }
 
         .btn-primary:hover {
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
         }
 
         .btn-secondary {
-            background: #e0e0e0;
-            color: #333;
+            background: #404050;
+            color: #ddd;
+            width: 100%;
         }
 
         .btn-secondary:hover {
-            background: #d0d0d0;
+            background: #505060;
         }
 
-        .info-section {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            margin-bottom: 30px;
+        .chart-container {
+            background: #1a1a2e;
+            border-radius: 6px;
+            padding: 10px;
+            max-height: 200px;
         }
 
-        .info-section h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.5em;
+        .chart-container canvas {
+            max-height: 180px;
         }
 
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #00ff00;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
         }
 
-        .info-card {
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
-        .info-card h3 {
-            color: #667eea;
-            margin-bottom: 10px;
+        .status-indicator.inactive {
+            background: #ff6b6b;
+            animation: none;
         }
 
-        .info-card p {
-            color: #666;
-            font-size: 0.95em;
-            line-height: 1.6;
+        .draggable {
+            cursor: grab;
+            user-select: none;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
+        .draggable:active {
+            cursor: grabbing;
+        }
+
+        .perilla {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .perilla-visual {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fff, #666);
+            border: 3px solid #333;
+            position: relative;
+            margin: 10px 0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .perilla-indicator {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: #667eea;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
 
-        @media (max-width: 1200px) {
             .main-content {
                 grid-template-columns: 1fr;
             }
 
-            #canvas {
-                height: 500px;
+            .right-panel {
+                max-height: 300px;
             }
-        }
-
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.8em;
-            }
-
-            .weights-selector {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .breadcrumb {
-            color: white;
-            font-size: 0.95em;
-            opacity: 0.9;
-            margin-bottom: 15px;
-        }
-
-        .breadcrumb a {
-            color: white;
-            text-decoration: none;
-        }
-
-        .breadcrumb a:hover {
-            text-decoration: underline;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div class="breadcrumb">
-                <a href="index.html">🏠 Inicio</a> / 
-                <a href="maquinas-simples.html">⚙️ Máquinas Simples</a> / 
-                📐 Plano Inclinado
+        <header>
+            <div>
+                <h1>📐 Simulador Profesional de Plano Inclinado</h1>
+                <div class="breadcrumb">
+                    <a href="index.html">🏠 Inicio</a> / 
+                    <a href="maquinas-simples.html">⚙️ Máquinas Simples</a> / 
+                    📐 Plano Inclinado
+                </div>
             </div>
-            <h1>📐 Simulador Interactivo de Plano Inclinado</h1>
-            <p>Construye tu experimento arrastrando y soltando componentes</p>
-        </div>
+            <div style="font-size: 0.9em;">
+                <span class="status-indicator"></span>
+                <span id="statusText">Sistema listo</span>
+            </div>
+        </header>
 
         <div class="main-content">
             <canvas id="canvas"></canvas>
 
-            <div class="sidebar">
-                <!-- Panel de Controles -->
+            <div class="right-panel">
+                <!-- Panel de Control -->
                 <div class="panel">
                     <h3>⚙️ Controles</h3>
                     
@@ -391,182 +424,245 @@
                             <span class="control-value" id="angleValue">30°</span>
                         </div>
                         <input type="range" id="angleSlider" class="slider" min="5" max="80" value="30">
+                        <div class="perilla">
+                            <div class="perilla-visual">
+                                <div class="perilla-indicator" id="perillaindicator"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="control-group">
                         <div class="control-label">
-                            <span>Coeficiente de Fricción</span>
-                            <span class="control-value" id="frictionValue">0.2</span>
+                            <span>Fricción</span>
+                            <span class="control-value" id="frictionValue">0.20</span>
                         </div>
                         <input type="range" id="frictionSlider" class="slider" min="0" max="1" step="0.05" value="0.2">
                     </div>
 
-                    <div class="dynamometer-display">
-                        <div>📏 Dinamómetro</div>
-                        <div class="dynamometer-value" id="dynamometerReading">0.00</div>
-                        <div class="dynamometer-unit">Newtons (N)</div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Masa (kg)</span>
+                            <span class="control-value" id="massValue">0.5</span>
+                        </div>
+                        <input type="range" id="massSlider" class="slider" min="0.1" max="3" step="0.1" value="0.5">
                     </div>
 
-                    <div class="buttons">
-                        <button class="btn btn-primary" onclick="playSimulation()">▶ Simular</button>
-                        <button class="btn btn-secondary" onclick="resetSimulation()">↻ Reiniciar</button>
+                    <div class="dynamometer">
+                        <div class="dynamometer-value" id="forceReading">0.00</div>
+                        <div class="dynamometer-unit">N</div>
+                    </div>
+
+                    <div class="btn-group" style="display: flex; gap: 8px;">
+                        <button class="btn btn-primary" onclick="startSimulation()" style="flex: 1;">▶ Simular</button>
+                        <button class="btn btn-secondary" onclick="resetSimulation()" style="flex: 1;">↻ Reset</button>
                     </div>
                 </div>
 
                 <!-- Panel de Pesas -->
                 <div class="panel">
-                    <h3>⚖️ Juego de Pesas</h3>
-                    <div class="weights-selector">
-                        <div class="weight-option" onclick="selectWeight(10)">10 g</div>
-                        <div class="weight-option" onclick="selectWeight(20)">20 g</div>
-                        <div class="weight-option" onclick="selectWeight(50)">50 g</div>
-                        <div class="weight-option" onclick="selectWeight(100)">100 g</div>
+                    <h3>⚖️ Pesas</h3>
+                    <div class="weights-grid">
+                        <button class="weight-btn" onclick="selectWeight(10)">10 g</button>
+                        <button class="weight-btn" onclick="selectWeight(20)">20 g</button>
+                        <button class="weight-btn" onclick="selectWeight(50)">50 g</button>
+                        <button class="weight-btn" onclick="selectWeight(100)">100 g</button>
                     </div>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="addSelectedWeight()">
-                        + Agregar Pesa
-                    </button>
+                    <button class="btn btn-primary" onclick="addWeight()">+ Agregar</button>
+                </div>
+
+                <!-- Panel de Datos -->
+                <div class="panel">
+                    <h3>📊 Datos en Vivo</h3>
+                    <div class="data-display">
+                        <div class="data-row">
+                            <span class="data-label">Velocidad:</span>
+                            <span class="data-value" id="velocityData">0.00 m/s</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Aceleración:</span>
+                            <span class="data-value" id="accelerationData">0.00 m/s²</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Distancia:</span>
+                            <span class="data-value" id="distanceData">0.00 m</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Fuerza Neta:</span>
+                            <span class="data-value" id="netForceData">0.00 N</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Friction:</span>
+                            <span class="data-value" id="frictionForceData">0.00 N</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Panel de Componentes -->
                 <div class="panel">
-                    <h3>🔧 Componentes Disponibles</h3>
-                    <div class="components-panel">
-                        <div class="component-item" draggable="true" ondragstart="dragComponent(event, 'Plano')">A. Plano</div>
-                        <div class="component-item" draggable="true" ondragstart="dragComponent(event, 'Base')">B. Base</div>
-                        <div class="component-item" draggable="true" ondragstart="dragComponent(event, 'Varillas Laterales')">C. Varillas Laterales</div>
-                        <div class="component-item" draggable="true" ondragstart="dragComponent(event, 'Perilla de Ajuste')">D. Perilla de Ajuste</div>
-                        <div class="component-item" draggable="true" ondragstart="dragComponent(event, 'Perilla Reguladora')">E. Perilla Reguladora del Ángulo</div>
-                        <div class="component-item" draggable="true" ondragstart="dragComponent(event, 'Nivel de Burbujas')">F. Nivel de Burbujas</div>
-                        <div class="component-item" draggable="true" ondragstart="dragComponent(event, 'Tornillos Niveladores')">G. Tornillos Niveladores</div>
-                        <div class="component-item" draggable="true" ondragstart="dragComponent(event, 'Transportador')">H. Transportador</div>
-                        <div class="component-item" draggable="true" ondragstart="dragComponent(event, 'Aguja Indicadora')">I. Aguja Indicadora del Ángulo</div>
-                        <div class="component-item" draggable="true" ondragstart="dragComponent(event, 'Polea')">J. Polea</div>
-                        <div class="component-item" draggable="true" ondragstart="dragComponent(event, 'Topes de Jebe')">K. Topes de Jebe</div>
-                        <div class="component-item" draggable="true" ondragstart="dragComponent(event, 'Distanciador')">L. Distanciador</div>
-                        <div class="component-item" draggable="true" ondragstart="dragComponent(event, 'Carro de Hall')">M. Carro de Hall</div>
-                        <div class="component-item" draggable="true" ondragstart="dragComponent(event, 'Cordón de Poliéster')">N. Cordón de Poliéster</div>
-                        <div class="component-item" draggable="true" ondragstart="dragComponent(event, 'Varilla de la Polea')">O. Varilla de la Polea</div>
-                        <div class="component-item instrument" draggable="true" ondragstart="dragComponent(event, 'Dinamómetro')">📏 Dinamómetro</div>
+                    <h3>🔧 Componentes</h3>
+                    <div class="components-list" id="componentsList">
+                        <p style="color: #666; text-align: center; padding: 20px;">Agregados: 0</p>
                     </div>
-                </div>
-
-                <!-- Componentes Agregados -->
-                <div class="panel">
-                    <h3>✅ Componentes Agregados</h3>
-                    <div class="added-components" id="addedComponents">
-                        <p style="color: #999; text-align: center; padding: 20px;">Arrastra componentes aquí</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sección Informativa -->
-        <div class="info-section">
-            <h2>📚 Componentes del Kit de Plano Inclinado</h2>
-            <div class="info-grid">
-                <div class="info-card">
-                    <h3>Estructura Base</h3>
-                    <p>
-                        <strong>Plano (A):</strong> Superficie inclinada donde se realizan los experimentos.<br>
-                        <strong>Base (B):</strong> Soporte para estabilidad.<br>
-                        <strong>Varillas Laterales (C):</strong> Guías para el movimiento.
-                    </p>
-                </div>
-                <div class="info-card">
-                    <h3>Ajuste y Medición</h3>
-                    <p>
-                        <strong>Perilla Reguladora (E):</strong> Ajusta el ángulo del plano.<br>
-                        <strong>Transportador (H):</strong> Mide ángulos precisamente.<br>
-                        <strong>Nivel de Burbujas (F):</strong> Verifica horizontalidad.
-                    </p>
-                </div>
-                <div class="info-card">
-                    <h3>Componentes Móviles</h3>
-                    <p>
-                        <strong>Carro de Hall (M):</strong> Objeto que se mueve en el plano.<br>
-                        <strong>Polea (J):</strong> Cambia dirección de fuerzas.<br>
-                        <strong>Cordón (N):</strong> Conecta componentes.
-                    </p>
-                </div>
-                <div class="info-card">
-                    <h3>Instrumentos de Medición</h3>
-                    <p>
-                        <strong>Dinamómetro:</strong> Mide fuerzas en Newtons (N).<br>
-                        <strong>Pesas:</strong> 10g, 20g, 50g, 100g.<br>
-                        <strong>Aguja Indicadora (I):</strong> Muestra ángulo actual.
-                    </p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Variables globales
-        let scene, camera, renderer, incline, cart;
+        // ==================== VARIABLES GLOBALES ====================
+        let scene, camera, renderer, incline, cart, pulley, weights = [];
         let angle = 30;
         let friction = 0.2;
+        let mass = 0.5;
+        let gravity = 9.8;
+        
+        let isSimulating = false;
+        let time = 0;
+        let position = 0;
+        let velocity = 0;
+        let acceleration = 0;
+        
         let selectedWeight = null;
-        let addedComponents = [];
+        let addedWeights = [];
         let totalWeight = 0;
-        let animating = false;
+        let addedComponents = [];
 
-        // Inicializar Three.js
+        // ==================== INICIALIZACIÓN ====================
         function init() {
             const canvas = document.getElementById('canvas');
+            
+            // Scene setup
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x87ceeb);
-            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-            scene.add(new THREE.DirectionalLight(0xffffff, 0.6));
+            scene.background = new THREE.Color(0x1e3c72);
+            scene.fog = new THREE.Fog(0x1e3c72, 50, 100);
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.left = -20;
+            directionalLight.shadow.camera.right = 20;
+            directionalLight.shadow.camera.top = 20;
+            directionalLight.shadow.camera.bottom = -20;
+            scene.add(directionalLight);
 
+            // Point lights
+            const pointLight1 = new THREE.PointLight(0x667eea, 0.5, 30);
+            pointLight1.position.set(-10, 5, 5);
+            scene.add(pointLight1);
+
+            const pointLight2 = new THREE.PointLight(0x764ba2, 0.5, 30);
+            pointLight2.position.set(10, 5, -5);
+            scene.add(pointLight2);
+
+            // Camera
             camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-            camera.position.set(0, 2, 3);
+            camera.position.set(0, 3, 4);
             camera.lookAt(0, 0, 0);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas });
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, canvas, alpha: false });
             renderer.setSize(canvas.clientWidth, canvas.clientHeight);
             renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
-            // Ground
-            const groundGeometry = new THREE.BoxGeometry(6, 0.2, 4);
-            const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x8b7355 });
-            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-            ground.position.y = -0.1;
-            ground.castShadow = true;
-            ground.receiveShadow = true;
-            scene.add(ground);
-
+            // Create scene objects
+            createGround();
             createIncline();
             createCart();
+            createPulley();
 
             // Event listeners
             document.getElementById('angleSlider').addEventListener('input', updateAngle);
             document.getElementById('frictionSlider').addEventListener('input', updateFriction);
+            document.getElementById('massSlider').addEventListener('input', updateMass);
 
-            // Drag and drop
-            canvas.addEventListener('dragover', e => e.preventDefault());
-            canvas.addEventListener('drop', dropComponent);
+            window.addEventListener('resize', onWindowResize);
 
-            updateDynamometer();
+            updatePhysics();
             animate();
+        }
+
+        function createGround() {
+            const groundGeometry = new THREE.PlaneGeometry(30, 30);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x2a4a3a,
+                roughness: 0.8,
+                metalness: 0.1
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            ground.position.y = -0.1;
+            scene.add(ground);
+
+            // Grid helper
+            const gridHelper = new THREE.GridHelper(30, 30, 0x444444, 0x333333);
+            gridHelper.position.y = 0;
+            scene.add(gridHelper);
         }
 
         function createIncline() {
             if (incline) scene.remove(incline);
 
             const angleRad = THREE.MathUtils.degToRad(angle);
-            const length = 4;
-            const width = 2;
+            const length = 5;
+            const width = 2.5;
+            const thickness = 0.15;
 
-            const inclineGeometry = new THREE.BoxGeometry(length, 0.2, width);
-            const inclineMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0xc0b080,
-                roughness: 0.7 
+            // Main incline surface
+            const inclineGeometry = new THREE.BoxGeometry(length, thickness, width);
+            const inclineMaterial = new THREE.MeshStandardMaterial({
+                color: 0xb8956a,
+                roughness: 0.6,
+                metalness: 0.1,
+                map: createWoodTexture()
             });
 
             incline = new THREE.Mesh(inclineGeometry, inclineMaterial);
             incline.rotation.z = angleRad;
             incline.castShadow = true;
             incline.receiveShadow = true;
+
+            // Add metal rails
+            const railGeometry = new THREE.BoxGeometry(length, 0.05, 0.1);
+            const railMaterial = new THREE.MeshStandardMaterial({
+                color: 0xc0c0c0,
+                roughness: 0.3,
+                metalness: 0.8
+            });
+
+            for (let i = -1; i <= 1; i += 2) {
+                const rail = new THREE.Mesh(railGeometry, railMaterial);
+                rail.position.z = i * (width / 2 + 0.1);
+                rail.rotation.z = angleRad;
+                rail.castShadow = true;
+                rail.receiveShadow = true;
+                incline.add(rail);
+            }
+
+            // Support structure
+            const supportGeometry = new THREE.BoxGeometry(0.1, 3, 0.1);
+            const supportMaterial = new THREE.MeshStandardMaterial({
+                color: 0x4a4a4a,
+                roughness: 0.7
+            });
+
+            const support1 = new THREE.Mesh(supportGeometry, supportMaterial);
+            support1.position.set(-length/2 + 0.2, -1.5, -width/2 - 0.2);
+            support1.castShadow = true;
+            incline.add(support1);
+
+            const support2 = new THREE.Mesh(supportGeometry, supportMaterial);
+            support2.position.set(length/2 - 0.2, -1.5, width/2 + 0.2);
+            support2.castShadow = true;
+            incline.add(support2);
+
             scene.add(incline);
         }
 
@@ -575,143 +671,269 @@
 
             const group = new THREE.Group();
 
-            const bodyGeometry = new THREE.BoxGeometry(0.6, 0.3, 0.4);
-            const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0xff6b6b });
+            // Main body
+            const bodyGeometry = new THREE.BoxGeometry(0.7, 0.4, 0.5);
+            const bodyMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff4444,
+                roughness: 0.4,
+                metalness: 0.6
+            });
             const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-            body.position.y = 0.2;
+            body.position.y = 0.25;
             body.castShadow = true;
+            body.receiveShadow = true;
             group.add(body);
 
+            // Wheels with axles
+            const wheelGeometry = new THREE.CylinderGeometry(0.18, 0.18, 0.12, 32);
+            const wheelMaterial = new THREE.MeshStandardMaterial({
+                color: 0x1a1a1a,
+                roughness: 0.5,
+                metalness: 0.7
+            });
+
             for (let i = -1; i <= 1; i += 2) {
-                const wheelGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.1, 16);
-                const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
                 const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
                 wheel.rotation.z = Math.PI / 2;
-                wheel.position.set(0, 0.15, i * 0.25);
+                wheel.position.set(0, 0.18, i * 0.3);
                 wheel.castShadow = true;
+                wheel.receiveShadow = true;
                 group.add(wheel);
+
+                // Axle
+                const axleGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.5, 16);
+                const axleMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xaaaaaa,
+                    roughness: 0.3,
+                    metalness: 0.8
+                });
+                const axle = new THREE.Mesh(axleGeometry, axleMaterial);
+                axle.rotation.z = Math.PI / 2;
+                axle.position.set(0, 0.18, i * 0.25);
+                group.add(axle);
             }
+
+            // Connector for string
+            const connectorGeometry = new THREE.BoxGeometry(0.1, 0.15, 0.1);
+            const connectorMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffaa00,
+                roughness: 0.5,
+                metalness: 0.7
+            });
+            const connector = new THREE.Mesh(connectorGeometry, connectorMaterial);
+            connector.position.set(0.4, 0.25, 0);
+            group.add(connector);
 
             const angleRad = THREE.MathUtils.degToRad(angle);
             group.rotation.z = angleRad;
-            group.position.set(-1.5, 0, 0);
+            group.position.set(-1.8 + position, 0, 0);
 
             cart = group;
             scene.add(cart);
         }
 
+        function createPulley() {
+            if (pulley) scene.remove(pulley);
+
+            const group = new THREE.Group();
+
+            // Pulley wheel
+            const pulleyGeometry = new THREE.TorusGeometry(0.3, 0.08, 16, 100);
+            const pulleyMaterial = new THREE.MeshStandardMaterial({
+                color: 0xeeeeee,
+                roughness: 0.3,
+                metalness: 0.8
+            });
+            const pulleyWheel = new THREE.Mesh(pulleyGeometry, pulleyMaterial);
+            pulleyWheel.rotation.y = Math.PI / 2;
+            pulleyWheel.castShadow = true;
+            pulleyWheel.receiveShadow = true;
+            group.add(pulleyWheel);
+
+            // Support bracket
+            const bracketGeometry = new THREE.BoxGeometry(0.15, 0.6, 0.15);
+            const bracketMaterial = new THREE.MeshStandardMaterial({
+                color: 0x4a4a4a,
+                roughness: 0.7,
+                metalness: 0.3
+            });
+            const bracket = new THREE.Mesh(bracketGeometry, bracketMaterial);
+            bracket.position.set(0, -0.3, 0);
+            group.add(bracket);
+
+            const angleRad = THREE.MathUtils.degToRad(angle);
+            const pulleyX = 1.8 * Math.cos(angleRad);
+            const pulleyY = 1.8 * Math.sin(angleRad) + 1;
+
+            group.position.set(pulleyX, pulleyY, 0);
+            pulley = group;
+            scene.add(pulley);
+        }
+
+        function createWoodTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#b8956a';
+            ctx.fillRect(0, 0, 256, 256);
+
+            for (let i = 0; i < 100; i++) {
+                ctx.strokeStyle = `rgba(${Math.random() * 50}, ${Math.random() * 50}, ${Math.random() * 50}, 0.3)`;
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * 256, 0);
+                ctx.lineTo(Math.random() * 256, 256);
+                ctx.stroke();
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.magFilter = THREE.LinearFilter;
+            texture.minFilter = THREE.LinearFilter;
+            return texture;
+        }
+
+        // ==================== FUNCIONES DE ACTUALIZACIÓN ====================
         function updateAngle(e) {
             angle = parseFloat(e.target.value);
             document.getElementById('angleValue').textContent = angle + '°';
+            
+            const perilla = document.getElementById('perillaindicator');
+            perilla.style.transform = `rotate(${angle * 2}deg)`;
+            
             createIncline();
             createCart();
-            updateDynamometer();
+            createPulley();
+            updatePhysics();
         }
 
         function updateFriction(e) {
             friction = parseFloat(e.target.value);
             document.getElementById('frictionValue').textContent = friction.toFixed(2);
-            updateDynamometer();
+            updatePhysics();
         }
 
-        function updateDynamometer() {
-            if (totalWeight === 0) {
-                document.getElementById('dynamometerReading').textContent = '0.00';
-                return;
-            }
+        function updateMass(e) {
+            mass = parseFloat(e.target.value);
+            document.getElementById('massValue').textContent = mass.toFixed(1);
+            updatePhysics();
+        }
 
+        function updatePhysics() {
             const angleRad = THREE.MathUtils.degToRad(angle);
-            const mass = (totalWeight / 1000); // Convertir gramos a kg
-            const weight = mass * 9.8;
+            const totalMass = mass + (totalWeight / 1000);
+            
+            const weight = totalMass * gravity;
             const normalForce = weight * Math.cos(angleRad);
             const parallelForce = weight * Math.sin(angleRad);
             const frictionForce = friction * normalForce;
             const netForce = Math.max(0, parallelForce - frictionForce);
+            acceleration = netForce / totalMass;
 
-            document.getElementById('dynamometerReading').textContent = netForce.toFixed(2);
+            const force = netForce;
+            document.getElementById('forceReading').textContent = force.toFixed(2);
+            document.getElementById('netForceData').textContent = force.toFixed(2) + ' N';
+            document.getElementById('frictionForceData').textContent = frictionForce.toFixed(2) + ' N';
+            document.getElementById('accelerationData').textContent = acceleration.toFixed(2) + ' m/s²';
         }
 
         function selectWeight(weight) {
             selectedWeight = weight;
-            document.querySelectorAll('.weight-option').forEach(opt => opt.classList.remove('selected'));
+            document.querySelectorAll('.weight-btn').forEach(btn => btn.classList.remove('selected'));
             event.target.classList.add('selected');
         }
 
-        function addSelectedWeight() {
+        function addWeight() {
             if (!selectedWeight) {
                 alert('Selecciona una pesa primero');
                 return;
             }
 
             totalWeight += selectedWeight;
-            addedComponents.push({
-                name: `Pesa de ${selectedWeight}g`,
-                weight: selectedWeight
-            });
-            updateAddedComponents();
-            updateDynamometer();
+            addedWeights.push(selectedWeight);
+            updateComponentsList();
+            updatePhysics();
         }
 
-        function dragComponent(e, componentName) {
-            e.dataTransfer.effectAllowed = 'copy';
-            e.dataTransfer.setData('componentName', componentName);
-        }
-
-        function dropComponent(e) {
-            e.preventDefault();
-            const componentName = e.dataTransfer.getData('componentName');
-            
-            addedComponents.push({ name: componentName, weight: 0 });
-            updateAddedComponents();
-        }
-
-        function updateAddedComponents() {
-            const container = document.getElementById('addedComponents');
-            
-            if (addedComponents.length === 0) {
-                container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Arrastra componentes aquí</p>';
+        function updateComponentsList() {
+            const list = document.getElementById('componentsList');
+            if (addedWeights.length === 0) {
+                list.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">Agregados: 0</p>';
                 return;
             }
 
-            container.innerHTML = addedComponents.map((comp, idx) => `
-                <div class="added-item">
-                    <span>${comp.name}</span>
-                    <button class="remove-btn" onclick="removeComponent(${idx})">✕</button>
+            list.innerHTML = addedWeights.map((w, idx) => `
+                <div class="component-item">
+                    <span>⚖️ Pesa ${w}g</span>
+                    <button class="remove-btn" onclick="removeWeight(${idx})">✕</button>
                 </div>
-            `).join('');
+            `).join('') + `<p style="color: #999; font-size: 0.75em; margin-top: 8px; text-align: center;">Total: ${totalWeight}g</p>`;
         }
 
-        function removeComponent(idx) {
-            const comp = addedComponents[idx];
-            if (comp.weight > 0) {
-                totalWeight -= comp.weight;
+        function removeWeight(idx) {
+            totalWeight -= addedWeights[idx];
+            addedWeights.splice(idx, 1);
+            updateComponentsList();
+            updatePhysics();
+        }
+
+        function startSimulation() {
+            isSimulating = !isSimulating;
+            document.getElementById('statusText').textContent = isSimulating ? 'Simulando...' : 'Detenido';
+            
+            if (isSimulating) {
+                time = 0;
+                position = 0;
+                velocity = 0;
             }
-            addedComponents.splice(idx, 1);
-            updateAddedComponents();
-            updateDynamometer();
-        }
-
-        function playSimulation() {
-            animating = !animating;
         }
 
         function resetSimulation() {
-            animating = false;
+            isSimulating = false;
+            time = 0;
+            position = 0;
+            velocity = 0;
+            document.getElementById('statusText').textContent = 'Sistema listo';
+            
+            createCart();
+            
+            document.getElementById('velocityData').textContent = '0.00 m/s';
+            document.getElementById('distanceData').textContent = '0.00 m';
         }
 
+        // ==================== ANIMACIÓN ====================
         function animate() {
             requestAnimationFrame(animate);
+
+            if (isSimulating) {
+                const dt = 0.016;
+                
+                if (position < 3) {
+                    velocity += acceleration * dt;
+                    position += velocity * dt;
+                    
+                    createCart();
+                    
+                    document.getElementById('velocityData').textContent = velocity.toFixed(2) + ' m/s';
+                    document.getElementById('distanceData').textContent = position.toFixed(2) + ' m';
+                } else {
+                    isSimulating = false;
+                    document.getElementById('statusText').textContent = 'Simulación completada';
+                }
+            }
+
             renderer.render(scene, camera);
         }
 
-        window.addEventListener('resize', () => {
+        function onWindowResize() {
             const canvas = document.getElementById('canvas');
             const width = canvas.clientWidth;
             const height = canvas.clientHeight;
+            
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
             renderer.setSize(width, height);
-        });
+        }
 
         window.addEventListener('load', init);
     </script>
