@@ -3,801 +3,721 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laboratorio Virtual de Física - Plano Inclinado</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <title>Laboratorio Virtual de Física - Mecánica de Sólidos Rígidos</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --bg: #f5f7fa;
+            --panel: #ffffff;
+            --text: #2c3e50;
         }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
-            color: #333;
-        }
-
-        .header {
-            background: #2c3e50;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .header h1 {
-            font-size: 1.8em;
-            margin: 0;
-        }
-
-        .container {
-            display: grid;
-            grid-template-columns: 250px 1fr 320px;
-            gap: 15px;
-            padding: 20px;
-            height: calc(100vh - 80px);
-        }
-
-        /* ============ PANEL IZQUIERDO ============ */
-        .left-panel {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            overflow-y: auto;
-        }
-
-        .panel-title {
-            font-size: 0.9em;
-            font-weight: bold;
-            color: #7f8c8d;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 10px;
-        }
-
-        .module-item {
-            padding: 10px 12px;
-            margin-bottom: 8px;
-            background: #ecf0f1;
-            border-left: 4px solid #3498db;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.85em;
-        }
-
-        .module-item:hover {
-            background: #d5dbdb;
-            transform: translateX(5px);
-        }
-
-        .module-item.active {
-            background: #d6eaf8;
-            border-left-color: #2980b9;
-            color: #2980b9;
-            font-weight: bold;
-        }
-
-        .formula-box {
-            background: #ecf0f1;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 15px;
-            border-left: 3px solid #e74c3c;
-        }
-
-        .formula-box h4 {
-            color: #e74c3c;
-            font-size: 0.85em;
-            margin-bottom: 8px;
-        }
-
-        .formula {
-            font-family: 'Courier New', monospace;
-            color: #c0392b;
-            font-size: 0.8em;
-            line-height: 1.6;
-        }
-
-        .description {
-            font-size: 0.75em;
-            color: #7f8c8d;
-            margin-top: 8px;
-            line-height: 1.5;
-        }
-
-        /* ============ PANEL CENTRAL ============ */
-        .center-panel {
-            background: white;
-            border-radius: 8px;
+            background-color: var(--bg);
+            color: var(--text);
             display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            z-index: 10;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
             position: relative;
         }
 
-        #canvas {
-            width: 100%;
-            height: 100%;
-            border-radius: 8px;
+        .panel {
+            width: 280px;
+            background: var(--panel);
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            z-index: 5;
         }
 
-        .incline-container {
-            width: 100%;
-            height: 100%;
+        .panel-title {
+            background: #edf2f7;
+            padding: 12px;
+            font-weight: bold;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: var(--primary);
+        }
+
+        .control-group {
+            padding: 12px;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .control-group h3 {
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+            color: #718096;
+        }
+
+        label {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
-            border-radius: 8px;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+        }
+
+        input[type="range"] { width: 50%; }
+
+        .btn-container {
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+
+        .btn-start { background: #2ecc71; color: white; }
+        .btn-pause { background: #f1c40f; color: white; }
+        .btn-reset { background: #e74c3c; color: white; grid-column: span 2; }
+        button:hover { opacity: 0.9; }
+
+        .simulation-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
             position: relative;
             overflow: hidden;
         }
 
-        .angle-label {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-weight: bold;
-            color: #2c3e50;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        canvas {
+            flex: 1;
+            background: #ffffff;
         }
 
-        /* ============ PANEL DERECHO ============ */
-        .right-panel {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            overflow-y: auto;
-        }
-
-        .section {
-            margin-bottom: 20px;
-            border-bottom: 1px solid #ecf0f1;
-            padding-bottom: 15px;
-        }
-
-        .section:last-child {
-            border-bottom: none;
-        }
-
-        .section-title {
-            font-size: 0.9em;
-            font-weight: bold;
-            color: #7f8c8d;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-        }
-
-        /* Pesas */
-        .weights-container {
+        .results-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 8px;
+            padding: 12px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
         }
 
-        .weight-box {
-            background: #ecf0f1;
-            padding: 10px;
-            border-radius: 6px;
-            text-align: center;
-            cursor: grab;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-
-        .weight-box:hover {
-            background: #d5dbdb;
-            border-color: #3498db;
-        }
-
-        .weight-label {
-            font-size: 0.8em;
-            color: #7f8c8d;
-            margin-bottom: 5px;
-        }
-
-        .weight-value {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #2c3e50;
-            width: 50px;
-            height: 50px;
+        .result-card {
             background: white;
+            border-left: 3px solid var(--accent);
+            padding: 8px 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .result-card div:first-child { font-size: 0.7rem; color: #718096; }
+        .result-card div:last-child { font-size: 1rem; font-weight: bold; color: var(--primary); }
+
+        .study-list { list-style: none; padding: 8px; }
+        .study-item {
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            background: #f7fafc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .study-item:hover, .study-item.active {
+            background: #ebf8ff;
+            border-left-color: var(--accent);
+            font-weight: bold;
+        }
+
+        .formula-box {
+            margin: 8px;
+            padding: 12px;
+            background: #f0f4f8;
+            border-left: 4px solid #34495e;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        .formula-title { font-weight: bold; color: #2c3e50; margin-bottom: 6px; }
+        .formula-text {
+            font-family: 'Courier New', Courier, monospace;
+            background: #ffffff;
+            padding: 6px;
+            border-radius: 3px;
+            border: 1px solid #dcdde1;
+            color: #c0392b;
+            font-weight: bold;
+            white-space: pre-line;
+            text-align: center;
+        }
+
+        /* Contenedor Vertical de Accesorios (Ubicado a la izquierda de Parámetros del Entorno) */
+        .accessories-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #edf2f7;
+            align-items: center;
+        }
+        .accessory-slot {
+            width: 100%;
+            padding: 8px;
+            background: white;
+            border: 1px dashed #cbd5e0;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .item-draggable {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
+            border: 1.5px solid #2c3e50;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            font-size: 9px;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        .item-draggable:active { cursor: grabbing; }
 
-        .accesorios {
-            text-align: center;
-            margin-top: 10px;
-        }
-
-        .accessory-btn {
-            background: #27ae60;
-            color: white;
-            border: none;
-            padding: 8px 16px;
+        /* Panel Fijo Registrador de Ensayos */
+        .log-box {
+            background: #fff;
+            border: 1px solid #cbd5e0;
             border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.85em;
-            font-weight: bold;
-            transition: all 0.3s ease;
+            margin: 12px;
+            padding: 10px;
         }
-
-        .accessory-btn:hover {
-            background: #229954;
-        }
-
-        /* Controles */
-        .control-item {
-            margin-bottom: 15px;
-        }
-
-        .control-label {
-            font-size: 0.85em;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 5px;
+        .log-row {
             display: flex;
             justify-content: space-between;
+            font-size: 0.75rem;
+            padding: 4px 0;
+            border-bottom: 1px dashed #edf2f7;
         }
-
-        .control-value {
-            color: #e74c3c;
+        .log-row span:last-child {
             font-weight: bold;
-        }
-
-        .slider {
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: #bdc3c7;
-            outline: none;
-            -webkit-appearance: none;
-            appearance: none;
-            cursor: pointer;
-        }
-
-        .slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        .slider::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Datos en vivo */
-        .data-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .data-box {
-            background: #ecf0f1;
-            padding: 12px;
-            border-radius: 6px;
-            border-left: 3px solid #3498db;
-            text-align: center;
-        }
-
-        .data-label {
-            font-size: 0.75em;
-            color: #7f8c8d;
-            margin-bottom: 5px;
-        }
-
-        .data-value {
-            font-size: 1.1em;
-            font-weight: bold;
-            color: #2c3e50;
-            font-family: 'Courier New', monospace;
-        }
-
-        /* Botones */
-        .buttons {
-            display: flex;
-            gap: 8px;
-            margin-top: 15px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.85em;
-        }
-
-        .btn-start {
-            background: #27ae60;
-            color: white;
-        }
-
-        .btn-start:hover {
-            background: #229954;
-        }
-
-        .btn-pause {
-            background: #f39c12;
-            color: white;
-        }
-
-        .btn-pause:hover {
-            background: #e67e22;
-        }
-
-        .btn-reset {
-            background: #e74c3c;
-            color: white;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .btn-reset:hover {
-            background: #c0392b;
-        }
-
-        /* Último ensayo */
-        .last-test {
-            background: #ecf0f1;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 0.85em;
-            color: #7f8c8d;
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #bdc3c7;
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #95a5a6;
-        }
-
-        @media (max-width: 1200px) {
-            .container {
-                grid-template-columns: 1fr;
-                height: auto;
-            }
+            color: #c0392b;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Laboratorio Virtual de Física - Mecánica de Sólidos Rígidos</h1>
-    </div>
 
-    <div class="container">
-        <!-- PANEL IZQUIERDO -->
-        <div class="left-panel">
-            <div class="panel-title">MÓDULOS DE ESTUDIO</div>
-            
-            <div class="module-item active" onclick="selectModule(0)">Cinemática (MRUV)</div>
-            <div class="module-item" onclick="selectModule(1)">Descomposición de Fuerzas</div>
-            <div class="module-item" onclick="selectModule(2)">Equilibrio de Traslación</div>
-            <div class="module-item" onclick="selectModule(3)">2da Ley de Newton (F = m·a)</div>
-            <div class="module-item" onclick="selectModule(4)">Fuerza y Coef. de Rozamiento</div>
+    <header>
+        <h2>Laboratorio Virtual de Física - Mecánica de Sólidos Rígidos</h2>
+    </header>
+
+    <div class="main-container">
+        <div class="panel">
+            <div class="panel-title">Módulos de Estudio</div>
+            <ul class="study-list">
+                <li class="study-item active" id="btn-mruv" onclick="setStudy('mruv')">Cinemática (MRUV)</li>
+                <li class="study-item" id="btn-fuerzas" onclick="setStudy('fuerzas')">Descomposición de Fuerzas</li>
+                <li class="study-item" id="btn-equilibrio" onclick="setStudy('equilibrio')">Equilibrio de Traslación</li>
+                <li class="study-item" id="btn-newton2" onclick="setStudy('newton2')">2da Ley de Newton (F = m·a)</li>
+                <li class="study-item" id="btn-rozamiento" onclick="setStudy('rozamiento')">Fuerza y Coef. de Rozamiento</li>
+            </ul>
 
             <div class="formula-box">
-                <h4 id="formulaTitle">Cinemática (MRUV):</h4>
-                <div class="formula" id="formulaContent">
-                    a = g · sin(θ)<br>
-                    v = a · t
-                </div>
-                <p class="description" id="formulaDesc">
-                    Deslizamiento libre gravitacional sin rozamiento en la rampa.
-                </p>
+                <div class="formula-title" id="formTitle">Ecuaciones del Módulo:</div>
+                <div class="formula-text" id="formText">a = g · sin(θ)</div>
+                <div style="font-size: 0.7rem; color: #555; margin-top: 5px;" id="formDesc">Cinemática del movimiento libre acelerado.</div>
             </div>
         </div>
 
-        <!-- PANEL CENTRAL -->
-        <div class="center-panel">
-            <div class="incline-container" id="inclineContainer">
-                <svg viewBox="0 0 800 600" style="width: 100%; height: 100%; position: relative;">
-                    <!-- Plano inclinado -->
-                    <line id="inclineLine" x1="100" y1="500" x2="700" y2="200" stroke="#2c3e50" stroke-width="8"/>
-                    
-                    <!-- Línea de referencia horizontal -->
-                    <line x1="100" y1="500" x2="700" y2="500" stroke="#bdc3c7" stroke-width="2" stroke-dasharray="5,5"/>
-                    
-                    <!-- Ángulo -->
-                    <path id="anglePath" d="M 150 500 Q 160 480 180 475" stroke="#e74c3c" stroke-width="2" fill="none"/>
-                    <text id="angleText" x="165" y="520" font-size="20" font-weight="bold" fill="#e74c3c">25°</text>
-                    
-                    <!-- Carro/Objeto -->
-                    <g id="cartGroup">
-                        <rect id="cartBody" x="150" y="485" width="50" height="30" fill="#3498db" rx="4"/>
-                        <circle id="wheel1" cx="160" cy="520" r="8" fill="#2c3e50"/>
-                        <circle id="wheel2" cx="190" cy="520" r="8" fill="#2c3e50"/>
-                    </g>
-                    
-                    <!-- Pesa colgante -->
-                    <g id="weightGroup" style="display: none;">
-                        <line id="cordString" x1="700" y1="200" x2="700" y2="250" stroke="#34495e" stroke-width="2"/>
-                        <circle id="hangingWeight" cx="700" cy="280" r="12" fill="#f39c12"/>
-                    </g>
-                    
-                    <!-- Polea -->
-                    <circle id="pulley" cx="700" cy="200" r="10" fill="none" stroke="#2c3e50" stroke-width="3"/>
-                </svg>
-                <div class="angle-label" id="angleDisplay">Ángulo: 25°</div>
+        <div class="simulation-area">
+            <canvas id="simCanvas"></canvas>
+            
+            <div class="results-grid">
+                <div class="result-card"><div>Posición (x)</div><div id="resX">1.10 m</div></div>
+                <div class="result-card"><div>Velocidad (v)</div><div id="resV">0.00 m/s</div></div>
+                <div class="result-card"><div>Aceleración (a)</div><div id="resA">0.00 m/s²</div></div>
+                <div class="result-card"><div>F. Rozamiento (Fr)</div><div id="resFr">0.00 N</div></div>
+                <div class="result-card"><div>Fuerza Normal (N)</div><div id="resN">0.00 N</div></div>
+                <div class="result-card"><div>Tensión (T)</div><div id="resT">0.00 N</div></div>
             </div>
         </div>
 
-        <!-- PANEL DERECHO -->
-        <div class="right-panel">
-            <!-- Pesas y Accesorios -->
-            <div class="section">
-                <div class="section-title">PESAS Y ACCESORIOS</div>
-                <p style="font-size: 0.8em; color: #7f8c8d; margin-bottom: 10px;">Arrastra hacia el carro o gancho:</p>
-                
-                <div class="weights-container">
-                    <div class="weight-box" draggable="true" ondragstart="dragWeight(event, 10)">
-                        <div class="weight-label">Pesa 10g</div>
-                        <div class="weight-value">10g</div>
-                    </div>
-                    <div class="weight-box" draggable="true" ondragstart="dragWeight(event, 20)">
-                        <div class="weight-label">Pesa 20g</div>
-                        <div class="weight-value">20g</div>
-                    </div>
-                    <div class="weight-box" draggable="true" ondragstart="dragWeight(event, 50)">
-                        <div class="weight-label">Pesa 50g</div>
-                        <div class="weight-value">50g</div>
-                    </div>
-                    <div class="weight-box" draggable="true" ondragstart="dragWeight(event, 100)">
-                        <div class="weight-label">Pesa 100g</div>
-                        <div class="weight-value">100g</div>
-                    </div>
-                </div>
-                
-                <div class="accesorios">
-                    <button class="accessory-btn" onclick="addHilo()">+ Hilo</button>
-                </div>
+        <div class="panel" style="width: 180px; border-right: 1px solid #edf2f7; border-left: 1px solid #edf2f7;">
+            <div class="panel-title">Pesas y Accesorios</div>
+            <div class="accessories-vertical" id="accessoriesContainer">
+                <div style="font-size:0.68rem; color:#718096; text-align:center; margin-bottom:4px;">Arrastra hacia el carro o gancho:</div>
+                <div class="accessory-slot"><span>Pesa 10g</span><div class="item-draggable" style="background:#bdc3c7;" id="dom-w10">10g</div></div>
+                <div class="accessory-slot"><span>Pesa 20g</span><div class="item-draggable" style="background:#bdc3c7;" id="dom-w20">20g</div></div>
+                <div class="accessory-slot"><span>Pesa 50g</span><div class="item-draggable" style="background:#bdc3c7;" id="dom-w50">50g</div></div>
+                <div class="accessory-slot"><span>Pesa 100g</span><div class="item-draggable" style="background:#bdc3c7;" id="dom-w100">100g</div></div>
+                <div class="accessory-slot"><span>Hilo</span><div class="item-draggable" style="background:#27ae60; color:white;" id="dom-thread">Hilo</div></div>
+            </div>
+        </div>
+
+        <div class="panel" style="width: 270px;">
+            <div class="panel-title">Parámetros del Entorno</div>
+            
+            <div class="control-group">
+                <h3>Ambiente Físico</h3>
+                <label style="color: #e53e3e; font-weight: bold;">Gravedad (g): <span id="valGravity">9.81</span> m/s²
+                    <input type="range" id="inputGravity" min="0" max="25" value="9.81" step="0.1">
+                </label>
             </div>
 
-            <!-- Parámetros del Entorno -->
-            <div class="section">
-                <div class="section-title">PARÁMETROS DEL ENTORNO</div>
-                
-                <div class="control-item">
-                    <div class="control-label">
-                        <span>Gravedad (g):</span>
-                        <span class="control-value" id="gravityValue">9.81 m/s²</span>
-                    </div>
-                    <input type="range" id="gravitySlider" class="slider" min="5" max="15" step="0.1" value="9.81" oninput="updateGravity()">
-                </div>
-
-                <div class="control-item">
-                    <div class="control-label">
-                        <span>Ángulo (θ):</span>
-                        <span class="control-value" id="angleControlValue">25 °</span>
-                    </div>
-                    <input type="range" id="angleSlider" class="slider" min="5" max="80" value="25" oninput="updateAngle()">
-                </div>
-
-                <div class="control-item">
-                    <div class="control-label">
-                        <span>Masa Carro (M):</span>
-                        <span class="control-value" id="massCarValue">200g</span>
-                    </div>
-                    <input type="range" id="massCarSlider" class="slider" min="100" max="500" step="10" value="200" oninput="updateMassCar()">
-                </div>
-
-                <div class="control-item">
-                    <div class="control-label">
-                        <span>Masa Gancho (Mj):</span>
-                        <span class="control-value" id="massHookValue">20g</span>
-                    </div>
-                    <input type="range" id="massHookSlider" class="slider" min="10" max="100" step="5" value="20" oninput="updateMassHook()">
-                </div>
-
-                <div class="control-item">
-                    <div class="control-label">
-                        <span>Rugosidad (μ_k):</span>
-                        <span class="control-value" id="frictionValue">0.15</span>
-                    </div>
-                    <input type="range" id="frictionSlider" class="slider" min="0" max="1" step="0.05" value="0.15" oninput="updateFriction()">
-                </div>
+            <div class="control-group">
+                <h3>Geometría del Plano</h3>
+                <label>Ángulo (θ): <span id="valAngle">25</span>°
+                    <input type="range" id="inputAngle" min="0" max="60" value="25" step="1">
+                </label>
             </div>
 
-            <!-- Datos en Vivo -->
-            <div class="section">
-                <div class="section-title">DATOS EN VIVO</div>
-                <div class="data-grid">
-                    <div class="data-box">
-                        <div class="data-label">Posición (x)</div>
-                        <div class="data-value" id="positionData">1.10 m</div>
-                    </div>
-                    <div class="data-box">
-                        <div class="data-label">Velocidad (v)</div>
-                        <div class="data-value" id="velocityData">0.00 m/s</div>
-                    </div>
-                    <div class="data-box">
-                        <div class="data-label">Aceleración (a)</div>
-                        <div class="data-value" id="accelerationData">4.15 m/s²</div>
-                    </div>
-                    <div class="data-box">
-                        <div class="data-label">F. Rozamiento (Fr)</div>
-                        <div class="data-value" id="frictionForceData">0.00 N</div>
-                    </div>
-                    <div class="data-box">
-                        <div class="data-label">Fuerza Normal (N)</div>
-                        <div class="data-value" id="normalForceData">1.78 N</div>
-                    </div>
-                    <div class="data-box">
-                        <div class="data-label">Tensión (T)</div>
-                        <div class="data-value" id="tensionData">0.00 N</div>
-                    </div>
-                </div>
+            <div class="control-group">
+                <h3>Masas Base Configurables</h3>
+                <label>Masa Carro (M₁): <span id="valM1Base">200</span> g
+                    <input type="range" id="inputM1Base" min="100" max="1000" value="200" step="50">
+                </label>
+                <label id="lblM2">Masa Gancho (M₂): <span id="valM2Base">20</span> g
+                    <input type="range" id="inputM2Base" min="10" max="200" value="20" step="10">
+                </label>
             </div>
 
-            <!-- Botones de Control -->
-            <div class="buttons">
-                <button class="btn btn-start" onclick="startSimulation()">▶ Iniciar</button>
-                <button class="btn btn-pause" onclick="pauseSimulation()">⏸ Pausar</button>
+            <div class="control-group">
+                <h3>Coeficiente de Fricción</h3>
+                <label>Rugosidad ($\mu_k$): <span id="valMuk">0.15</span>
+                    <input type="range" id="inputMuk" min="0" max="0.8" value="0.15" step="0.05">
+                </label>
             </div>
-            <button class="btn btn-reset" onclick="resetSimulation()">Reiniciar Todo</button>
 
-            <!-- Último Ensayo Guardado -->
-            <div class="section" style="margin-top: 10px;">
-                <div class="section-title">ÚLTIMO ENSAYO GUARDADO</div>
-                <div class="last-test">
-                    <p><strong>Ángulo:</strong> 25°</p>
-                    <p><strong>Aceleración:</strong> 4.15 m/s²</p>
-                    <p><strong>Distancia:</strong> 1.10 m</p>
-                    <p style="margin-top: 5px; color: #95a5a6;">Última actualización: Ahora</p>
-                </div>
+            <div class="btn-container">
+                <button class="btn-start" onclick="startSim()">Iniciar</button>
+                <button class="btn-pause" onclick="pauseSim()">Pausar</button>
+                <button class="btn-reset" onclick="fullReset()">Reiniciar Todo</button>
+            </div>
+
+            <div class="panel-title" style="margin-top: auto; border-top: 1px solid #cbd5e0;">Último Ensayo Guardado</div>
+            <div class="log-box">
+                <div class="log-row"><span>Módulo Evaluado:</span><span id="logMod">-</span></div>
+                <div class="log-row"><span>Masa Total M₁:</span><span id="logM1">-</span></div>
+                <div class="log-row"><span>Masa Total M₂:</span><span id="logM2">-</span></div>
+                <div class="log-row"><span>Punto Origen X₀:</span><span id="logX0">-</span></div>
+                <div class="log-row"><span>Aceleración Const:</span><span id="logA">-</span></div>
+                <div class="log-row"><span>Velocidad Terminal:</span><span id="logVf" style="color:#2ecc71;">-</span></div>
+                <div class="log-row"><span>Tensión Mecánica:</span><span id="logT">-</span></div>
             </div>
         </div>
     </div>
 
     <script>
-        // ==================== VARIABLES GLOBALES ====================
-        let isSimulating = false;
-        let time = 0;
-        let position = 0;
-        let velocity = 0;
-        let acceleration = 0;
-        
-        let gravity = 9.81;
-        let angle = 25;
-        let massCar = 200; // gramos
-        let massHook = 20; // gramos
-        let friction = 0.15;
-        let addedWeight = 0;
-        
-        let currentModule = 0;
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
 
-        // Fórmulas y descripciones
-        const modules = [
-            {
-                title: "Cinemática (MRUV):",
-                formula: "a = g · sin(θ)<br>v = a · t<br>x = ½ · a · t²",
-                description: "Deslizamiento libre gravitacional sin rozamiento en la rampa."
-            },
-            {
-                title: "Descomposición de Fuerzas:",
-                formula: "F∥ = m·g·sin(θ)<br>F⊥ = m·g·cos(θ)<br>Fr = μ·F⊥",
-                description: "Las fuerzas se descomponen en componentes paralela y perpendicular."
-            },
-            {
-                title: "Equilibrio de Traslación:",
-                formula: "ΣF = 0<br>F∥ = Fr",
-                description: "El objeto está en equilibrio cuando la suma de fuerzas es cero."
-            },
-            {
-                title: "2da Ley de Newton (F = m·a):",
-                formula: "F_neta = m·a<br>a = F_neta / m",
-                description: "La aceleración es proporcional a la fuerza neta e inversamente proporcional a la masa."
-            },
-            {
-                title: "Fuerza y Coef. de Rozamiento:",
-                formula: "Fr = μ·N<br>N = m·g·cos(θ)<br>μ = Fr/N",
-                description: "El coeficiente de rozamiento es la relación entre la fuerza de fricción y la fuerza normal."
-            }
-        ];
+        // PARAMETRIZACIÓN DEL MODELO REAL MATEMÁTICO
+        let g = 9.81;
+        let angle = 25 * Math.PI / 180;
+        let mu = 0.15;
+        let massCartBase = 0.200; 
+        let massHookBase = 0.020; 
 
-        // ==================== FUNCIONES PRINCIPALES ====================
-        function selectModule(idx) {
-            currentModule = idx;
-            document.querySelectorAll('.module-item').forEach((el, i) => {
-                el.classList.toggle('active', i === idx);
+        // CONFIGURACIÓN DE ORIGEN DEL RECORRIDO EN ZONA ALTA
+        const defaultTopX = 1.10; 
+        let initialX = defaultTopX; 
+        let x = initialX; 
+        let v = 0;
+        let a = 0;
+        let dt = 0.008; // Delta time optimizado para precisión diferencial
+        let isRunning = false;
+        let currentStudy = 'mruv';
+        let animationId = null;
+
+        // PARÁMETROS DEL CANVAS RENDERING
+        const scale = 380; 
+        const originX = 60;
+        const originY = 320;
+        const planeLength = 1.2;
+
+        let isThreadAttached = false;
+        let isDraggingCart = false;
+        let items = [];
+        let globalCalculations = { M1: 0, M2: 0, Fr: 0, T: 0, N: 0 };
+
+        const formulasMap = {
+            mruv: { title: "Cinemática (MRUV):", text: "a = g · sin(θ)\nv = a · t", desc: "Deslizamiento libre gravitacional sin rozamiento en la rampa." },
+            fuerzas: { title: "Descomposición de Fuerzas:", text: "Wx = M₁ · g · sin(θ)\nWy = M₁ · g · cos(θ)", desc: "Estudio analítico de vectores sobre el plano. El sistema se auto-mantiene estático." },
+            equilibrio: { title: "Equilibrio de Traslación:", text: "ΣF = 0\nT = Wx₁ ± Fr", desc: "El simulador calcula la fuerza requerida para nulidad de movimiento mecánico." },
+            newton2: { title: "2da Ley de Newton:", text: "a = (Wx₁ - W₂) / (M₁+M₂)\nT = Wx₁ - M₁·a", desc: "Aceleración acoplada por cuerda que pasa directamente por la polea extrema alta." },
+            rozamiento: { title: "Fuerza de Rozamiento:", text: "Fr = μ_k · N\na = (Wx₁ - Fr) / M₁", desc: "Estudio dinámico considerando el coeficiente de rugosidad de la rampa." }
+        };
+
+        // ENTRADAS DE CONTROL DEL USUARIO
+        document.getElementById('inputGravity').addEventListener('input', (e) => { g = parseFloat(e.target.value); document.getElementById('valGravity').innerText = g.toFixed(2); runCalculations(); });
+        document.getElementById('inputAngle').addEventListener('input', (e) => { angle = parseInt(e.target.value) * Math.PI / 180; document.getElementById('valAngle').innerText = e.target.value; runCalculations(); });
+        document.getElementById('inputM1Base').addEventListener('input', (e) => { massCartBase = parseInt(e.target.value) / 1000; document.getElementById('valM1Base').innerText = e.target.value; runCalculations(); });
+        document.getElementById('inputM2Base').addEventListener('input', (e) => { massHookBase = parseInt(e.target.value) / 1000; document.getElementById('valM2Base').innerText = e.target.value; runCalculations(); });
+        document.getElementById('inputMuk').addEventListener('input', (e) => { mu = parseFloat(e.target.value); document.getElementById('valMuk').innerText = e.target.value; runCalculations(); });
+
+        function setStudy(study) {
+            currentStudy = study;
+            document.querySelectorAll('.study-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`btn-${study}`).classList.add('active');
+            document.getElementById('formTitle').innerText = formulasMap[study].title;
+            document.getElementById('formText').innerText = formulasMap[study].text;
+            document.getElementById('formDesc').innerText = formulasMap[study].desc;
+
+            // Configurar el acoplamiento del hilo por defecto según la práctica seleccionada
+            isThreadAttached = (study === 'newton2' || study === 'equilibrio');
+            resetSim();
+        }
+
+        function initAccessories() {
+            items = [
+                { id: 'w10',  type: 'weight', mass: 0.010, place: 'shelf', x: 0, y: 0 },
+                { id: 'w20',  type: 'weight', mass: 0.020, place: 'shelf', x: 0, y: 0 },
+                { id: 'w50',  type: 'weight', mass: 0.050, place: 'shelf', x: 0, y: 0 },
+                { id: 'w100', type: 'weight', mass: 0.100, place: 'shelf', x: 0, y: 0 }
+            ];
+        }
+
+        // MOTOR DRAG AND DROP DESDE EL PANEL VERTICAL
+        function setupDOMDragAndDrop() {
+            const dragIds = ['dom-w10', 'dom-w20', 'dom-w50', 'dom-w100', 'dom-thread'];
+            dragIds.forEach(id => {
+                const el = document.getElementById(id);
+                el.setAttribute('draggable', 'true');
+                el.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', id); });
             });
-            
-            const module = modules[idx];
-            document.getElementById('formulaTitle').textContent = module.title;
-            document.getElementById('formulaContent').innerHTML = module.formula;
-            document.getElementById('formulaDesc').textContent = module.description;
+
+            canvas.addEventListener('dragover', (e) => { e.preventDefault(); });
+            canvas.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const mX = e.clientX - rect.left;
+                const mY = e.clientY - rect.top;
+                const id = e.dataTransfer.getData('text/plain');
+
+                if(id === 'dom-thread') { isThreadAttached = true; runCalculations(); return; }
+
+                let targetItemId = id.replace('dom-', '');
+                let matchItem = items.find(i => i.id === targetItemId);
+
+                if (matchItem) {
+                    let endX = originX + planeLength * scale * Math.cos(angle);
+                    let endY = originY - planeLength * scale * Math.sin(angle);
+                    let cartGlobalX = originX + x * scale * Math.cos(angle);
+                    let cartGlobalY = originY - x * scale * Math.sin(angle);
+                    let hangGlobalX = endX + 15;
+                    let hangGlobalY = endY + 70;
+
+                    if (Math.hypot(mX - cartGlobalX, mY - cartGlobalY) < 60) {
+                        matchItem.place = 'cart';
+                    } else if (Math.hypot(mX - hangGlobalX, mY - hangGlobalY) < 80) {
+                        matchItem.place = 'hook';
+                    } else {
+                        matchItem.place = 'shelf';
+                    }
+                    runCalculations();
+                }
+            });
         }
 
-        function updateGravity() {
-            gravity = parseFloat(document.getElementById('gravitySlider').value);
-            document.getElementById('gravityValue').textContent = gravity.toFixed(2) + ' m/s²';
-            updatePhysics();
+        // CÁLCULO CIENTÍFICO EXACTO DE VARIABLES FÍSICAS
+        function runCalculations() {
+            let extraM1 = 0; let extraM2 = 0;
+            items.forEach(item => {
+                if (item.place === 'cart') extraM1 += item.mass;
+                if (item.place === 'hook') extraM2 += item.mass;
+            });
+
+            let M1 = massCartBase + extraM1;
+            let M2 = massHookBase + extraM2;
+            
+            let W1x = M1 * g * Math.sin(angle);
+            let W1y = M1 * g * Math.cos(angle);
+            let W2 = M2 * g;
+            
+            let N = W1y;
+            let Fr = 0;
+            let T = 0;
+
+            switch (currentStudy) {
+                case 'mruv':
+                    a = g * Math.sin(angle); 
+                    Fr = 0; T = 0;
+                    break;
+
+                case 'fuerzas':
+                    a = 0; v = 0; 
+                    Fr = 0; T = 0;
+                    break;
+
+                case 'equilibrio':
+                    a = 0; v = 0; 
+                    if (isThreadAttached) {
+                        T = W2;
+                        Fr = W1x - T; 
+                    }
+                    break;
+
+                case 'newton2':
+                    Fr = 0; 
+                    if (isThreadAttached) {
+                        // W1x - T = M1 * a   &&   T - W2 = M2 * a  =>  Wx1 - W2 = (M1 + M2) * a
+                        a = (W1x - W2) / (M1 + M2);
+                        T = W1x - (M1 * a);
+                    } else {
+                        a = g * Math.sin(angle);
+                        T = 0;
+                    }
+                    break;
+
+                case 'rozamiento':
+                    Fr = mu * N; 
+                    if (isThreadAttached) {
+                        let fuerzaNeta = W1x - W2 - Fr;
+                        if (fuerzaNeta > 0) {
+                            a = fuerzaNeta / (M1 + M2);
+                        } else {
+                            a = 0; v = 0; 
+                        }
+                        T = W2 + (M2 * a);
+                    } else {
+                        if (W1x > Fr) {
+                            a = (W1x - Fr) / M1;
+                        } else {
+                            a = 0; v = 0;
+                        }
+                        T = 0;
+                    }
+                    break;
+            }
+
+            if (a < 0 && x >= initialX) { a = 0; v = 0; }
+
+            globalCalculations = { M1, M2, Fr, T, N };
+
+            // Renderizar los valores numéricos calculados en la interfaz
+            document.getElementById('resX').innerText = `${x.toFixed(2)} m`;
+            document.getElementById('resV').innerText = `${v.toFixed(2)} m/s`;
+            document.getElementById('resA').innerText = `${a.toFixed(2)} m/s²`;
+            document.getElementById('resFr').innerText = `${Math.abs(Fr).toFixed(2)} N`;
+            document.getElementById('resN').innerText = `${N.toFixed(2)} N`;
+            document.getElementById('resT').innerText = `${T.toFixed(2)} N`;
+            
+            draw();
         }
 
-        function updateAngle() {
-            angle = parseFloat(document.getElementById('angleSlider').value);
-            document.getElementById('angleControlValue').textContent = angle + ' °';
-            document.getElementById('angleDisplay').textContent = 'Ángulo: ' + angle + '°';
-            
-            // Actualizar visualización del ángulo en SVG
-            const angleRad = angle * Math.PI / 180;
-            const inclineLine = document.getElementById('inclineLine');
-            const cartGroup = document.getElementById('cartGroup');
-            
-            const x1 = 100;
-            const y1 = 500;
-            const x2 = 100 + 600 * Math.cos(angleRad);
-            const y2 = 500 - 600 * Math.sin(angleRad);
-            
-            inclineLine.setAttribute('x2', x2);
-            inclineLine.setAttribute('y2', y2);
-            
-            // Rotar grupo del carro
-            cartGroup.setAttribute('transform', `rotate(${-angle} 175 500)`);
-            
-            updatePhysics();
-        }
+        // MOTOR INTEGRADOR TEMPORAL
+        function updateSimulation() {
+            if (isRunning) {
+                v += a * dt;
+                x -= v * dt; 
 
-        function updateMassCar() {
-            massCar = parseFloat(document.getElementById('massCarSlider').value);
-            document.getElementById('massCarValue').textContent = massCar + 'g';
-            updatePhysics();
-        }
+                // Control del final de carrera físico
+                if (x <= 0.05 || x >= planeLength - 0.15) {
+                    let finalLoggedV = Math.abs(v);
+                    x = (x <= 0.05) ? 0.05 : planeLength - 0.15;
+                    v = 0;
+                    isRunning = false;
 
-        function updateMassHook() {
-            massHook = parseFloat(document.getElementById('massHookSlider').value);
-            document.getElementById('massHookValue').textContent = massHook + 'g';
-            updatePhysics();
-        }
+                    // Guardar de manera persistente al finalizar la trayectoria
+                    saveExperimentToLog(finalLoggedV);
+                }
 
-        function updateFriction() {
-            friction = parseFloat(document.getElementById('frictionSlider').value);
-            document.getElementById('frictionValue').textContent = friction.toFixed(2);
-            updatePhysics();
-        }
-
-        function updatePhysics() {
-            const angleRad = angle * Math.PI / 180;
-            const M = massCar / 1000; // convertir a kg
-            const m = (massHook + addedWeight) / 1000;
-            const mu = friction;
-            
-            // Fuerzas
-            const Fg = M * gravity;
-            const Fpara = Fg * Math.sin(angleRad);
-            const Fperp = Fg * Math.cos(angleRad);
-            const Fr = mu * Fperp;
-            
-            // Aceleración
-            const Fnet = Fpara - Fr;
-            acceleration = Fnet / M;
-            
-            // Mostrar datos
-            document.getElementById('normalForceData').textContent = Fperp.toFixed(2) + ' N';
-            document.getElementById('frictionForceData').textContent = Fr.toFixed(2) + ' N';
-            document.getElementById('accelerationData').textContent = Math.max(0, acceleration).toFixed(2) + ' m/s²';
-        }
-
-        function startSimulation() {
-            if (!isSimulating) {
-                isSimulating = true;
-                simulateMovement();
+                runCalculations();
+                if (isRunning) {
+                    animationId = requestAnimationFrame(updateSimulation);
+                }
             }
         }
 
-        function pauseSimulation() {
-            isSimulating = false;
+        function saveExperimentToLog(finalV) {
+            let modText = document.getElementById(`btn-${currentStudy}`).innerText;
+            document.getElementById('logMod').innerText = modText;
+            document.getElementById('logM1').innerText = `${(globalCalculations.M1 * 1000).toFixed(0)} g`;
+            document.getElementById('logM2').innerText = `${(globalCalculations.M2 * 1000).toFixed(0)} g`;
+            document.getElementById('logX0').innerText = `${initialX.toFixed(2)} m`;
+            document.getElementById('logA').innerText = `${a.toFixed(2)} m/s²`;
+            document.getElementById('logVf').innerText = `${finalV.toFixed(2)} m/s`;
+            document.getElementById('logT').innerText = `${globalCalculations.T.toFixed(2)} N`;
         }
 
-        function resetSimulation() {
-            isSimulating = false;
-            time = 0;
-            position = 0;
-            velocity = 0;
-            addedWeight = 0;
-            
-            document.getElementById('positionData').textContent = '0.00 m';
-            document.getElementById('velocityData').textContent = '0.00 m/s';
-            document.getElementById('cartGroup').setAttribute('transform', `rotate(${-angle} 175 500)`);
-        }
-
-        function simulateMovement() {
-            if (!isSimulating) return;
-            
-            const dt = 0.05; // Paso de tiempo
-            const angleRad = angle * Math.PI / 180;
-            const M = massCar / 1000;
-            const mu = friction;
-            
-            const Fg = M * gravity;
-            const Fpara = Fg * Math.sin(angleRad);
-            const Fperp = Fg * Math.cos(angleRad);
-            const Fr = mu * Fperp;
-            const Fnet = Fpara - Fr;
-            const a = Math.max(0, Fnet / M);
-            
-            velocity += a * dt;
-            position += velocity * dt;
-            time += dt;
-            
-            // Limitar a 3 metros
-            if (position > 3) {
-                position = 3;
-                isSimulating = false;
+        // MOTOR DE RENDERIZADO GRÁFICO (CANVAS)
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if(canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+                canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
             }
+
+            let endX = originX + planeLength * scale * Math.cos(angle);
+            let endY = originY - planeLength * scale * Math.sin(angle);
+
+            // Línea de base inferior
+            ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(originX, originY); ctx.lineTo(endX, originY); ctx.stroke();
             
-            // Actualizar datos
-            document.getElementById('positionData').textContent = position.toFixed(2) + ' m';
-            document.getElementById('velocityData').textContent = velocity.toFixed(2) + ' m/s';
-            document.getElementById('accelerationData').textContent = a.toFixed(2) + ' m/s²';
-            
-            // Mover carro
-            const displacement = (position / 3) * 600;
-            const cartGroup = document.getElementById('cartGroup');
-            cartGroup.setAttribute('transform', `translate(${displacement} 0) rotate(${-angle} 175 500)`);
-            
-            if (isSimulating) {
-                requestAnimationFrame(simulateMovement);
+            // Rampa Inclinada Metálica Principal
+            ctx.strokeStyle = '#34495e'; ctx.lineWidth = 6;
+            ctx.beginPath(); ctx.moveTo(originX, originY); ctx.lineTo(endX, endY); ctx.stroke();
+
+            // Medidor del Ángulo (Transportador)
+            ctx.fillStyle = "rgba(52, 152, 219, 0.15)";
+            ctx.beginPath(); ctx.moveTo(originX, originY); ctx.arc(originX, originY, 50, 0, -angle, true); ctx.lineTo(originX, originY); ctx.fill();
+            ctx.fillStyle = "#2c3e50"; ctx.font = "bold 12px sans-serif";
+            ctx.fillText(`${(angle*180/Math.PI).toFixed(0)}°`, originX + 55, originY - 12);
+
+            // Polea Superior del Extremo Alto de la Rampa
+            ctx.beginPath(); ctx.arc(endX, endY, 12, 0, 2*Math.PI); ctx.fillStyle = '#2c3e50'; ctx.fill(); ctx.stroke();
+
+            // Coordenadas actuales del carro deslizante
+            let cartX = originX + x * scale * Math.cos(angle);
+            let cartY = originY - x * scale * Math.sin(angle);
+
+            // Trazado de Hilo Inextensible Directo de Carro a Polea Fija Extrema
+            if (isThreadAttached) {
+                ctx.strokeStyle = '#27ae60'; ctx.lineWidth = 2;
+                ctx.beginPath();
+                // Origen desde el vástago del coche
+                let rX = cartX + 15 * Math.cos(angle); let rY = cartY - 15 * Math.sin(angle);
+                ctx.moveTo(rX, rY - 10); 
+                
+                // Pasa por el borde superior de la polea fija extrema alta
+                ctx.lineTo(endX, endY - 12);
+                
+                // Cuelga de forma vertical hacia el gancho portapesas libre
+                let hangX = endX + 12;
+                let hangY = endY + 50 + ((planeLength - x) * scale * 0.4);
+                ctx.lineTo(hangX, hangY);
+                ctx.stroke();
+
+                // Gancho Porta-Pesas Colgante Metálico
+                ctx.fillStyle = '#7f8c8d'; ctx.fillRect(hangX - 10, hangY, 20, 3);
+                ctx.beginPath(); ctx.moveTo(hangX, hangY); ctx.lineTo(hangX, hangY - 15); ctx.stroke();
+
+                // Renderizado de bloques de pesas agregados al gancho
+                let currentStackY = hangY - 3;
+                items.forEach(item => {
+                    if (item.place === 'hook') {
+                        ctx.fillStyle = '#95a5a6'; ctx.fillRect(hangX - 12, currentStackY - 6, 24, 6);
+                        ctx.strokeRect(hangX - 12, currentStackY - 6, 24, 6);
+                        currentStackY -= 7;
+                    }
+                });
             }
+
+            // Cuerpo Sólido del Carro Metálico (M₁)
+            ctx.save(); ctx.translate(cartX, cartY); ctx.rotate(-angle);
+            ctx.fillStyle = isDraggingCart ? '#2ecc71' : '#3498db';
+            ctx.fillRect(-25, -18, 50, 14);
+            // Ruedas del Carro
+            ctx.beginPath(); ctx.arc(-14, -2, 5, 0, 2*Math.PI); ctx.arc(14, -2, 5, 0, 2*Math.PI); ctx.fillStyle = '#111'; ctx.fill();
+
+            // Vástago Central Porta-Pesas del Coche
+            ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(0, -36); ctx.stroke();
+
+            // Dibujar las pesas apiladas en el vástago del carro
+            let currentCartY = -18;
+            items.forEach(item => {
+                if (item.place === 'cart') {
+                    ctx.fillStyle = '#bdc3c7'; ctx.fillRect(-15, currentCartY - 6, 30, 6);
+                    ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 1; ctx.strokeRect(-15, currentCartY - 6, 30, 6);
+                    currentCartY -= 7;
+                }
+            });
+            ctx.restore();
         }
 
-        function dragWeight(e, weight) {
-            e.dataTransfer.effectAllowed = 'copy';
-            e.dataTransfer.setData('weight', weight);
-        }
+        // POSICIONAMIENTO MANUAL (DRAG AL COCHE EN FRÍO)
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mX = e.clientX - rect.left; const mY = e.clientY - rect.top;
 
-        function addHilo() {
-            document.getElementById('weightGroup').style.display = 'block';
-            alert('Hilo agregado. Arrastra pesas para colgarlas.');
-        }
-
-        // Inicializar
-        window.addEventListener('load', () => {
-            selectModule(0);
-            updatePhysics();
+            if (!isRunning) {
+                let cartGlobalX = originX + x * scale * Math.cos(angle);
+                let cartGlobalY = originY - x * scale * Math.sin(angle);
+                if (Math.hypot(mX - cartGlobalX, mY - cartGlobalY) < 40) { isDraggingCart = true; }
+            }
         });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDraggingCart) {
+                const rect = canvas.getBoundingClientRect();
+                const mX = e.clientX - rect.left; const mY = e.clientY - rect.top;
+                let dx = mX - originX; let dy = originY - mY;
+                let projectedX = (dx * Math.cos(angle) + dy * Math.sin(angle)) / scale;
+                if (projectedX < 0.10) projectedX = 0.10;
+                if (projectedX > 1.12) projectedX = 1.12;
+                initialX = projectedX; x = initialX;
+                runCalculations();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => { isDraggingCart = false; });
+
+        // INTERRUPTORES DE PANEL DE CONTROL
+        function startSim() {
+            if (!isRunning) {
+                isRunning = true;
+                runCalculations();
+                updateSimulation();
+            }
+        }
+
+        function pauseSim() { isRunning = false; cancelAnimationFrame(animationId); }
+
+        function resetSim() {
+            pauseSim();
+            x = initialX; v = 0;
+            runCalculations();
+        }
+
+        function fullReset() {
+            initialX = defaultTopX; 
+            x = initialX; v = 0;
+            document.getElementById('logMod').innerText = '-';
+            document.getElementById('logM1').innerText = '-';
+            document.getElementById('logM2').innerText = '-';
+            document.getElementById('logX0').innerText = '-';
+            document.getElementById('logA').innerText = '-';
+            document.getElementById('logVf').innerText = '-';
+            document.getElementById('logT').innerText = '-';
+            initAccessories();
+            setStudy(currentStudy);
+        }
+
+        window.onload = function() {
+            canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
+            initAccessories();
+            setupDOMDragAndDrop();
+            setStudy('mruv');
+        };
     </script>
 </body>
 </html>
