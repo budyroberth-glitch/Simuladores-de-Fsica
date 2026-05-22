@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Sistema de Poleas - Laboratorio de Física Avanzado</title>
+    <style>
+        :root {
+            --bg-main: #f4f7fa;
+            --panel-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --accent-blue: #0284c7;
+            --border-color: #cbd5e1;
+            --header-bg: #0f172a;
+            --green-success: #10b981;
+            --red-danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            overflow-x: hidden;
+            overflow-y: auto;
+            font-size: 13px;
+        }
+
+        header {
+            background: var(--header-bg);
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 50px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header-title { font-weight: 600; font-size: 16px; letter-spacing: 0.5px; }
+
+        .app-main-section {
+            display: flex;
+            height: calc(100vh - 50px);
+            min-height: 600px;
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .left-sidebar {
+            width: 320px;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .sidebar-title { 
+            background: #f1f5f9; 
+            padding: 12px 16px; 
+            font-weight: 700; 
+            font-size: 12px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .study-selector-list { list-style: none; padding: 0; overflow-y: auto; flex: 1; }
+        .study-item {
+            padding: 16px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s;
+        }
+        .study-item:hover { background: #f8fafc; }
+        .study-item.active { background: #f0f9ff; border-left: 5px solid var(--accent-blue); }
+        .study-name { font-weight: bold; font-size: 13px; color: #0f172a; margin-bottom: 4px;}
+        .study-desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.3; }
+
+        .methodology-box {
+            padding: 16px; background: #f8fafc; border-top: 1px solid var(--border-color); font-size: 12px;
+        }
+        .formula-display {
+            background: #1e293b; color: #f8fafc; padding: 10px; border-radius: 6px;
+            font-family: 'Courier New', Courier, monospace; font-weight: bold; margin: 10px 0; text-align: center; font-size: 14px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .center-stage {
+            flex: 1;
+            background: #ffffff;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-right: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        #mainCanvas { width: 100%; height: 100%; display: block; }
+
+        .dcl-window {
+            position: absolute;
+            top: 20px; right: 20px;
+            width: 220px; height: 180px;
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+        }
+        .dcl-header { background: #f1f5f9; padding: 6px 12px; font-weight: bold; border-bottom: 1px solid var(--border-color); font-size: 11.5px; }
+
+        .right-sidebar {
+            width: 360px;
+            background: var(--panel-bg);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        .sidebar-section { padding: 16px; border-bottom: 1px solid #f1f5f9; }
+        
+        .control-row { margin-bottom: 12px; }
+        .control-row label { display: block; font-size: 12px; margin-bottom: 5px; color: #334155; font-weight: 600; }
+        .slider-container { display: flex; align-items: center; gap: 12px; }
+        .slider-container input[type="range"] { flex: 1; cursor: pointer; height: 6px; accent-color: var(--accent-blue); }
+        .slider-val { width: 65px; text-align: right; font-family: monospace; font-weight: bold; color: #0f172a; font-size: 12.5px; }
+
+        .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px; margin-top: 6px; }
+        .status-indicator { padding: 6px 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; display: flex; justify-content: space-between; }
+        .status-ok { color: #059669; font-weight: bold; }
+        .status-ko { color: #dc2626; font-weight: bold; }
+
+        .sim-actions { padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #f8fafc; border-top: 1px solid var(--border-color); }
+        .btn { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; font-size: 13px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn:hover { opacity: 0.95; transform: translateY(-1px); }
+        .btn-play { background: var(--green-success); color: white; }
+        .btn-reset { background: #64748b; color: white; }
+
+        .table-container {
+            width: 100%; background: #ffffff;
+            padding: 24px 40px; flex-shrink: 0;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
+        }
+        .table-header-tool { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .table-title { font-weight: 700; color: #0f172a; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .btn-clear-table { background: var(--red-danger); color: white; padding: 8px 16px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; font-size: 12px; transition: background 0.2s; }
+        .btn-clear-table:hover { background: #b91c1c; }
+        .data-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 13px; margin-bottom: 20px;}
+        .data-table th { background: #1e293b; color: white; padding: 12px; font-weight: 600; }
+        .data-table td { border: 1px solid var(--border-color); padding: 10px; vertical-align: middle; background: #fff; }
+        .input-note { width: 98%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12.5px; }
+        .input-note:focus { outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 2px rgba(2,132,199,0.2); }
+
+        footer { background: #f8fafc; border-top: 1px solid var(--border-color); padding: 10px 40px; font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; flex-shrink: 0; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">💻 Virtual Physics Lab — Simulador de Poleas Profesional</div>
+        <div style="font-size: 12px; color: #94a3b8;" id="liveDate">22 de Mayo, 2026</div>
+    </header>
+
+    <div class="app-main-section">
+        
+        <div class="left-sidebar">
+            <div class="sidebar-title">Módulos de Estudio de Laboratorio</div>
+            <ul class="study-selector-list" id="studyList">
+                <li class="study-item active" data-study="ventaja-mecanica">
+                    <div class="study-name">1. Ventaja Mecánica</div>
+                    <div class="study-desc">Análisis de cómo los sistemas de poleas multiplican la fuerza aplicada. Relación entrada-salida.</div>
+                </li>
+                <li class="study-item" data-study="velocidad-angular">
+                    <div class="study-name">2. Velocidad Angular</div>
+                    <div class="study-desc">Estudio de la transmisión de movimiento rotacional entre poleas de diferentes diámetros.</div>
+                </li>
+                <li class="study-item" data-study="transmision-energia">
+                    <div class="study-name">3. Transmisión de Energía</div>
+                    <div class="study-desc">Evaluación de cómo se transmite la potencia mecánica a través del sistema de poleas.</div>
+                </li>
+                <li class="study-item" data-study="trabajo-potencia">
+                    <div class="study-name">4. Trabajo y Potencia</div>
+                    <div class="study-desc">Cálculo del trabajo realizado y la potencia desarrollada en función del tiempo.</div>
+                </li>
+                <li class="study-item" data-study="rendimiento">
+                    <div class="study-name">5. Rendimiento y Fricción</div>
+                    <div class="study-desc">Análisis del efecto de la fricción en las poleas y el rendimiento total del sistema.</div>
+                </li>
+            </ul>
+
+            <div class="methodology-box">
+                <span style="font-weight: bold; color: var(--accent-blue);" id="methodologyTitle">Guía: Ventaja Mecánica</span>
+                <div class="formula-display" id="methodologyFormula">VM = F_salida / F_entrada = n (número de poleas moviles)</div>
+                <div style="color: #334155; line-height: 1.3; font-size: 11px;" id="methodologySteps">
+                    <b>Acciones requeridas:</b><br>
+                    1. Seleccione la configuración de poleas (fijas o móviles).<br>
+                    2. Ajuste la carga y la fuerza aplicada.<br>
+                    3. Presione "Iniciar" para ver la transmisión de fuerzas.
+                </div>
+            </div>
+        </div>
+
+        <div class="center-stage" id="canvasContainer">
+            <div class="dcl-window">
+                <div class="dcl-header">Análisis de Fuerzas (DCL)</div>
+                <canvas id="dclCanvas" width="220" height="150"></canvas>
+            </div>
+            <canvas id="mainCanvas"></canvas>
+        </div>
+
+        <div class="right-sidebar">
+            <div class="sidebar-title">Configuración del Sistema de Poleas</div>
+            <div class="sidebar-section">
+                <div class="control-row">
+                    <label>Tipo de Sistema</label>
+                    <select id="pulleyType" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); font-size: 12px;">
+                        <option value="simple-fija">Polea Fija Simple</option>
+                        <option value="simple-movil">Polea Móvil Simple</option>
+                        <option value="compuesta-2">Sistema Compuesto (2 poleas)</option>
+                        <option value="compuesta-3">Sistema Compuesto (3 poleas)</option>
+                        <option value="exponencial">Sistema Exponencial (Cadena)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sidebar-title">Parámetros del Sistema</div>
+            <div class="sidebar-section">
+                <div class="control-row">
+                    <label>Diámetro Polea Principal (cm)</label>
+                    <div class="slider-container">
+                        <input type="range" id="slDiamMain" min="5" max="50" step="1" value="20">
+                        <span class="slider-val" id="valDiamMain">20 cm</span>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label>Diámetro Polea Secundaria (cm)</label>
+                    <div class="slider-container">
+                        <input type="range" id="slDiamSecond" min="5" max="50" step="1" value="10">
+                        <span class="slider-val" id="valDiamSecond">10 cm</span>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label>Carga Aplicada ($M$)</label>
+                    <div class="slider-container">
+                        <input type="range" id="slLoadMass" min="1" max="100" step="1" value="20">
+                        <span class="slider-val" id="valLoadMass">20 kg</span>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label>Fuerza Aplicada (N)</label>
+                    <div class="slider-container">
+                        <input type="range" id="slForce" min="0" max="500" step="10" value="50">
+                        <span class="slider-val" id="valForce">50 N</span>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label>Coeficiente de Fricción ($\mu$)</label>
+                    <div class="slider-container">
+                        <input type="range" id="slFriction" min="0" max="0.5" step="0.01" value="0.05">
+                        <span class="slider-val" id="valFriction">0.05</span>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label>Velocidad Angular RPM</label>
+                    <div class="slider-container">
+                        <input type="range" id="slRPM" min="0" max="200" step="5" value="60">
+                        <span class="slider-val" id="valRPM">60 RPM</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-title">Resultado del Análisis</div>
+            <div class="sidebar-section" style="background: #f8fafc; font-size:12px; flex: 1;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span>Ventaja Mecánica (VM):</span><span id="lblVM" style="font-weight:bold;">1.00</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span>Fuerza Resultante (N):</span><span id="lblForceResult" style="font-weight:bold;">50.0 N</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span>Carga Levantada (N):</span><span id="lblLoadForce" style="font-weight:bold;">196.2 N</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span>Potencia (W):</span><span id="lblPower" style="font-weight:bold;">0.0 W</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span>Rendimiento (%):</span><span id="lblRendimiento" style="font-weight:bold;">0%</span>
+                </div>
+            </div>
+
+            <div class="sim-actions">
+                <button class="btn btn-play" id="btnPlay" onclick="toggleSimulation()">Iniciar</button>
+                <button class="btn btn-reset" onclick="resetSimulation()">Limpiar Escenario</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-header-tool">
+            <span class="table-title">📊 Registro de Ensayos y Resultados (Historial Completo)</span>
+            <button class="btn-clear-table" onclick="clearTableData()">🗑️ Limpiar Anotaciones</button>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr id="tableHeadRow">
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <footer>
+        <span>Sistema de Poleas Virtual | Simulación Física Avanzada</span>
+        <span>Módulo de Simulación Física</span>
+    </footer>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const dclCanvas = document.getElementById('dclCanvas');
+        const dclCtx = dclCanvas.getContext('2d');
+
+        let currentStudy = "ventaja-mecanica";
+        let pulleyType = "simple-fija";
+        let diamMain = 0.20;
+        let diamSecond = 0.10;
+        let loadMass = 20;
+        let appliedForce = 50;
+        let mu = 0.05;
+        let rpm = 60;
+
+        let isRunning = false;
+        let dt = 0.01;
+        let recordsCount = 0;
+        let simulationTime = 0;
+        let heightLifted = 0;
+        let velocityLift = 0;
+
+        const studyGuides = {
+            'ventaja-mecanica': {
+                title: "Guía: Ventaja Mecánica",
+                formula: "VM = F_salida / F_entrada",
+                steps: "Las poleas móviles multiplican la fuerza. Observa cómo varía la ventaja mecánica según la configuración."
+            },
+            'velocidad-angular': {
+                title: "Guía: Velocidad Angular",
+                formula: "ω₁ · r₁ = ω₂ · r₂ (Conservación de velocidad tangencial)",
+                steps: "Estudia cómo cambia la velocidad angular al cambiar el diámetro de las poleas. La velocidad es inversamente proporcional al diámetro."
+            },
+            'transmision-energia': {
+                title: "Guía: Transmisión de Energía",
+                formula: "P_entrada = P_salida + P_fricción",
+                steps: "Verifica cómo se transmite la energía mecánica y cómo la fricción disipa parte de ella."
+            },
+            'trabajo-potencia': {
+                title: "Guía: Trabajo y Potencia",
+                formula: "W = F·d, P = W/t = F·v",
+                steps: "Calcula el trabajo realizado al levantar la carga y la potencia desarrollada por el sistema."
+            },
+            'rendimiento': {
+                title: "Guía: Rendimiento del Sistema",
+                formula: "η = (P_útil / P_total) × 100%",
+                steps: "Analiza cómo la fricción reduce el rendimiento del sistema de poleas."
+            }
+        };
+
+        document.getElementById('studyList').addEventListener('click', (e) => {
+            let item = e.target.closest('.study-item');
+            if (!item) return;
+            document.querySelectorAll('.study-item').forEach(li => li.classList.remove('active'));
+            item.classList.add('active');
+            currentStudy = item.getAttribute('data-study');
+            
+            document.getElementById('methodologyTitle').innerText = studyGuides[currentStudy].title;
+            document.getElementById('methodologyFormula').innerText = studyGuides[currentStudy].formula;
+            document.getElementById('methodologySteps').innerHTML = "<b>Acciones requeridas:</b><br>" + studyGuides[currentStudy].steps;
+            
+            configureTableHeaders();
+            resetSimulation();
+        });
+
+        document.getElementById('pulleyType').addEventListener('change', (e) => { pulleyType = e.target.value; recalculatePhysics(); });
+        document.getElementById('slDiamMain').addEventListener('input', (e) => { diamMain = parseFloat(e.target.value) / 100; document.getElementById('valDiamMain').innerText = e.target.value + " cm"; recalculatePhysics(); });
+        document.getElementById('slDiamSecond').addEventListener('input', (e) => { diamSecond = parseFloat(e.target.value) / 100; document.getElementById('valDiamSecond').innerText = e.target.value + " cm"; recalculatePhysics(); });
+        document.getElementById('slLoadMass').addEventListener('input', (e) => { loadMass = parseFloat(e.target.value); document.getElementById('valLoadMass').innerText = e.target.value + " kg"; recalculatePhysics(); });
+        document.getElementById('slForce').addEventListener('input', (e) => { appliedForce = parseFloat(e.target.value); document.getElementById('valForce').innerText = e.target.value + " N"; recalculatePhysics(); });
+        document.getElementById('slFriction').addEventListener('input', (e) => { mu = parseFloat(e.target.value); document.getElementById('valFriction').innerText = e.target.value.toFixed(2); recalculatePhysics(); });
+        document.getElementById('slRPM').addEventListener('input', (e) => { rpm = parseFloat(e.target.value); document.getElementById('valRPM').innerText = e.target.value + " RPM"; recalculatePhysics(); });
+
+        function calculateVentajaMecanica() {
+            let vm = 1;
+            switch(pulleyType) {
+                case 'simple-fija':
+                    vm = 1;
+                    break;
+                case 'simple-movil':
+                    vm = 2;
+                    break;
+                case 'compuesta-2':
+                    vm = diamMain / diamSecond;
+                    break;
+                case 'compuesta-3':
+                    vm = (diamMain / diamSecond) * 1.5;
+                    break;
+                case 'exponencial':
+                    vm = Math.pow(2, 3);
+                    break;
+            }
+            return vm;
+        }
+
+        function recalculatePhysics() {
+            let vm = calculateVentajaMecanica();
+            let loadForce = loadMass * 9.81;
+            let frictionForce = mu * loadForce;
+            let resultantForce = appliedForce * vm - frictionForce;
+            let omega = rpm * 2 * Math.PI / 60;
+            let velocityLineal = omega * (diamMain / 2);
+            let power = appliedForce * velocityLineal;
+            let powerNeeded = loadForce * velocityLineal;
+            let rendimiento = powerNeeded > 0 ? (power / (power + frictionForce * velocityLineal)) * 100 : 0;
+
+            document.getElementById('lblVM').innerText = vm.toFixed(2);
+            document.getElementById('lblForceResult').innerText = Math.max(0, resultantForce).toFixed(1) + " N";
+            document.getElementById('lblLoadForce').innerText = loadForce.toFixed(1) + " N";
+            document.getElementById('lblPower').innerText = power.toFixed(1) + " W";
+            document.getElementById('lblRendimiento').innerText = Math.min(100, Math.max(0, rendimiento)).toFixed(1) + "%";
+
+            if (!isRunning) drawScene();
+            drawDCL(appliedForce, resultantForce, loadForce);
+
+            return { vm, loadForce, frictionForce, resultantForce, power, rendimiento };
+        }
+
+        function toggleSimulation() {
+            if (!isRunning) {
+                isRunning = true;
+                simulationTime = 0;
+                heightLifted = 0;
+                velocityLift = 0;
+                document.getElementById('btnPlay').innerText = "Pausar";
+                document.getElementById('btnPlay').style.background = "#eab308";
+                runLoop();
+            } else {
+                isRunning = false;
+                document.getElementById('btnPlay').innerText = "Iniciar";
+                document.getElementById('btnPlay').style.background = "var(--green-success)";
+            }
+        }
+
+        function resetSimulation() {
+            isRunning = false;
+            simulationTime = 0;
+            heightLifted = 0;
+            velocityLift = 0;
+            document.getElementById('btnPlay').innerText = "Iniciar";
+            document.getElementById('btnPlay').style.background = "var(--green-success)";
+            recalculatePhysics();
+        }
+
+        function runLoop() {
+            if (!isRunning) return;
+
+            let physData = recalculatePhysics();
+            
+            simulationTime += dt;
+            let omega = rpm * 2 * Math.PI / 60;
+            velocityLift = omega * (diamMain / 2);
+            heightLifted += velocityLift * dt;
+
+            if (simulationTime >= 5) {
+                isRunning = false;
+                document.getElementById('btnPlay').innerText = "Iniciar";
+                document.getElementById('btnPlay').style.background = "var(--green-success)";
+                saveScientificLog(physData);
+            }
+
+            drawScene();
+            requestAnimationFrame(runLoop);
+        }
+
+        function configureTableHeaders() {
+            let headerRow = document.getElementById('tableHeadRow');
+            let baseCols = `<th>ID</th><th>Módulo</th>`;
+            
+            switch (currentStudy) {
+                case 'ventaja-mecanica':
+                    headerRow.innerHTML = baseCols + `<th>VM Calculada</th><th>Fuerza Entrada (N)</th><th>Fuerza Salida (N)</th><th>Anotaciones</th>`;
+                    break;
+                case 'velocidad-angular':
+                    headerRow.innerHTML = baseCols + `<th>RPM</th><th>ω (rad/s)</th><th>Velocidad Lineal (m/s)</th><th>Anotaciones</th>`;
+                    break;
+                case 'transmision-energia':
+                    headerRow.innerHTML = baseCols + `<th>Potencia Entrada (W)</th><th>Potencia Salida (W)</th><th>Pérdida (W)</th><th>Anotaciones</th>`;
+                    break;
+                case 'trabajo-potencia':
+                    headerRow.innerHTML = baseCols + `<th>Tiempo (s)</th><th>Trabajo (J)</th><th>Potencia (W)</th><th>Anotaciones</th>`;
+                    break;
+                case 'rendimiento':
+                    headerRow.innerHTML = baseCols + `<th>Rendimiento (%)</th><th>Fricción (N)</th><th>Altura (m)</th><th>Anotaciones</th>`;
+                    break;
+            }
+        }
+
+        function saveScientificLog(phys) {
+            recordsCount++;
+            let body = document.getElementById('tableBody');
+            let row = document.createElement('tr');
+            
+            let omega = rpm * 2 * Math.PI / 60;
+            let velocityLineal = omega * (diamMain / 2);
+            let trabajo = phys.resultantForce * heightLifted;
+
+            let rowContent = `<td>#${recordsCount}</td><td><b>${currentStudy.toUpperCase()}</b></td>`;
+
+            switch (currentStudy) {
+                case 'ventaja-mecanica':
+                    rowContent += `<td>${phys.vm.toFixed(2)}</td><td>${appliedForce.toFixed(1)}</td><td>${(appliedForce * phys.vm).toFixed(1)}</td>`;
+                    break;
+                case 'velocidad-angular':
+                    rowContent += `<td>${rpm}</td><td>${omega.toFixed(2)}</td><td>${velocityLineal.toFixed(2)}</td>`;
+                    break;
+                case 'transmision-energia':
+                    rowContent += `<td>${phys.power.toFixed(1)}</td><td>${(phys.resultantForce * velocityLineal).toFixed(1)}</td><td>${(phys.frictionForce * velocityLineal).toFixed(1)}</td>`;
+                    break;
+                case 'trabajo-potencia':
+                    rowContent += `<td>${simulationTime.toFixed(2)}</td><td>${trabajo.toFixed(1)}</td><td>${phys.power.toFixed(1)}</td>`;
+                    break;
+                case 'rendimiento':
+                    rowContent += `<td>${phys.rendimiento.toFixed(1)}</td><td>${phys.frictionForce.toFixed(2)}</td><td>${heightLifted.toFixed(3)}</td>`;
+                    break;
+            }
+
+            rowContent += `<td><input type="text" class="input-note" placeholder="Observaciones..."></td>`;
+            row.innerHTML = rowContent;
+            body.appendChild(row);
+
+            setTimeout(() => {
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }, 300);
+        }
+
+        function clearTableData() {
+            recordsCount = 0;
+            document.getElementById('tableBody').innerHTML = "";
+        }
+
+        function drawDCL(forceIn, forceOut, loadForce) {
+            dclCtx.clearRect(0, 0, 220, 150);
+            let cx = 110, cy = 75;
+            
+            dclCtx.fillStyle = "rgba(2, 132, 199, 0.2)";
+            dclCtx.fillRect(cx - 25, cy - 15, 50, 30);
+            dclCtx.strokeStyle = "#0284c7";
+            dclCtx.lineWidth = 2;
+            dclCtx.strokeRect(cx - 25, cy - 15, 50, 30);
+
+            // Fuerzas
+            drawVector(dclCtx, cx - 25, cy, cx - 60, cy, "#ef4444", "F_in");
+            drawVector(dclCtx, cx + 25, cy, cx + 60, cy, "#10b981", "F_out");
+            drawVector(dclCtx, cx, cy + 15, cx, cy + 50, "#334155", "W");
+        }
+
+        function drawVector(ctx, x1, y1, x2, y2, color, label) {
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            
+            let ang = Math.atan2(y2 - y1, x2 - x1);
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - 6 * Math.cos(ang - Math.PI/6), y2 - 6 * Math.sin(ang - Math.PI/6));
+            ctx.lineTo(x2 - 6 * Math.cos(ang + Math.PI/6), y2 - 6 * Math.sin(ang + Math.PI/6));
+            ctx.fill();
+            
+            ctx.font = "bold 10px sans-serif";
+            ctx.fillText(label, x2 + 8, y2 + 8);
+        }
+
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+            }
+
+            let cx = canvas.width / 2;
+            let cy = canvas.height / 3;
+            let scale = 100;
+            let radiusMain = (diamMain / 2) * scale;
+            let radiusSecond = (diamSecond / 2) * scale;
+
+            // Polea principal
+            ctx.beginPath();
+            ctx.arc(cx, cy, radiusMain, 0, 2 * Math.PI);
+            ctx.fillStyle = "#334155";
+            ctx.fill();
+            ctx.strokeStyle = "#000";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Centro de polea
+            ctx.fillStyle = "#fff";
+            ctx.beginPath();
+            ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Polea secundaria (si es compuesta)
+            if (pulleyType.startsWith('compuesta') || pulleyType === 'exponencial') {
+                ctx.beginPath();
+                ctx.arc(cx + radiusMain + radiusSecond + 20, cy, radiusSecond, 0, 2 * Math.PI);
+                ctx.fillStyle = "#475569";
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = "#fff";
+                ctx.beginPath();
+                ctx.arc(cx + radiusMain + radiusSecond + 20, cy, 5, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+
+            // Carga
+            let loadY = cy + radiusMain + 50;
+            ctx.fillStyle = "#10b981";
+            ctx.fillRect(cx - 15, loadY, 30, 30);
+            ctx.strokeStyle = "#000";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(cx - 15, loadY, 30, 30);
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 11px sans-serif";
+            ctx.fillText(loadMass + "kg", cx - 12, loadY + 20);
+
+            // Altura levantada
+            let liftAmount = Math.min(heightLifted * scale, radiusMain + 30);
+            ctx.fillStyle = "#f0f9ff";
+            ctx.fillRect(cx - 25, loadY - liftAmount, 50, liftAmount);
+            ctx.strokeStyle = "#0284c7";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(cx - 25, loadY - liftAmount, 50, liftAmount);
+
+            // Datos en tiempo real
+            ctx.fillStyle = "#0f172a";
+            ctx.font = "bold 13px monospace";
+            ctx.fillText(`VM: ${calculateVentajaMecanica().toFixed(2)}`, 20, 30);
+            ctx.fillText(`Carga: ${loadMass}kg | Fuerza: ${appliedForce}N`, 20, 55);
+            ctx.fillText(`Altura: ${heightLifted.toFixed(2)}m | Tiempo: ${simulationTime.toFixed(2)}s`, 20, 80);
+            ctx.fillText(`Potencia: ${(appliedForce * rpm * 2 * Math.PI / 60 * diamMain / 2).toFixed(1)}W`, 20, 105);
+        }
+
+        window.addEventListener('resize', () => recalculatePhysics());
+        
+        window.onload = () => {
+            configureTableHeaders();
+            recalculatePhysics();
+        };
+    </script>
+</body>
+</html>
