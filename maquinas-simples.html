@@ -79,6 +79,7 @@
         }
 
         .machine-card:nth-child(1) { animation-delay: 0.1s; }
+        .machine-card:nth-child(2) { animation-delay: 0.2s; }
 
         @keyframes slideUp {
             from {
@@ -105,6 +106,10 @@
 
         .card-header.header-1 {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .card-header.header-2 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         }
 
         .card-icon {
@@ -253,7 +258,7 @@
                 </div>
                 <div class="card-body">
                     <div class="description">
-                        Estudia el movimiento de objetos en planos inclinados, descomposición de fuerzas y el efecto de la fricción. Experimenta con ángulos, masas y coeficientes de fricción interactivamente.
+                        Estudia el movimiento de objetos en planos inclinados, descomposición de fuerzas y el efecto de la fricción. Experimenta con ángulos, masas y coeficientes de fricción [...]
                     </div>
                     <ul class="features-list">
                         <li>Análisis de fuerzas</li>
@@ -268,9 +273,34 @@
                     <a href="simulador1.html" class="btn">Abrir Simulador</a>
                 </div>
             </div>
+
+            <!-- 2. Sistema de Poleas -->
+            <div class="machine-card">
+                <div class="card-header header-2">
+                    <div class="card-icon">🔄</div>
+                    <div class="card-title">Sistema de Poleas</div>
+                    <div class="card-subtitle">Transmisión de Fuerzas</div>
+                </div>
+                <div class="card-body">
+                    <div class="description">
+                        Analiza sistemas de poleas fijas y móviles para comprender cómo se multiplica la fuerza aplicada. Estudia ventaja mecánica, transmisión de energía y rendimiento [...]
+                    </div>
+                    <ul class="features-list">
+                        <li>Ventaja mecánica de poleas</li>
+                        <li>Velocidad angular y lineal</li>
+                        <li>Transmisión de energía</li>
+                        <li>Trabajo y potencia</li>
+                        <li>Rendimiento y fricción</li>
+                        <li>Simulación en tiempo real</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <a href="simulador-poleas.html" class="btn">Abrir Simulador</a>
+                </div>
+            </div>
         </div>
 
-        <!-- Información Educativa -->
+        <!-- Información Educativa - Plano Inclinado -->
         <div class="info-section">
             <h2>📚 ¿Qué es el Plano Inclinado?</h2>
             <p>
@@ -290,6 +320,30 @@
                 <strong>Concepto Clave - Fórmula de Aceleración:</strong><br>
                 a = g(sin(θ) - μ·cos(θ))<br><br>
                 Donde: θ es el ángulo del plano, μ es el coeficiente de fricción, y g es la aceleración gravitacional.
+            </p>
+        </div>
+
+        <!-- Información Educativa - Sistema de Poleas -->
+        <div class="info-section">
+            <h2>📚 ¿Qué es un Sistema de Poleas?</h2>
+            <p>
+                Un <strong>sistema de poleas</strong> es un conjunto de poleas (ruedas con una ranura en el borde por la que corre una cuerda) 
+                que permite cambiar la dirección o reducir la magnitud de la fuerza necesaria para realizar un trabajo.
+            </p>
+            <p>
+                <strong>Tipos de Poleas:</strong>
+                <br>• <strong>Polea Fija:</strong> No multiplica la fuerza, solo cambia su dirección.
+                <br>• <strong>Polea Móvil:</strong> Multiplica la fuerza por dos, reduciendo el esfuerzo necesario.
+                <br>• <strong>Poleas Compuestas:</strong> Combinación de poleas fijas y móviles que ofrecen ventajas mecánicas mayores.
+            </p>
+            <p>
+                <strong>Ventaja Mecánica:</strong> La ventaja mecánica en un sistema de poleas está determinada por el número de segmentos 
+                de cuerda que sostienen la carga. Una mayor ventaja mecánica significa menos esfuerzo, pero mayor distancia recorrida.
+            </p>
+            <p style="margin-top: 15px;">
+                <strong>Concepto Clave - Ventaja Mecánica:</strong><br>
+                VM = n (número de segmentos de cuerda que sostienen la carga)<br><br>
+                La velocidad es inversamente proporcional: v₁·r₁ = v₂·r₂
             </p>
         </div>
 
