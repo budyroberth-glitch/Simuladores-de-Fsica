@@ -531,11 +531,12 @@
     </div>
 
     <script>
+        // ==================== VARIABLES GLOBALES ====================
         let scene, camera, renderer, incline, cart, pulley, weightObject;
         let angle = 25;
         let friction = 0.15;
-        let massCar = 200;
-        let massHook = 0;
+        let massCar = 200; // gramos
+        let massHook = 0; // gramos
         let gravity = 9.81;
         
         let isSimulating = false;
@@ -546,6 +547,7 @@
         let acceleration = 0;
         let currentModule = 0;
 
+        // Fórmulas y descripciones
         const modules = [
             {
                 title: "Cinemática (MRUV):",
@@ -574,6 +576,7 @@
             }
         ];
 
+        // ==================== INICIALIZACIÓN THREE.JS ====================
         function init() {
             const canvas = document.getElementById('canvas');
             scene = new THREE.Scene();
@@ -594,6 +597,7 @@
             renderer.setSize(canvas.clientWidth, canvas.clientHeight);
             renderer.shadowMap.enabled = true;
 
+            // Ground
             const groundGeometry = new THREE.BoxGeometry(6, 0.2, 4);
             const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x8b7355 });
             const ground = new THREE.Mesh(groundGeometry, groundMaterial);
@@ -606,13 +610,16 @@
             createCart();
             createPulley();
 
+            // Event listeners
             window.addEventListener('resize', onWindowResize);
+
             updatePhysics();
             animate();
         }
 
         function createIncline() {
             if (incline) scene.remove(incline);
+
             const angleRad = THREE.MathUtils.degToRad(angle);
             const length = 4;
             const width = 2;
@@ -629,6 +636,7 @@
 
         function createCart() {
             if (cart) scene.remove(cart);
+
             const group = new THREE.Group();
 
             const bodyGeometry = new THREE.BoxGeometry(0.6, 0.3, 0.4);
@@ -658,6 +666,7 @@
 
         function createPulley() {
             if (pulley) scene.remove(pulley);
+
             const group = new THREE.Group();
             const pulleyGeometry = new THREE.TorusGeometry(0.15, 0.05, 16, 100);
             const pulleyMaterial = new THREE.MeshStandardMaterial({ color: 0x555555 });
@@ -675,6 +684,7 @@
 
             if (hiloActivo && massHook > 0) {
                 if (weightObject) scene.remove(weightObject);
+                
                 const weightGeometry = new THREE.SphereGeometry(0.15, 16, 16);
                 const weightMaterial = new THREE.MeshStandardMaterial({ color: 0xf39c12 });
                 const weight = new THREE.Mesh(weightGeometry, weightMaterial);
@@ -685,11 +695,13 @@
             }
         }
 
+        // ==================== FUNCIONES DE ACTUALIZACIÓN ====================
         function selectModule(idx) {
             currentModule = idx;
             document.querySelectorAll('.module-item').forEach((el, i) => {
                 el.classList.toggle('active', i === idx);
             });
+            
             const module = modules[idx];
             document.getElementById('formulaTitle').textContent = module.title;
             document.getElementById('formulaContent').innerHTML = module.formula;
@@ -720,7 +732,9 @@
         function updateMassHook() {
             massHook = parseFloat(document.getElementById('massHookSlider').value);
             document.getElementById('massHookValue').textContent = massHook + 'g';
-            if (hiloActivo) createPulley();
+            if (hiloActivo) {
+                createPulley();
+            }
             updatePhysics();
         }
 
@@ -732,24 +746,30 @@
 
         function updatePhysics() {
             const angleRad = angle * Math.PI / 180;
-            const M = massCar / 1000;
-            const m = massHook / 1000;
+            const M = massCar / 1000; // kg
+            const m = massHook / 1000; // kg
             const mu = friction;
 
-            let a, T, Fr, Fnet;
+            let a, T, Fr, Fnet, Fparallel, Fnormal;
 
             if (hiloActivo && massHook > 0) {
-                const Fparallel = M * gravity * Math.sin(angleRad);
-                const Fnormal = M * gravity * Math.cos(angleRad);
+                // Sistema acoplado (polea-pesa)
+                Fparallel = M * gravity * Math.sin(angleRad);
+                Fnormal = M * gravity * Math.cos(angleRad);
                 Fr = mu * Fnormal;
+                
+                // Aceleración del sistema acoplado
                 const numerator = m * gravity - Fparallel - Fr;
                 const denominator = M + m;
                 a = numerator / denominator;
+                
+                // Tensión
                 T = m * (gravity - a);
                 Fnet = m * a;
             } else {
-                const Fparallel = M * gravity * Math.sin(angleRad);
-                const Fnormal = M * gravity * Math.cos(angleRad);
+                // Solo carro, sin hilo
+                Fparallel = M * gravity * Math.sin(angleRad);
+                Fnormal = M * gravity * Math.cos(angleRad);
                 Fr = mu * Fnormal;
                 Fnet = Fparallel - Fr;
                 a = Fnet / M;
@@ -757,6 +777,8 @@
             }
 
             acceleration = Math.max(0, a);
+
+            // Actualizar datos
             document.getElementById('accelerationData').textContent = acceleration.toFixed(2) + ' m/s²';
             document.getElementById('frictionForceData').textContent = Fr.toFixed(2) + ' N';
             document.getElementById('netForceData').textContent = Math.abs(Fnet).toFixed(2) + ' N';
@@ -797,7 +819,9 @@
         }
 
         function startSimulation() {
-            if (!isSimulating) isSimulating = true;
+            if (!isSimulating) {
+                isSimulating = true;
+            }
         }
 
         function pauseSimulation() {
@@ -809,8 +833,10 @@
             time = 0;
             position = 0;
             velocity = 0;
+            
             document.getElementById('positionData').textContent = '0.00 m';
             document.getElementById('velocityData').textContent = '0.00 m/s';
+            
             createCart();
             createPulley();
             updatePhysics();
@@ -818,20 +844,25 @@
 
         function animate() {
             requestAnimationFrame(animate);
+
             if (isSimulating) {
                 const dt = 0.016;
+                
                 if (position < 2) {
                     velocity += acceleration * dt;
                     position += velocity * dt;
                     time += dt;
+                    
                     createCart();
                     createPulley();
+                    
                     document.getElementById('positionData').textContent = position.toFixed(2) + ' m';
                     document.getElementById('velocityData').textContent = velocity.toFixed(2) + ' m/s';
                 } else {
                     isSimulating = false;
                 }
             }
+
             renderer.render(scene, camera);
         }
 
@@ -839,6 +870,7 @@
             const canvas = document.getElementById('canvas');
             const width = canvas.clientWidth;
             const height = canvas.clientHeight;
+            
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
             renderer.setSize(width, height);
