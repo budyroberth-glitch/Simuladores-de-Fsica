@@ -30,6 +30,7 @@ header {
 header h1 {
     font-size: 2.5em;
     margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 header p {
@@ -96,8 +97,25 @@ main {
 
 main h2 {
     color: #333;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     font-size: 2em;
+}
+
+.simulator-header {
+    margin-bottom: 30px;
+}
+
+.simulator-header h2 {
+    color: #667eea;
+    font-size: 2.2em;
+    margin-bottom: 10px;
+}
+
+.subtitle-small {
+    color: #666;
+    font-size: 1em;
+    font-weight: normal;
+    margin: 0;
 }
 
 main p {
@@ -146,6 +164,7 @@ canvas {
     border-radius: 5px;
     font-size: 1em;
     transition: border-color 0.3s;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .control-group input:focus,
@@ -158,7 +177,7 @@ canvas {
 .value-display {
     background: #667eea;
     color: white;
-    padding: 5px 10px;
+    padding: 8px 12px;
     border-radius: 5px;
     font-weight: bold;
     text-align: center;
@@ -175,15 +194,22 @@ canvas {
     font-size: 1em;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: all 0.3s;
 }
 
 .reset-button:hover:not(:disabled) {
     background: #5a3a82;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 .reset-button:active {
     transform: scale(0.98);
+}
+
+.reset-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
 }
 
 .info-panel {
@@ -214,10 +240,18 @@ canvas {
 }
 
 .info-box p {
-    font-size: 1.3em;
+    font-size: 1.5em;
     font-weight: bold;
     color: #333;
     margin: 0;
+}
+
+.info-box small {
+    display: block;
+    color: #999;
+    font-size: 0.8em;
+    margin-top: 5px;
+    font-weight: normal;
 }
 
 .info-box.status {
@@ -251,7 +285,74 @@ canvas {
     border-radius: 5px;
     border-left: 4px solid #667eea;
     font-size: 0.95em;
-    line-height: 1.5;
+    line-height: 1.6;
+}
+
+.info-section {
+    background: #e8f4f8;
+    border-left: 4px solid #667eea;
+    padding: 20px;
+    border-radius: 5px;
+    margin: 30px 0;
+}
+
+.info-section h2 {
+    color: #667eea;
+    margin-bottom: 15px;
+}
+
+.info-section p {
+    color: #555;
+    margin: 0;
+}
+
+.theory-section {
+    background: #fff9e6;
+    border-left: 4px solid #ffc107;
+    padding: 20px;
+    border-radius: 5px;
+    margin-top: 30px;
+}
+
+.theory-section h2 {
+    color: #ff9800;
+    margin-bottom: 15px;
+}
+
+.theory-section p {
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.theory-section ul {
+    margin-left: 20px;
+}
+
+.theory-section li {
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.formula {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 5px;
+    margin: 15px 0;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95em;
+}
+
+.formula strong {
+    display: block;
+    color: #667eea;
+    margin-bottom: 5px;
+}
+
+.formula em {
+    color: #999;
+    font-size: 0.9em;
 }
 
 footer {
@@ -264,8 +365,8 @@ footer {
 
 .machines-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
     margin-bottom: 40px;
 }
 
@@ -273,7 +374,7 @@ footer {
     background: white;
     border: 2px solid #ddd;
     border-radius: 10px;
-    padding: 20px;
+    padding: 25px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s;
@@ -281,14 +382,14 @@ footer {
 
 .machine-card:hover {
     border-color: #667eea;
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
     transform: translateY(-5px);
 }
 
 .machine-card h3 {
     color: #667eea;
-    margin-bottom: 10px;
-    font-size: 1.3em;
+    margin: 15px 0;
+    font-size: 1.4em;
 }
 
 .machine-card p {
@@ -299,18 +400,33 @@ footer {
 }
 
 .machine-card .icon {
-    font-size: 3em;
+    font-size: 3.5em;
     margin-bottom: 10px;
 }
 
+.card-features {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.card-features span {
+    color: #667eea;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
     header h1 {
         font-size: 1.8em;
     }
 
     .tab-button {
-        min-width: 120px;
-        font-size: 0.9em;
+        min-width: 100px;
+        font-size: 0.85em;
+        padding: 12px 10px;
     }
 
     canvas {
@@ -323,5 +439,47 @@ footer {
 
     .reset-button {
         grid-column: 1;
+    }
+
+    .machines-grid {
+        grid-template-columns: 1fr;
+    }
+
+    main h2 {
+        font-size: 1.5em;
+    }
+
+    .simulator-header h2 {
+        font-size: 1.6em;
+    }
+
+    .equipment-info ul {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        border-radius: 10px;
+    }
+
+    header {
+        padding: 30px 15px;
+    }
+
+    header h1 {
+        font-size: 1.5em;
+    }
+
+    .control-panel {
+        padding: 20px;
+    }
+
+    .info-panel {
+        gap: 15px;
+    }
+
+    .equipment-info {
+        padding: 20px;
     }
 }
