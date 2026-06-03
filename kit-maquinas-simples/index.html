@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kit de Máquinas Simples - Simuladores</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚙️ Kit de Máquinas Simples</h1>
+            <p class="subtitle">Colección de Simuladores Educativos</p>
+        </header>
+
+        <!-- Navegación de pestañas -->
+        <nav class="tabs-nav">
+            <button class="tab-button active" data-tab="inicio">Inicio</button>
+            <button class="tab-button" data-tab="palanca">Sistema de Palanca</button>
+            <button class="tab-button" data-tab="polea">Sistema de Polea</button>
+        </nav>
+
+        <!-- PESTAÑA 1: INICIO -->
+        <div id="inicio" class="tab-content active">
+            <main>
+                <h2>Bienvenido al Kit de Máquinas Simples</h2>
+                
+                <p>
+                    Este kit educativo contiene simuladores interactivos de máquinas simples fundamentales en la física clásica. 
+                    Explore cada simulador para entender los principios de funcionamiento, realizar cálculos y experimentar 
+                    con diferentes configuraciones.
+                </p>
+
+                <div class="machines-grid">
+                    <div class="machine-card">
+                        <div class="icon">🔄</div>
+                        <h3>Sistema de Palanca</h3>
+                        <p>Experimenta con el principio de momento y equilibrio. Ajusta pesos y distancias para lograr el equilibrio perfecto.</p>
+                        <button class="reset-button" onclick="switchTab('palanca')">Abrir Simulador</button>
+                    </div>
+
+                    <div class="machine-card">
+                        <div class="icon">⚡</div>
+                        <h3>Sistema de Polea</h3>
+                        <p>Descubre cómo funcionan las poleas. Experimenta con diferentes configuraciones para entender la ventaja mecánica.</p>
+                        <button class="reset-button" onclick="switchTab('polea')">Abrir Simulador</button>
+                    </div>
+
+                    <div class="machine-card">
+                        <div class="icon">📚</div>
+                        <h3>Más Máquinas (Próximamente)</h3>
+                        <p>Plano inclinado, cuña, tornillo, engranajes y más simuladores estarán disponibles pronto.</p>
+                        <button class="reset-button" style="background: #ccc; cursor: not-allowed;" disabled>Próximamente</button>
+                    </div>
+                </div>
+
+                <div class="equipment-info">
+                    <h2>Objetivos de Aprendizaje</h2>
+                    <ul>
+                        <li>Comprender los principios fundamentales de máquinas simples</li>
+                        <li>Aplicar conceptos de momento, fuerza y equilibrio</li>
+                        <li>Realizar experimentos virtuales de forma segura</li>
+                        <li>Analizar la ventaja mecánica en diferentes configuraciones</li>
+                        <li>Desarrollar pensamiento crítico y habilidades de resolución de problemas</li>
+                    </ul>
+                </div>
+            </main>
+        </div>
+
+        <!-- PESTAÑA 2: SISTEMA DE PALANCA -->
+        <div id="palanca" class="tab-content">
+            <main>
+                <h2>Simulador - Sistema de Palanca</h2>
+                
+                <canvas id="leverCanvas" width="1200" height="600"></canvas>
+
+                <section class="control-panel">
+                    <div class="control-group">
+                        <label for="weight-left">Peso Izquierda (g):</label>
+                        <input type="number" id="weight-left" min="0" max="500" value="100" step="10">
+                        <span class="value-display" id="display-left">100g</span>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="weight-right">Peso Derecha (g):</label>
+                        <input type="number" id="weight-right" min="0" max="500" value="100" step="10">
+                        <span class="value-display" id="display-right">100g</span>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="distance-left">Distancia Izquierda (cm):</label>
+                        <input type="number" id="distance-left" min="0" max="37" value="25" step="1">
+                        <span class="value-display" id="display-dist-left">25cm</span>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="distance-right">Distancia Derecha (cm):</label>
+                        <input type="number" id="distance-right" min="0" max="37" value="25" step="1">
+                        <span class="value-display" id="display-dist-right">25cm</span>
+                    </div>
+
+                    <button id="reset-btn-palanca" class="reset-button">Reiniciar</button>
+                </section>
+
+                <section class="info-panel">
+                    <div class="info-box">
+                        <h3>Momento Izquierdo</h3>
+                        <p id="moment-left">2500 g·cm</p>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>Momento Derecho</h3>
+                        <p id="moment-right">2500 g·cm</p>
+                    </div>
+
+                    <div class="info-box status">
+                        <h3>Estado</h3>
+                        <p id="status">⚖️ Equilibrado</p>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>Diferencia</h3>
+                        <p id="difference">0 g·cm</p>
+                    </div>
+                </section>
+
+                <div class="equipment-info">
+                    <h2>Componentes del Equipo</h2>
+                    <ul>
+                        <li><strong>Base:</strong> Hierro fundido, 700-900g, pintura electrostática</li>
+                        <li><strong>Varilla cilíndrica:</strong> Acero inoxidable, 25cm alto, 1.2cm diámetro</li>
+                        <li><strong>Regla graduada:</strong> Aluminio, 74cm largo, escala milimetrada</li>
+                        <li><strong>Sujetadores:</strong> Plástico ABS en los lados de la regla</li>
+                        <li><strong>Balancín:</strong> Con aguja indicadora</li>
+                        <li><strong>Tornillos de calibración:</strong> En los extremos de la regla</li>
+                        <li><strong>Pesas:</strong> De 50g y 100g</li>
+                    </ul>
+                </div>
+            </main>
+        </div>
+
+        <!-- PESTAÑA 3: SISTEMA DE POLEA -->
+        <div id="polea" class="tab-content">
+            <main>
+                <h2>Simulador - Sistema de Polea</h2>
+                
+                <canvas id="pulleyCanvas" width="1200" height="600"></canvas>
+
+                <section class="control-panel">
+                    <div class="control-group">
+                        <label for="pulley-type">Tipo de Polea:</label>
+                        <select id="pulley-type" class="select-input">
+                            <option value="fixed">Polea Fija</option>
+                            <option value="mobile">Polea Móvil</option>
+                            <option value="compound">Polea Compuesta</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="load-weight">Peso de Carga (g):</label>
+                        <input type="number" id="load-weight" min="50" max="1000" value="200" step="50">
+                        <span class="value-display" id="display-load">200g</span>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="applied-force">Fuerza Aplicada (g):</label>
+                        <input type="number" id="applied-force" min="10" max="1000" value="200" step="10">
+                        <span class="value-display" id="display-force">200g</span>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="rope-pull">Distancia de Cuerda (cm):</label>
+                        <input type="number" id="rope-pull" min="0" max="50" value="0" step="1">
+                        <span class="value-display" id="display-rope">0 cm</span>
+                    </div>
+
+                    <button id="reset-btn-polea" class="reset-button">Reiniciar</button>
+                </section>
+
+                <section class="info-panel">
+                    <div class="info-box">
+                        <h3>Ventaja Mecánica</h3>
+                        <p id="mechanical-advantage">1.0</p>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>Fuerza Necesaria</h3>
+                        <p id="force-needed">200g</p>
+                    </div>
+
+                    <div class="info-box status">
+                        <h3>Estado</h3>
+                        <p id="pulley-status">✅ Sistema balanceado</p>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>Altura Levantada</h3>
+                        <p id="height-lifted">0 cm</p>
+                    </div>
+                </section>
+
+                <div class="equipment-info">
+                    <h2>Componentes del Sistema de Polea</h2>
+                    <ul>
+                        <li><strong>Estructura:</strong> Marco de aluminio resistente y estable</li>
+                        <li><strong>Poleas:</strong> De plástico reforzado, diámetro 8cm, rodamiento suave</li>
+                        <li><strong>Cuerda:</strong> Nylon resistente, 2mm de diámetro, 2 metros de largo</li>
+                        <li><strong>Gancho de carga:</strong> Acero inoxidable, capacidad 1kg</li>
+                        <li><strong>Marcas de medida:</strong> Escala en cm para medir desplazamientos</li>
+                        <li><strong>Pesas:</strong> De 50g, 100g y 200g para experimentos</li>
+                    </ul>
+                </div>
+            </main>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 Kit de Máquinas Simples - Simuladores Educativos</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
