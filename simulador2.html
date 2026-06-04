@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo de Palancas - Laboratorio de Física Avanzado</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1350px;
+            width: 100%;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 14px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: #0f172a;
+            padding: 20px 25px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.5em;
+            color: #f8fafc;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid #475569;
+            color: #f1f5f9;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: #f1f5f9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #0f172a;
+            border-bottom: 1px solid #334155;
+            gap: 2px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: #1e293b;
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            background: #243249;
+            color: #f1f5f9;
+        }
+
+        .tab-btn.active {
+            background: #1e293b;
+            color: #3b82f6;
+            border-bottom: 3px solid #3b82f6;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            background: #111827;
+        }
+
+        .canvas-container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            background: #1a2333;
+            border: 1px solid #374151;
+            border-radius: 10px;
+            width: 100%;
+            height: auto;
+        }
+
+        .instructions-panel {
+            color: #94a3b8;
+            font-size: 0.85em;
+            margin-top: 10px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            width: 100%;
+            line-height: 1.4;
+        }
+
+        .controls-panel {
+            background: #1f2937;
+            border-left: 1px solid #374151;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .panel-title {
+            font-size: 0.85em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            border-bottom: 1px solid #374151;
+            padding-bottom: 6px;
+        }
+
+        .assembly-bench {
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-spawn {
+            width: 100%;
+            background: #3b82f6;
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-spawn:hover { background: #2563eb; }
+
+        #elementsList {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 240px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .element-manager {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .manager-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85em;
+            color: #cbd5e1;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 2px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        .btn-delete:hover { background: #dc2626; }
+
+        .weight-group {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .btn-w {
+            background: #111827;
+            border: 1px solid #4b5563;
+            color: #cbd5e1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-w:hover { background: #3b82f6; color: white; }
+
+        .results-panel {
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+        }
+
+        .result-row span:first-child { color: #94a3b8; }
+        .result-row span:last-child { font-family: monospace; font-weight: bold; color: #f8fafc; }
+
+        .state-indicator {
+            text-align: center;
+            font-weight: bold;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .state-balance { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .state-unbalance { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>📐 Banco de Ensayos: Palancas de Laboratorio de Alta Fidelidad</h1>
+            <a href="maquinas-simples.html" class="btn-back">🎛️ Volver al Kit</a>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="setDegree(1, this)">Configuración 1° Grado (Inter-apoyo)</button>
+            <button class="tab-btn" onclick="setDegree(2, this)">Configuración 2° Grado (Inter-resistencia)</button>
+            <button class="tab-btn" onclick="setDegree(3, this)">Configuración 3° Grado (Inter-potencia)</button>
+        </div>
+
+        <div class="workspace">
+            <div class="canvas-container">
+                <canvas id="blueprintCanvas" width="850" height="460"></canvas>
+                <div class="instructions-panel">
+                    <strong>Interacción de Laboratorio Real:</strong> Cree sujetadores corredizos usando el panel lateral. Arrástrelos libremente con el puntero del mouse sobre la regla perforada. Active los ganchos y modifique la cantidad de pesas ranuradas. La barra oscilará físicamente como una balanza real de acuerdo con las leyes de torques.
+                </div>
+            </div>
+
+            <div class="controls-panel">
+                <div class="panel-title">Línea de Ensamble de Componentes</div>
+                <div class="assembly-bench">
+                    <button class="btn-spawn" onclick="spawnSujetador()">🔧 Inyectar Sujetador Deslizable</button>
+                    <div id="elementsList"></div>
+                </div>
+
+                <div class="panel-title">Módulo Analítico de Torque Real</div>
+                <div class="results-panel">
+                    <div class="result-row">
+                        <span>Momento Izquierdo ($\Sigma M_{Izq}$):</span>
+                        <span id="txtTorqueIzq">0.00 N·m</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Momento Derecho ($\Sigma M_{Der}$):</span>
+                        <span id="txtTorqueDer">0.00 N·m</span>
+                    </div>
+                    <div class="result-row" style="border-top:1px solid #374151; padding-top:6px;">
+                        <span>Inclinación de Balanza:</span>
+                        <span id="txtAnguloBalanza">0.0°</span>
+                    </div>
+                    <div id="balanceIndicator" class="state-indicator state-balance">Sistema Libre de Carga</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('blueprintCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let currentDegree = 1;
+        const scale = 6.5; 
+
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2 - 30; 
+
+        const barraLargo = 100 * scale;
+        const barraEspesor = 2.4 * scale;
+
+        let sujetadores = [];
+        let activeDragIndex = null;
+        let anguloBalanza = 0; 
+
+        function setDegree(degree, element) {
+            currentDegree = degree;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            sujetadores = [];
+            anguloBalanza = 0;
+            updateSimulation();
+        }
+
+        function spawnSujetador() {
+            if (sujetadores.length >= 4) {
+                alert("Límite de laboratorio: Máximo 4 abrazaderas simultáneas.");
+                return;
+            }
+            let inicialCm = (sujetadores.length % 2 === 0) ? -20 - (sujetadores.length * 5) : 20 + (sujetadores.length * 5);
+            if (currentDegree !== 1) inicialCm = 20 + (sujetadores.length * 15);
+
+            sujetadores.push({
+                cmRelativo: inicialCm, 
+                hasGancho: false,
+                pesoTotal: 0,
+                discos: { 10: 0, 20: 0, 50: 0 }
+            });
+            updateSimulation();
+        }
+
+        function deleteSujetador(index) {
+            sujetadores.splice(index, 1);
+            updateSimulation();
+        }
+
+        function toggleGancho(index, checked) {
+            sujetadores[index].hasGancho = checked;
+            if(!checked) {
+                sujetadores[index].pesoTotal = 0;
+                sujetadores[index].discos = { 10: 0, 20: 0, 50: 0 };
+            }
+            updateSimulation();
+        }
+
+        function alterDisco(index, discoVal, amount) {
+            let s = sujetadores[index];
+            if(!s.hasGancho) return;
+            
+            if (amount > 0) s.discos[discoVal]++;
+            else if (s.discos[discoVal] > 0) s.discos[discoVal]--;
+
+            s.pesoTotal = (s.discos[10]*10) + (s.discos[20]*20) + (s.discos[50]*50);
+            updateSimulation();
+        }
+
+        function updateSimulation() {
+            buildControlsUI();
+
+            let torqueIzq = 0;
+            let torqueDer = 0;
+
+            sujetadores.forEach(s => {
+                if (!s.hasGancho || s.pesoTotal <= 0) return;
+                let brazoMetros = Math.abs(s.cmRelativo) / 100;
+                let momento = s.pesoTotal * brazoMetros;
+
+                if (s.cmRelativo < 0) torqueIzq += momento;
+                else torqueDer += momento;
+            });
+
+            document.getElementById('txtTorqueIzq').innerText = torqueIzq.toFixed(2) + " N·m";
+            document.getElementById('txtTorqueDer').innerText = torqueDer.toFixed(2) + " N·m";
+            
+            let diferencia = torqueDer - torqueIzq;
+            if (sujetadores.length === 0) {
+                anguloBalanza = 0;
+            } else {
+                anguloBalanza = Math.max(-12, Math.min(12, diferencia * 2.5));
+            }
+
+            document.getElementById('txtAnguloBalanza').innerText = (anguloBalanza).toFixed(1) + "°";
+
+            let indicator = document.getElementById('balanceIndicator');
+            if (sujetadores.length === 0) {
+                indicator.innerText = "Sistema Libre de Carga";
+                indicator.className = "state-indicator state-balance";
+            } else if (Math.abs(diferencia) <= 0.05) {
+                indicator.innerText = "Balanza en Equilibrio Perfecto";
+                indicator.className = "state-indicator state-balance";
+                anguloBalanza = 0; 
+            } else {
+                indicator.innerText = "Desequilibrio Vectorial Activo";
+                indicator.className = "state-indicator state-unbalance";
+            }
+
+            renderGraphics();
+        }
+
+        function buildControlsUI() {
+            const container = document.getElementById('elementsList');
+            container.innerHTML = "";
+
+            sujetadores.forEach((s, idx) => {
+                let div = document.createElement('div');
+                div.className = "element-manager";
+                div.innerHTML = `
+                    <div class="manager-row">
+                        <strong>Sujetador #${idx + 1} (${s.cmRelativo} cm)</strong>
+                        <button class="btn-delete" onclick="deleteSujetador(${idx})">Eliminar</button>
+                    </div>
+                    <div class="manager-row" style="margin-top: 6px;">
+                        <label><input type="checkbox" ${s.hasGancho ? 'checked' : ''} onchange="toggleGancho(${idx}, this.checked)"> Usar Gancho Porta-pesas</label>
+                        <span style="color:#3b82f6; font-weight:bold;">${s.pesoTotal} N</span>
+                    </div>
+                    ${s.hasGancho ? `
+                    <div class="manager-row" style="margin-top:6px; background:#111827; padding:4px; border-radius:4px;">
+                        <div class="weight-group">
+                            <span>10N:${s.discos[10]}</span>
+                            <button class="btn-w" onclick="alterDisco(${idx},10,1)">+</button>
+                            <button class="btn-w" onclick="alterDisco(${idx},10,-1)">-</button>
+                        </div>
+                        <div class="weight-group">
+                            <span>20N:${s.discos[20]}</span>
+                            <button class="btn-w" onclick="alterDisco(${idx},20,1)">+</button>
+                            <button class="btn-w" onclick="alterDisco(${idx},20,-1)">-</button>
+                        </div>
+                        <div class="weight-group">
+                            <span>50N:${s.discos[50]}</span>
+                            <button class="btn-w" onclick="alterDisco(${idx},50,1)">+</button>
+                            <button class="btn-w" onclick="alterDisco(${idx},50,-1)">-</button>
+                        </div>
+                    </div>
+                    ` : ''}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderGraphics() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = "#1e293b"; ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += 25) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += 25) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+
+            let fulcroX = (currentDegree === 1) ? cx : cx - (43 * scale);
+            let groundY = canvas.height - 20;
+
+            ctx.fillStyle = "#334155"; ctx.strokeStyle = "#0f172a"; ctx.lineWidth = 2;
+            ctx.fillRect(fulcroX - 50, groundY - 15, 100, 15);
+            ctx.strokeRect(fulcroX - 50, groundY - 15, 100, 15);
+
+            ctx.fillStyle = "#0284c7"; ctx.fillRect(fulcroX - 8, cy - 10, 6, groundY - cy - 5);
+            ctx.fillStyle = "#38bdf8"; ctx.fillRect(fulcroX + 2, cy - 10, 6, groundY - cy - 5);
+
+            ctx.fillStyle = "#64748b"; ctx.beginPath();
+            ctx.arc(fulcroX, cy, 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            // ---- SISTEMA ROTACIONAL (BALANZA) ----
+            ctx.save();
+            ctx.translate(fulcroX, cy);
+            ctx.rotate(anguloBalanza * Math.PI / 180); 
+
+            ctx.fillStyle = "#cbd5e1"; ctx.strokeStyle = "#475569"; ctx.lineWidth = 2;
+            let barraStartX = (currentDegree === 1) ? -barraLargo / 2 : -5 * scale;
+            ctx.fillRect(barraStartX, -barraEspesor / 2, barraLargo, barraEspesor);
+            ctx.strokeRect(barraStartX, -barraEspesor / 2, barraLargo, barraEspesor);
+
+            ctx.fillStyle = "#111827";
+            for (let i = 2.5; i < 100; i += 2.5) {
+                ctx.beginPath(); ctx.arc(barraStartX + (i * scale), 0, 2, 0, Math.PI * 2); ctx.fill();
+            }
+
+            ctx.fillStyle = "#0f172a"; ctx.font = "bold 8px monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            for (let i = 0; i <= 100; i += 5) {
+                let markX = barraStartX + (i * scale);
+                ctx.strokeStyle = "#334155";
+                ctx.lineWidth = (i % 10 === 0) ? 1.5 : 0.8;
+                ctx.beginPath(); ctx.moveTo(markX, -barraEspesor / 2); ctx.lineTo(markX, -barraEspesor / 2 + 5); ctx.stroke();
+
+                if (i % 10 === 0) {
+                    let labelNum = (currentDegree === 1) ? (i - 50) : i;
+                    ctx.fillText(labelNum, markX, barraEspesor/2 - 5);
+                }
+            }
+
+            sujetadores.forEach((s, idx) => {
+                let absX = s.cmRelativo * scale;
+                if (currentDegree !== 1) absX = (s.cmRelativo + 5) * scale; 
+                let clampY = -barraEspesor / 2 - 1;
+
+                // Nueva mejora: Mostrar la distancia / número de regla exacto encima del riel
+                ctx.fillStyle = "#fef08a"; ctx.font = "bold 10px monospace"; ctx.textAlign = "center";
+                ctx.fillText(`${s.cmRelativo > 0 ? '+' : ''}${s.cmRelativo} cm`, absX, clampY - 22);
+
+                // Dibujar línea de cota técnica (brazo de palanca) desde el centro hasta el riel
+                ctx.strokeStyle = "rgba(254, 240, 138, 0.4)"; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(0, clampY - 14); ctx.lineTo(absX, clampY - 14); ctx.stroke();
+                
+                // Puntas de flecha de la cota
+                ctx.fillStyle = "rgba(254, 240, 138, 0.6)";
+                ctx.beginPath(); ctx.moveTo(absX, clampY - 14);
+                ctx.lineTo(absX - (s.cmRelativo >= 0 ? 5 : -5), clampY - 17);
+                ctx.lineTo(absX - (s.cmRelativo >= 0 ? 5 : -5), clampY - 11);
+                ctx.closePath(); ctx.fill();
+
+                // Cuerpo del sujetador
+                ctx.fillStyle = (activeDragIndex === idx) ? "#10b981" : "#64748b";
+                ctx.strokeStyle = "#1e293b"; ctx.lineWidth = 1.5;
+                ctx.fillRect(absX - 10, clampY, 20, barraEspesor + 2);
+                ctx.strokeRect(absX - 10, clampY, 20, barraEspesor + 2);
+
+                ctx.fillStyle = "#ffffff"; ctx.font = "bold 9px sans-serif";
+                ctx.fillText(`S${idx+1}`, absX, clampY + barraEspesor/2 + 3);
+
+                if (s.hasGancho) {
+                    let ganchoY = barraEspesor / 2 + 3;
+                    ctx.strokeStyle = "#94a3b8"; ctx.lineWidth = 2;
+                    
+                    ctx.beginPath(); ctx.arc(absX, ganchoY, 3, 0, Math.PI * 2); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(absX, ganchoY + 3); ctx.lineTo(absX, ganchoY + 35); ctx.stroke();
+                    ctx.fillStyle = "#475569"; ctx.fillRect(absX - 12, ganchoY + 35, 24, 3);
+
+                    let currentStackY = ganchoY + 35;
+                    const diskH = 6;
+
+                    ctx.fillStyle = "#ef4444"; ctx.strokeStyle = "#7f1d1d";
+                    for(let i=0; i<s.discos[50]; i++) {
+                        ctx.fillRect(absX - 18, currentStackY - diskH, 36, diskH); ctx.strokeRect(absX - 18, currentStackY - diskH, 36, diskH);
+                        currentStackY -= diskH;
+                    }
+                    ctx.fillStyle = "#f59e0b"; ctx.strokeStyle = "#78350f";
+                    for(let i=0; i<s.discos[20]; i++) {
+                        ctx.fillRect(absX - 14, currentStackY - diskH, 28, diskH); ctx.strokeRect(absX - 14, currentStackY - diskH, 28, diskH);
+                        currentStackY -= diskH;
+                    }
+                    ctx.fillStyle = "#10b981"; ctx.strokeStyle = "#064e3b";
+                    for(let i=0; i<s.discos[10]; i++) {
+                        ctx.fillRect(absX - 10, currentStackY - diskH, 20, diskH); ctx.strokeRect(absX - 10, currentStackY - diskH, 20, diskH);
+                        currentStackY -= diskH;
+                    }
+
+                    if (s.pesoTotal > 0) {
+                        let vectorY = ganchoY + 42;
+                        ctx.strokeStyle = "#3b82f6"; ctx.fillStyle = "#3b82f6"; ctx.lineWidth = 2;
+                        ctx.beginPath(); ctx.moveTo(absX, vectorY); ctx.lineTo(absX, vectorY + 20); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(absX, vectorY + 20); ctx.lineTo(absX - 4, vectorY + 14); ctx.lineTo(absX + 4, vectorY + 14); ctx.closePath(); ctx.fill();
+                    }
+                }
+            });
+
+            ctx.restore(); 
+
+            ctx.fillStyle = "#f59e0b"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(fulcroX, cy, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        }
+
+        function getCanvasCoords(e) {
+            let rect = canvas.getBoundingClientRect();
+            return {
+                x: (e.clientX - rect.left) * (canvas.width / rect.width),
+                y: (e.clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        canvas.addEventListener('mousedown', function(e) {
+            let pos = getCanvasCoords(e);
+            let fulcroX = (currentDegree === 1) ? cx : cx - (43 * scale);
+
+            let rad = (anguloBalanza * Math.PI / 180);
+            let dx = pos.x - fulcroX;
+            let dy = pos.y - cy;
+            let rotX = dx * Math.cos(-rad) - dy * Math.sin(-rad);
+            let rotY = dx * Math.sin(-rad) + dy * Math.cos(-rad);
+
+            for (let i = 0; i < sujetadores.length; i++) {
+                let targetX = sujetadores[i].cmRelativo * scale;
+                if (currentDegree !== 1) targetX = (sujetadores[i].cmRelativo + 5) * scale;
+
+                if (Math.abs(rotX - targetX) < 16 && Math.abs(rotY) < 25) {
+                    activeDragIndex = i;
+                    canvas.style.cursor = "ew-resize";
+                    break;
+                }
+            }
+        });
+
+        canvas.addEventListener('mousemove', function(e) {
+            if (activeDragIndex === null) return;
+            
+            let pos = getCanvasCoords(e);
+            let fulcroX = (currentDegree === 1) ? cx : cx - (43 * scale);
+            
+            let rad = (anguloBalanza * Math.PI / 180);
+            let dx = pos.x - fulcroX;
+            let dy = pos.y - cy;
+            let rotX = dx * Math.cos(-rad) - dy * Math.sin(-rad);
+
+            let targetCm = Math.round(rotX / scale);
+            if (currentDegree !== 1) targetCm = Math.round(rotX / scale) - 5;
+
+            if (currentDegree === 1) {
+                targetCm = Math.max(-48, Math.min(48, targetCm));
+            } else {
+                targetCm = Math.max(0, Math.min(92, targetCm));
+            }
+
+            sujetadores[activeDragIndex].cmRelativo = targetCm;
+            updateSimulation();
+        });
+
+        window.addEventListener('mouseup', function() {
+            activeDragIndex = null;
+            canvas.style.cursor = "default";
+        });
+
+        window.onload = updateSimulation;
+    </script>
+</body>
+</html>

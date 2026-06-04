@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simuladores de Física - Laboratorio Virtual</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -18,281 +13,84 @@
             padding: 20px;
             color: #333;
         }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            color: white;
-            margin-bottom: 60px;
-            animation: fadeIn 0.8s ease-in;
-        }
-
-        header h1 {
-            font-size: 3em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        header p {
-            font-size: 1.2em;
-            opacity: 0.95;
-        }
-
-        .simulators-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-
-        .simulator-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
-        }
-
-        .simulator-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px 20px;
-            text-align: center;
-        }
-
-        .card-header h2 {
-            font-size: 1.8em;
-            margin-bottom: 10px;
-        }
-
-        .card-header .icon {
-            font-size: 3em;
-            margin-bottom: 15px;
-        }
-
-        .card-body {
-            padding: 25px;
-        }
-
-        .card-body p {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 20px;
-            text-align: justify;
-        }
-
-        .features {
-            list-style: none;
-            margin: 20px 0;
-            padding-left: 0;
-        }
-
-        .features li {
-            padding: 8px 0;
-            color: #555;
-            border-bottom: 1px solid #eee;
-        }
-
-        .features li:before {
-            content: "✓ ";
-            color: #667eea;
-            font-weight: bold;
-            margin-right: 8px;
-        }
-
-        .features li:last-child {
-            border-bottom: none;
-        }
-
-        .btn {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 30px;
-            border-radius: 25px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: opacity 0.3s ease;
-            border: none;
-            cursor: pointer;
-            font-size: 1em;
-        }
-
-        .btn:hover {
-            opacity: 0.9;
-            transform: scale(1.05);
-        }
-
-        .card-footer {
-            text-align: center;
-            padding-bottom: 25px;
-        }
-
-        .info-section {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            margin-top: 40px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            color: #333;
-        }
-
-        .info-section h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.8em;
-        }
-
-        .info-section p {
-            line-height: 1.8;
-            color: #666;
-        }
-
-        footer {
-            text-align: center;
-            color: white;
-            margin-top: 50px;
-            padding: 20px;
-            opacity: 0.9;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .card-header-simulator1 {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-
-        .card-header-simulator2 {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-
-        .card-header-simulator3 {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        @media (max-width: 768px) {
-            header h1 {
-                font-size: 2em;
-            }
-
-            .simulators-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .card-header h2 {
-                font-size: 1.5em;
-            }
-        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 60px; animation: fadeIn 0.8s ease-in; }
+        header h1 { font-size: 3em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
+        header p { font-size: 1.2em; opacity: 0.95; }
+        .simulators-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; margin-bottom: 50px; }
+        .card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.15); transition: transform 0.3s, box-shadow 0.3s; display: flex; flex-direction: column; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.25); }
+        .card-header { background: #f8fafc; padding: 25px; border-bottom: 1px solid #e2e8f0; text-align: center; }
+        .card-header .icon { font-size: 3.5em; margin-bottom: 10px; display: block; }
+        .card-header h2 { font-size: 1.5em; color: #2d3748; }
+        .card-body { padding: 25px; flex-grow: 1; }
+        .card-body p { color: #4a5568; line-height: 1.6; margin-bottom: 20px; }
+        .card-body ul { list-style-type: none; }
+        .card-body ul li { margin-bottom: 10px; position: relative; padding-left: 25px; color: #4a5568; }
+        .card-body ul li::before { content: "✓"; color: #4c51bf; font-weight: bold; position: absolute; left: 0; }
+        .card-footer { padding: 25px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.9; }
+        .info-section { background: rgba(255, 255, 255, 0.9); padding: 40px; border-radius: 15px; margin-bottom: 50px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .info-section h2 { color: #2d3748; margin-bottom: 15px; }
+        .info-section p { color: #4a5568; line-height: 1.7; }
+        footer { text-align: center; color: white; padding: 20px 0; font-size: 0.9em; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🔬 Simuladores de Física</h1>
-            <p>Laboratorio Virtual Educativo</p>
+            <h1>🔬 Física Interactiva</h1>
+            <p>Laboratorio Virtual de Mecánica y Máquinas Simples</p>
         </header>
 
         <div class="simulators-grid">
-            <!-- Kit de Máquinas Simples -->
-            <div class="simulator-card">
-                <div class="card-header card-header-simulator1">
-                    <div class="icon">⚙️</div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="icon">⚙️</span>
                     <h2>Kit de Máquinas Simples</h2>
                 </div>
                 <div class="card-body">
-                    <p>Explora las máquinas simples fundamentales: palancas, poleas, planos inclinados, cuñas, tornillos y ruedas con eje. Comprende cómo funcionan los dispositivos que usamos cada día [...]
-                    <ul class="features">
-                        <li>Plano Inclinado</li>
-                        <li>Palancas (3 tipos)</li>
-                        <li>Sistemas de poleas</li>
-                        <li>Ruedas y ejes</li>
-                        <li>Cuñas y tornillos</li>
-                        <li>Ventaja mecánica</li>
+                    <p>Explora los principios fundamentales de la ventaja mecánica a través de herramientas clásicas de la ingeniería.</p>
+                    <ul>
+                        <li>Simulador de Palancas (1°, 2° y 3° grado)</li>
+                        <li>Sistemas de Poleas (Fijas y Móviles)</li>
+                        <li>Plano Inclinado Profesional</li>
                     </ul>
                 </div>
                 <div class="card-footer">
-                    <a href="maquinas-simples.html" class="btn">Seleccionar Simulador</a>
+                    <a href="maquinas-simples.html" class="btn">Abrir Módulo del Kit</a>
                 </div>
             </div>
 
-            <!-- Simulador de Palancas -->
-            <div class="simulator-card">
-                <div class="card-header card-header-simulator3">
-                    <div class="icon">🔨</div>
-                    <h2>Simulador de Palancas</h2>
-                </div>
-                <div class="card-body">
-                    <p>Domina los tres tipos de palancas: experimenta con distancias de esfuerzo y carga, calcula la ventaja mecánica y comprende cómo estas máquinas simples multiplican la fuerza [...]
-                    <ul class="features">
-                        <li>Palanca Tipo 1 (Fulcro Centro)</li>
-                        <li>Palanca Tipo 2 (Carga Centro)</li>
-                        <li>Palanca Tipo 3 (Esfuerzo Centro)</li>
-                        <li>Ventaja mecánica en vivo</li>
-                        <li>Cálculos dinámicos</li>
-                        <li>Visualización interactiva</li>
-                    </ul>
-                </div>
-                <div class="card-footer">
-                    <a href="simulador-palancas.html" class="btn">Abrir Simulador</a>
-                </div>
-            </div>
-
-            <!-- Kit de Fuerza y Dinámica -->
-            <div class="simulator-card">
-                <div class="card-header card-header-simulator2">
-                    <div class="icon">💪</div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="icon">💪</span>
                     <h2>Kit de Fuerza y Dinámica</h2>
                 </div>
                 <div class="card-body">
-                    <p>Estudia los fundamentos de la dinámica: fuerzas, aceleración, movimiento, rozamiento y leyes de Newton. Experimenta interactivamente con vectores de fuerza y análisis de movi[...]
-                    <ul class="features">
-                        <li>Leyes de Newton</li>
-                        <li>Análisis de fuerzas</li>
-                        <li>Vectores y componentes</li>
-                        <li>Aceleración y movimiento</li>
-                        <li>Fuerzas de fricción</li>
-                        <li>Sistemas en equilibrio</li>
+                    <p>Experimenta con las Leyes de Newton, la relación entre fuerza, masa, aceleración y los efectos de la fricción dinámica.</p>
+                    <ul>
+                        <li>Análisis de fuerzas dinámicas</li>
+                        <li>Simulación con fricción regulable</li>
+                        <li>Vectores en tiempo real</li>
                     </ul>
                 </div>
                 <div class="card-footer">
-                    <a href="simulador2.html" class="btn">Abrir Simulador</a>
+                    <a href="#" class="btn" onclick="alert('Módulo de Dinámica en desarrollo')">Abrir Simulador</a>
                 </div>
             </div>
         </div>
 
-        <!-- Sección de Información -->
         <div class="info-section">
             <h2>📚 Acerca de este Laboratorio Virtual</h2>
-            <p>
-                Este laboratorio virtual ha sido diseñado para estudiantes de física que desean profundizar en la comprensión de conceptos fundamentales mediante simulaciones interactivas. Cada simulador [...]
-            </p>
-            <p style="margin-top: 15px;">
-                <strong>Objetivos educativos:</strong> Facilitar el aprendizaje experimental, permitir la exploración libre de conceptos físicos, proporcionar retroalimentación inmediata y desarrollar [...]
-            </p>
+            <p>Este laboratorio virtual ha sido diseñado para estudiantes de física que desean profundizar en la comprensión de conceptos fundamentales mediante simulaciones interactivas. Cada simulador permite manipular variables clave y observar resultados numéricos y gráficos en tiempo real.</p>
         </div>
 
         <footer>
-            <p>&copy; 2026 Simuladores de Física - Laboratorio Educativo Virtual</p>
-            <p>Todos los derechos reservados | <a href="https://github.com/budyroberth-glitch/Simuladores-de-Fsica" style="color: white; text-decoration: underline;">Ver en GitHub</a></p>
+            <p>&copy; 2026 Simuladores de Física - Laboratorio Virtual</p>
+            <p><a href="https://github.com/budyroberth-glitch/Simuladores-de-Fsica" style="color: white; text-decoration: underline;">Ver en GitHub</a></p>
         </footer>
     </div>
 </body>
