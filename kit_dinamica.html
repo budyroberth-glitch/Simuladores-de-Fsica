@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kit de Fuerza y Dinámica - Menú de Herramientas</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 40px; }
+        header h1 { font-size: 2.8em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
+        .breadcrumb { margin-bottom: 30px; font-size: 1.1em; text-align: center; }
+        .breadcrumb a { color: #fff; text-decoration: none; font-weight: bold; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; transition: background 0.2s; }
+        .breadcrumb a:hover { background: rgba(255,255,255,0.3); }
+
+        .simulators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+        .card:hover { transform: translateY(-5px); }
+
+        .card-header { background: #0f172a; color: white; padding: 20px; display: flex; align-items: center; gap: 15px; }
+        .card-header .icon { font-size: 2em; }
+        .card-header h2 { font-size: 1.3em; font-weight: 600; }
+
+        .card-body { padding: 20px; flex: 1; }
+        .card-body p { color: #64748b; line-height: 1.5; margin-bottom: 15px; }
+        .card-body ul { list-style: none; padding-left: 0; }
+        .card-body li { margin-bottom: 8px; color: #334155; display: flex; align-items: center; gap: 8px; }
+        .card-body li::before { content: "🔬"; }
+
+        .card-footer { padding: 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; }
+        .btn {
+            display: block; width: 100%; text-align: center; background: #a855f7; color: white;
+            text-decoration: none; padding: 12px; border-radius: 8px; font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #9333ea; }
+        
+        footer { text-align: center; color: white; margin-top: 40px; font-size: 0.9em; opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Kit de Fuerza y Dinámica</h1>
+            <div class="breadcrumb">
+                <a href="index.html">🏠 Volver al Menú Principal</a>
+            </div>
+        </header>
+
+        <div class="simulators-grid">
+            <div class="card">
+                <div class="card-header" style="background: #1e293b;">
+                    <span class="icon">🏃‍♂️</span>
+                    <h2>Ensayo de Inercia y Rozamiento</h2>
+                </div>
+                <div class="card-body">
+                    <p>Estudia la Primera y Segunda Ley de Newton utilizando un bloque sobre un riel graduado. Modifica fuerzas de impacto y masas regulables.</p>
+                    <ul>
+                        <li>Dinámica vectorial en tiempo real</li>
+                        <li>Análisis cinético del rozamiento uniforme</li>
+                        <li>Cálculo de desaceleración inercial por fricción</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <a href="simulador-inercia.html" class="btn">Abrir Simulador</a>
+                </div>
+            </div>
+
+            <div class="card" style="opacity: 0.7;">
+                <div class="card-header" style="background: #334155;">
+                    <span class="icon">⚖️</span>
+                    <h2>Fuerzas Concurrentes en Equilibrio</h2>
+                </div>
+                <div class="card-body">
+                    <p>Analiza sistemas de fuerzas concurrentes coplanares en equilibrio estático mediante dinamómetros virtuales y descomposición trigonométrica.</p>
+                    <ul>
+                        <li>Mesa de fuerzas de 3 vectores axiales</li>
+                        <li>Cálculo de tensiones en nodos centrales</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <a href="#" class="btn" style="background: #64748b; cursor: not-allowed;" onclick="alert('Este módulo accesorio se habilitará en las próximas sesiones prácticas.')">Próximamente</a>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 Laboratorio Virtual de Física Avanzada</p>
+        </footer>
+    </div>
+</body>
+</html>

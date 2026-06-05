@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aparato de Inercia — Simulador Virtual Integrado</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root {
+  --bg-interface: #e1ded4;
+  --panel-bg: #f5f4ed;
+  --text-dark: #3c2f2f;
+  --accent-orange: #b85a1c;
+  --accent-blue: #2b7bb9;
+  --border-color: #d1cebe;
+  --muted: #5c4d4d;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+body { font-family: 'Outfit', sans-serif; background: var(--bg-interface); color: var(--text-dark); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* Estilo para los Inputs Tipo Rango Personalizados */
+input[type=range] {
+  -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; background: #dcd9cd; outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent-orange); box-shadow: 0 0 6px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.1s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+/* Interruptores Estilizados */
+.toggle { position: relative; width: 38px; height: 20px; border-radius: 10px; background: rgba(0, 0, 0, 0.15); cursor: pointer; transition: background .3s; flex-shrink: 0; }
+.toggle.on { background: var(--accent-blue); }
+.toggle::after { content:''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .3s; }
+.toggle.on::after { transform: translateX(18px); }
+
+/* Componentes del Timeline */
+.phase-dot { width: 11px; height: 11px; border-radius: 50%; background: rgba(0, 0, 0, 0.15); transition: all .3s; }
+.phase-dot.active { background: var(--accent-orange); box-shadow: 0 0 8px var(--accent-orange); }
+.phase-dot.done { background: var(--accent-blue); }
+
+/* Notificaciones Flotantes (Toasts) */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); padding: 12px 24px; border-radius: 10px; background: #fcfbfa; border: 2px solid var(--accent-blue); font-size: 13px; font-weight: 700; z-index: 9999; opacity: 0; transition: all .4s cubic-bezier(0.175, 0.885, 0.32, 1.275); color: var(--text-dark); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+.sidebar-scroll::-webkit-scrollbar { width: 5px; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.12); border-radius: 10px; }
+
+/* Botones de Acción Estilizados */
+.btn-action { background-color: var(--accent-orange); color: white; transition: all 0.2s; }
+.btn-action:hover { background-color: #9c4914; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(184,90,28,0.25); }
+
+.btn-pause { background: #334155; color: #fff; transition: all 0.2s; }
+.btn-pause:hover { background: #1e293b; }
+.btn-pause.paused { background: #16a34a; }
+.btn-pause.paused:hover { background: #15803d; }
+
+.btn-back { background-color: #fcfbfa; color: var(--text-dark); border: 1px solid var(--border-color); transition: all 0.2s; }
+.btn-back:hover { background-color: #eae7dc; border-color: var(--accent-orange); }
+</style>
+</head>
+<body>
+
+<header class="bg-[#fcfbfa] px-5 py-3 flex items-center justify-between border-b-2 border-[var(--border-color)] relative z-10 flex-shrink-0 shadow-sm">
+  <div class="flex items-center gap-2">
+    <span class="text-xl">⚙️</span>
+    <div>
+      <h1 class="text-base font-black tracking-tight text-[#1e4d75]">Aparato de Inercia</h1>
+      <p class="text-xs font-medium text-[var(--muted)]">Kit de Fuerza y Dinámica — Simulador Virtual Profesional</p>
+    </div>
+  </div>
+  <div class="flex items-center gap-6 text-xs font-bold">
+    <label class="flex items-center gap-2 cursor-pointer"><span>Vectores Fuerza</span><div class="toggle on" id="togForces" onclick="toggleForces()"></div></label>
+    <label class="flex items-center gap-2 cursor-pointer"><span>Cámara lenta</span><div class="toggle" id="togSlow" onclick="toggleSlow()"></div></label>
+    <label class="flex items-center gap-2 cursor-pointer"><span>Sonido</span><div class="toggle on" id="togSound" onclick="toggleSound()"></div></label>
+    <a href="maquinas-simples.html" class="btn-back px-3 py-1.5 rounded font-bold shadow-sm text-[11px]">⬅️ Volver al Kit</a>
+  </div>
+</header>
+
+<div class="flex-1 flex gap-4 p-4 min-h-0 relative z-10">
+
+  <div class="flex-1 flex flex-col h-full bg-[#eae7dc] border-2 border-[var(--border-color)] rounded-xl p-4 shadow-inner relative">
+    <div class="flex items-center justify-between mb-2 flex-shrink-0">
+      <span class="text-[11px] font-black uppercase tracking-widest text-[var(--muted)]" id="phaseLabel">Reposo</span>
+      <span class="mono text-[11px] font-bold text-[var(--muted)]" id="fpsLabel">60 FPS</span>
+    </div>
+    
+    <div class="flex-1 relative rounded-lg overflow-hidden border border-rgba(0,0,0,0.04) bg-radial-gradient">
+      <canvas id="simCanvas" class="w-full h-full block"></canvas>
+      
+      <div class="absolute top-3 left-3 z-20">
+        <button id="btnPause" class="btn-pause text-xs py-1.5 px-3 rounded font-bold shadow flex items-center gap-1.5" onclick="togglePause()">
+          <i id="pauseIcon" class="fa-solid fa-pause"></i> <span id="pauseText">Pausar</span>
+        </button>
+      </div>
+
+      <div id="pullHint" class="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-500">
+        <div class="text-center p-5 rounded-xl shadow-md backdrop-blur-sm bg-white/50 border-2 border-dashed border-[var(--accent-orange)]">
+          <i class="fa-solid fa-hand-pointer text-2xl mb-2 text-[var(--accent-orange)] animate-bounce"></i>
+          <p class="font-bold text-sm text-[var(--text-dark)]">Jala el cordón hacia la izquierda</p>
+          <p class="text-[11px] font-medium mt-0.5 text-[var(--muted)]">Suéltalo para golpear la lámina cuadrada</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-1 mt-3 px-1 flex-shrink-0">
+      <div class="flex items-center gap-1" id="timelineDots"></div>
+      <div class="flex-1 mx-3 h-1 bg-black/10 rounded-full relative">
+        <div id="timelineProgress" class="h-full bg-[var(--accent-orange)] rounded-full w-0 transition-all duration-300"></div>
+      </div>
+      <span class="mono text-xs font-bold text-[var(--text-dark)]" id="timeLabel">0.000 s</span>
+    </div>
+  </div>
+
+  <div class="sidebar-scroll flex flex-col gap-3 w-[330px] min-w-[330px] h-full overflow-y-auto pr-1">
+
+    <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-xl p-4 shadow-sm flex-shrink-0">
+      <h3 class="text-xs font-black uppercase tracking-wider mb-3 text-[var(--muted)] flex items-center gap-1.5 border-b border-[#e1ded4] pb-1">
+        <i class="fa-solid fa-sliders text-[var(--accent-orange)]"></i> Parámetros Experimentales
+      </h3>
+      <div class="space-y-2.5">
+        <div>
+          <div class="flex justify-between text-[11px] font-bold mb-0.5"><span>Masa de la esfera</span><span class="mono text-[var(--accent-orange)]" id="massVal">91 g</span></div>
+          <input type="range" id="massSlider" min="30" max="200" step="1" value="91" oninput="updateParams()">
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px] font-bold mb-0.5"><span>Distancia de jalón</span><span class="mono text-[var(--accent-orange)]" id="pullVal">14 mm</span></div>
+          <input type="range" id="pullSlider" min="14" max="28" step="2" value="14" oninput="updateParams()">
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px] font-bold mb-0.5"><span>Fricción esfera-lámina</span><span class="mono text-[var(--accent-orange)]" id="fricVal">0.12</span></div>
+          <input type="range" id="fricSlider" min="0.02" max="0.50" step="0.01" value="0.12" oninput="updateParams()">
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px] font-bold mb-0.5"><span>Aceleración Gravedad</span><span class="mono text-[var(--accent-orange)]" id="gravVal">9.81 m/s²</span></div>
+          <input type="range" id="gravSlider" min="1" max="20" step="0.1" value="9.81" oninput="updateParams()">
+        </div>
+      </div>
+      <button class="btn-action w-full mt-3.5 py-2 px-4 rounded-lg font-bold text-xs flex items-center justify-center gap-2 shadow-sm" onclick="resetSim()">
+        <i class="fa-solid fa-rotate-left"></i> Reiniciar Simulación
+      </button>
+    </div>
+
+    <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-xl p-4 shadow-sm flex-shrink-0">
+      <h3 class="text-xs font-black uppercase tracking-wider mb-2 text-[var(--muted)] flex items-center gap-1.5 border-b border-[#e1ded4] pb-1">
+        <i class="fa-solid fa-gauge-high text-[var(--accent-blue)]"></i> Datos en Tiempo Real
+      </h3>
+      <div class="flex flex-col text-[11px] font-semibold text-[var(--muted)]">
+        <div class="flex justify-between py-1.5 border-b border-black/5"><span>Fuerza de golpe:</span><span class="mono font-bold text-[var(--text-dark)]" id="dForce">0.00 N</span></div>
+        <div class="flex justify-between py-1.5 border-b border-black/5"><span>Vel. lámina cuadrada:</span><span class="mono font-bold text-[var(--text-dark)]" id="dVelPlate">0.00 m/s</span></div>
+        <div class="flex justify-between py-1.5 border-b border-black/5"><span>Vel. horizontal esfera:</span><span class="mono font-bold text-[var(--text-dark)]" id="dVxSph">0.000 m/s</span></div>
+        <div class="flex justify-between py-1.5 border-b border-black/5"><span>Desplaz. horizontal:</span><span class="mono font-bold text-[var(--text-dark)]" id="dDxSph">0.0 mm</span></div>
+        <div class="flex justify-between py-1.5 border-b border-black/5"><span>Altura de caída libre:</span><span class="mono font-bold text-[var(--text-dark)]" id="dHeight">15.3 cm</span></div>
+        <div class="flex justify-between py-1.5 border-b border-black/5"><span>Energía acumulada:</span><span class="mono font-bold text-[var(--text-dark)]" id="dEnergy">0.0 mJ</span></div>
+      </div>
+    </div>
+
+    <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-xl p-4 shadow-sm flex-1 min-h-[110px]">
+      <h3 class="text-xs font-black uppercase tracking-wider mb-2 text-[var(--muted)] flex items-center gap-1.5 border-b border-[#e1ded4] pb-1">
+        <i class="fa-solid fa-book-open text-slate-600"></i> Explicación Dinámica
+      </h3>
+      <div class="text-[11px] leading-relaxed font-medium text-slate-600" id="explainBox">
+        Cargando descripción académica...
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+
+const REAL = {
+  baseDiam: 0.155, baseHeight: 0.022,
+  cylExtDiam: 0.031, cylIntDiam: 0.026, cylHeight: 0.153,
+  sphereDiam: 0.028,
+  plateSide: 0.042, plateThick: 0.0015,
+  stopDistance: 0.095 
+};
+
+const S = {
+  phase: 'IDLE', time: 0, dt: 1/240,
+  slowMotion: false, showForces: true, soundOn: true, isPaused: false,
+  sphereMass: 0.091, plateMass: 0.021, maxPull: 0.014, 
+  friction: 0.12, gravity: 9.81, laminaK: 24000, 
+  pullDist: 0, laminaTipX: 0, laminaVel: 0,
+  plateX: 0, plateVx: 0,
+  sphereX: 0, sphereY: 0, sphereVx: 0, sphereVy: 0,
+  impactForce: 0, fallTime: 0, particles: [], flashAlpha: 0,
+  fps: 60, frameCount: 0, lastFpsTime: 0
+};
+
+let SC = 1, OX = 0, OY = 0;
+
+const PHASES = ['IDLE','PULLING','STRIKING','EJECTING','FALLING','LANDED'];
+const PHASE_LABELS = ['Reposo','Tensionando','Golpe','Eyección','Caída','Aterrizaje'];
+
+function getExplanations() {
+  const pullMM = Math.round(S.maxPull * 1000);
+  const esCorto = pullMM <= 18;
+  
+  return [
+    `<strong>Reposo:</strong> La esfera descansa inmóvil sobre la lámina cuadrada. Las fuerzas verticales (Peso y Normal) se encuentran balanceadas en equilibrio estático perfecto.`,
+    `<strong>Tensionando:</strong> Al retirar el cordón elástico, se acumula energía potencial elástica en la lámina acerada. Distancia de jalón seleccionada: ${pullMM} mm.`,
+    `<strong>Golpe Instantáneo:</strong> Al soltar la lámina, la energía se libera rápidamente generando una fuerza de contacto que choca de forma brusca con la lámina cuadrada.`,
+    esCorto ? 
+    `<strong>Eyección (Jalón Corto):</strong> El golpe es débil debido al rango corto (${pullMM} mm). La aceleración de la lámina no supera el rozamiento estático; la esfera acompaña el movimiento.` :
+    `<strong>Eyección (Jalón Largo):</strong> La lámina cuadrada sale despedida a gran velocidad. Al ser una fuerza de impacto súbita, casi no se transmite movimiento horizontal a la esfera por inercia.`,
+    esCorto ? 
+    `<strong>Arrastre Completo:</strong> Al no romperse la inercia, la esfera se desplaza junto con la lámina cuadrada cayendo fuera del eje de la abertura del pilar.` :
+    `<strong>Caída Libre:</strong> La lámina cuadrada avanza liberando el soporte inferior. La fuerza de gravedad rompe el equilibrio vertical y acelera la esfera en dirección al cilindro.`,
+    esCorto ? 
+    `<strong>Resultado:</strong> Inercia no verificada en rango bajo. La esfera cayó fuera del tubo colector debido al arrastre mecánico.` :
+    `<strong>Aterrizaje (Ley I):</strong> Propiedad de inercia verificada. La esfera mantiene su posición inicial en el plano horizontal y cae de forma vertical directamente en el tubo.`
+  ];
+}
+
+let audioCtx = null;
+function initAudio() { if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } if (audioCtx.state === 'suspended') { audioCtx.resume(); } }
+
+function playStrike(force) {
+  if (!S.soundOn || !audioCtx || S.isPaused) return;
+  const now = audioCtx.currentTime; const vol = Math.min(0.6, force / 40);
+  const osc1 = audioCtx.createOscillator(); const gain1 = audioCtx.createGain();
+  osc1.type = 'square'; osc1.frequency.setValueAtTime(1200 + force * 2, now); osc1.frequency.exponentialRampToValueAtTime(200, now + 0.08);
+  gain1.gain.setValueAtTime(vol, now); gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+  osc1.connect(gain1); gain1.connect(audioCtx.destination); osc1.start(now); osc1.stop(now + 0.13);
+}
+
+function playTwang(pullAmount) {
+  if (!S.soundOn || !audioCtx || S.isPaused) return;
+  const now = audioCtx.currentTime; const vol = Math.min(0.35, pullAmount * 15);
+  const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+  osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300 + pullAmount * 2000, now); osc.frequency.exponentialRampToValueAtTime(80, now + 0.2);
+  gain.gain.setValueAtTime(vol, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+  osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.26);
+}
+
+function playClick() {
+  if (!S.soundOn || !audioCtx) return; const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+  osc.type = 'sine'; osc.frequency.setValueAtTime(1000, now); osc.frequency.exponentialRampToValueAtTime(500, now + 0.02);
+  gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+  osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.04);
+}
+
+function getSpherePixelPos() {
+  const s = SC, ox = OX, oy = OY;
+  const bh = REAL.baseHeight * s; const cylTopY = oy - bh - REAL.cylHeight * s;
+  const sphereR = REAL.sphereDiam * s / 2; const plateH = Math.max(4, REAL.plateThick * s * 3);
+  const restPy = cylTopY - plateH - sphereR;
+  let sphPx, sphPy;
+  if (S.phase === 'IDLE' || S.phase === 'PULLING' || S.phase === 'STRIKING') { sphPx = ox + S.sphereX * s; sphPy = restPy; }
+  else { sphPx = ox + S.sphereX * s; sphPy = restPy + S.sphereY * s; }
+  return { x: sphPx, y: sphPy, restPy, cylTopY, sphereR, plateH };
+}
+
+function getMaxFall() {
+  const s = SC, oy = OY; const bh = REAL.baseHeight * s;
+  const cylTopY = oy - bh - REAL.cylHeight * s; const sphereR = REAL.sphereDiam * s / 2;
+  const plateH = Math.max(4, REAL.plateThick * s * 3); const restPy = cylTopY - plateH - sphereR;
+  const bottomCenterPy = cylTopY + REAL.cylHeight * s - sphereR;
+  return (bottomCenterPy - restPy) / s;
+}
+
+function resize() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  SC = (rect.height * 0.65) / 0.20;
+  OX = rect.width * 0.50; 
+  OY = rect.height * 0.85;
+}
+window.addEventListener('resize', resize);
+
+function updateParams() {
+  if (S.isPaused) return;
+  S.sphereMass = parseFloat(document.getElementById('massSlider').value) / 1000;
+  const pullMM = parseInt(document.getElementById('pullSlider').value);
+  S.maxPull = pullMM / 1000;
+  S.friction = parseFloat(document.getElementById('fricSlider').value);
+  S.gravity = parseFloat(document.getElementById('gravSlider').value);
+  
+  document.getElementById('massVal').textContent = (S.sphereMass*1000).toFixed(0) + ' g';
+  document.getElementById('pullVal').textContent = pullMM + ' mm';
+  document.getElementById('fricVal').textContent = S.friction.toFixed(2);
+  document.getElementById('gravVal').textContent = S.gravity.toFixed(2) + ' m/s²';
+  
+  updateTimeline();
+}
+
+function toggleForces() { S.showForces = !S.showForces; document.getElementById('togForces').classList.toggle('on', S.showForces); playClick(); }
+function toggleSlow() { S.slowMotion = !S.slowMotion; document.getElementById('togSlow').classList.toggle('on', S.slowMotion); playClick(); }
+function toggleSound() { S.soundOn = !S.soundOn; document.getElementById('togSound').classList.toggle('on', S.soundOn); if (S.soundOn) { initAudio(); playClick(); } }
+
+function togglePause() {
+  S.isPaused = !S.isPaused;
+  playClick();
+  const btn = document.getElementById('btnPause');
+  const icon = document.getElementById('pauseIcon');
+  const text = document.getElementById('pauseText');
+  
+  if (S.isPaused) {
+    btn.classList.add('paused');
+    icon.className = 'fa-solid fa-play';
+    text.textContent = 'Reanudar';
+  } else {
+    btn.classList.remove('paused');
+    icon.className = 'fa-solid fa-pause';
+    text.textContent = 'Pausar';
+  }
+}
+
+function initTimeline() {
+  const c = document.getElementById('timelineDots'); c.innerHTML = '';
+  PHASES.forEach((p, i) => {
+    const d = document.createElement('div'); d.className = 'phase-dot'; d.title = PHASE_LABELS[i]; d.id = 'pdot' + i; c.appendChild(d);
+    if (i < PHASES.length - 1) { const line = document.createElement('div'); line.style.cssText = 'width:14px;height:2px;background:rgba(0,0,0,0.08);border-radius:1px'; c.appendChild(line); }
+  });
+}
+
+function updateTimeline() {
+  const idx = PHASES.indexOf(S.phase);
+  PHASES.forEach((p, i) => { const dot = document.getElementById('pdot' + i); dot.className = 'phase-dot'; if (i < idx) dot.classList.add('done'); if (i === idx) dot.classList.add('active'); });
+  document.getElementById('timelineProgress').style.width = (idx / (PHASES.length - 1) * 100) + '%';
+  document.getElementById('phaseLabel').textContent = PHASE_LABELS[idx];
+  document.getElementById('explainBox').innerHTML = getExplanations()[idx];
+}
+
+canvas.addEventListener('mousedown', startDrag);
+canvas.addEventListener('mousemove', moveDrag);
+window.addEventListener('mouseup', endDrag);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); initAudio(); startDrag(e.touches[0]); }, {passive:false});
+canvas.addEventListener('touchmove', e => { e.preventDefault(); moveDrag(e.touches[0]); }, {passive:false});
+window.addEventListener('touchend', e => { e.preventDefault(); endDrag(); }, {passive:false});
+
+function canvasPos(e) { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+
+function getLaminaTip() {
+  const s = SC, ox = OX, oy = OY;
+  const cylTopY = oy - (REAL.baseHeight + REAL.cylHeight) * s;
+  const supportX = ox - REAL.plateSide * 0.55 * s;
+  return { x: supportX + S.laminaTipX * s, y: cylTopY + 5 };
+}
+
+function getCordEndPos() {
+  const s = SC; const tip = getLaminaTip();
+  const restTipX = OX - REAL.plateSide * 0.55 * SC;
+  const cordRootX = restTipX - 0.05 * s;
+  return { rootX: cordRootX, rootY: tip.y, endX: tip.x, endY: tip.y };
+}
+
+function startDrag(e) {
+  initAudio(); if (S.phase !== 'IDLE' || S.isPaused) return;
+  const pos = canvasPos(e); const cord = getCordEndPos();
+  if (Math.hypot(pos.x - cord.endX, pos.y - cord.endY) < 32) {
+    S.isDragging = true; S.dragStartX = pos.x; S.phase = 'PULLING';
+    updateTimeline(); document.getElementById('pullHint').style.opacity = '0';
+    document.body.style.cursor = 'grabbing';
+  }
+}
+
+function moveDrag(e) {
+  if (S.isPaused) return;
+  const pos = canvasPos(e); const cord = getCordEndPos();
+  if (S.phase === 'IDLE') {
+    S.hoverNear = Math.hypot(pos.x - cord.endX, pos.y - cord.endY) < 32;
+    canvas.style.cursor = S.hoverNear ? 'grab' : 'default';
+  }
+  if (!S.isDragging) return;
+  const dx = (S.dragStartX - pos.x) / SC;
+  S.pullDist = Math.max(0, Math.min(dx, S.maxPull));
+  S.laminaTipX = -S.pullDist;
+  updateTimeline(); 
+}
+
+function endDrag() {
+  if (!S.isDragging) return; S.isDragging = false;
+  document.body.style.cursor = 'default';
+  if (S.pullDist > 0.002) {
+    triggerStrike();
+  } else {
+    S.pullDist = 0; S.laminaTipX = 0; S.phase = 'IDLE'; updateTimeline(); document.getElementById('pullHint').style.opacity = '1';
+  }
+}
+
+function triggerStrike() { S.phase = 'STRIKING'; S.laminaVel = S.pullDist * Math.sqrt(S.laminaK / 0.03) * 0.28; playTwang(S.pullDist); updateTimeline(); }
+
+function resetSim() {
+  initAudio(); S.phase = 'IDLE'; S.time = 0; S.pullDist = 0; S.laminaTipX = 0; S.laminaVel = 0;
+  S.plateX = 0; S.plateVx = 0; S.sphereX = 0; S.sphereY = 0; S.sphereVx = 0; S.sphereVy = 0;
+  S.impactForce = 0; S.particles = []; S.flashAlpha = 0;
+  if (S.isPaused) togglePause(); 
+  updateTimeline(); updateDataUI(); document.getElementById('pullHint').style.opacity = '1';
+}
+
+function stepPhysics() {
+  if (S.phase === 'IDLE' || S.phase === 'PULLING' || S.phase === 'LANDED' || S.isPaused) return;
+  const dt = S.dt * (S.slowMotion ? 0.15 : 1); S.time += dt;
+
+  if (S.phase === 'STRIKING') {
+    S.laminaTipX += S.laminaVel * dt;
+    S.laminaVel += (-S.laminaK / 0.03) * S.laminaTipX * dt;
+    if (S.laminaTipX >= -0.0005) {
+      S.laminaTipX = 0;
+      S.plateVx = S.laminaVel * 0.85; 
+      S.impactForce = S.plateMass * S.plateVx / 0.002;
+      playStrike(S.impactForce);
+      S.phase = 'EJECTING'; S.flashAlpha = 1;
+      spawnParticles(OX - REAL.plateSide*0.5*SC, getSpherePixelPos().cylTopY, 12, '#b85a1c');
+      updateTimeline();
+    }
+  }
+
+  if (S.phase === 'EJECTING') {
+    S.plateX += S.plateVx * dt; 
+    
+    if (S.plateX >= REAL.stopDistance) {
+      S.plateX = REAL.stopDistance;
+      S.plateVx = 0; 
+    } else {
+      S.plateVx *= (1 - dt * 0.3);
+    }
+    
+    const pullMM = Math.round(S.maxPull * 1000);
+    if (pullMM <= 18) {
+      S.sphereVx = S.plateVx; 
+    } else {
+      if (S.plateX < REAL.plateSide * 0.5) {
+        const fricAcc = S.friction * S.gravity;
+        S.sphereVx += fricAcc * dt;
+      }
+    }
+    S.sphereX += S.sphereVx * dt;
+    
+    if (pullMM <= 18) {
+      if (S.plateX >= REAL.stopDistance - 0.01) { S.phase = 'FALLING'; updateTimeline(); }
+    } else {
+      if (S.plateX > REAL.plateSide * 0.52) { S.phase = 'FALLING'; updateTimeline(); }
+    }
+  }
+
+  if (S.phase === 'FALLING') {
+    if (S.plateX < REAL.stopDistance) {
+      S.plateX += S.plateVx * dt;
+      if (S.plateX >= REAL.stopDistance) { S.plateX = REAL.stopDistance; S.plateVx = 0; }
+    }
+
+    S.sphereVy += S.gravity * dt; S.sphereY += S.sphereVy * dt; S.sphereX += S.sphereVx * dt;
+    const maxFall = getMaxFall();
+    
+    if (S.sphereY >= maxFall) {
+      S.sphereY = maxFall; S.sphereVy = 0; S.sphereVx = 0;
+      S.phase = 'LANDED';
+      
+      const pullMM = Math.round(S.maxPull * 1000);
+      if (pullMM <= 18) {
+        spawnParticles(getSpherePixelPos().x, getSpherePixelPos().y + getSpherePixelPos().sphereR, 14, '#b85a1c'); 
+        updateTimeline();
+        showToast('¡Inercia Fallida! Arrastre horizontal: ' + (S.sphereX*1000).toFixed(1) + ' mm');
+      } else {
+        spawnParticles(getSpherePixelPos().x, getSpherePixelPos().y + getSpherePixelPos().sphereR, 14, '#2b7bb9'); 
+        updateTimeline();
+        showToast('¡Inercia Cumplida! Desplazamiento horizontal: ' + (S.sphereX*1000).toFixed(1) + ' mm');
+      }
+    }
+  }
+
+  for (let i = S.particles.length - 1; i >= 0; i--) { const p = S.particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= dt * 3; if (p.life <= 0) S.particles.splice(i, 1); }
+  S.flashAlpha *= 0.88;
+}
+
+function spawnParticles(x, y, count, color) { for(let i=0; i<count; i++) S.particles.push({x,y,vx:(Math.random()-0.5)*5,vy:(Math.random()-0.7)*5,life:1,color}); }
+
+function updateDataUI() {
+  document.getElementById('dForce').textContent = S.impactForce.toFixed(2) + ' N';
+  document.getElementById('dVelPlate').textContent = S.plateVx.toFixed(2) + ' m/s';
+  document.getElementById('dVxSph').textContent = S.sphereVx.toFixed(3) + ' m/s';
+  document.getElementById('dDxSph').textContent = (S.sphereX * 1000).toFixed(1) + ' mm';
+  document.getElementById('dHeight').textContent = (REAL.cylHeight * 100).toFixed(1) + ' cm';
+  const energy = 0.5 * S.laminaK * Math.pow(S.pullDist, 2) * 1000;
+  document.getElementById('dEnergy').textContent = energy.toFixed(1) + ' mJ';
+  document.getElementById('timeLabel').textContent = S.time.toFixed(3) + ' s';
+}
+
+function showToast(m) { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 4000); }
+
+function drawVector(x, y, dx, dy, color, label) {
+  if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return;
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + dx, y + dy); ctx.stroke();
+  const angle = Math.atan2(dy, dx);
+  ctx.beginPath(); ctx.moveTo(x + dx, y + dy);
+  ctx.lineTo(x + dx - 8 * Math.cos(angle - Math.PI/6), y + dy - 8 * Math.sin(angle - Math.PI/6));
+  ctx.lineTo(x + dx - 8 * Math.cos(angle + Math.PI/6), y + dy - 8 * Math.sin(angle + Math.PI/6));
+  ctx.fill();
+  ctx.font = 'bold 11px Outfit'; ctx.fillText(label, x + dx + 5 * Math.cos(angle), y + dy + 5 * Math.sin(angle) + 4);
+}
+
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const s = SC, ox = OX, oy = OY;
+  const bh = REAL.baseHeight * s; const bd = REAL.baseDiam * s;
+  const ch = REAL.cylHeight * s; const ced = REAL.cylExtDiam * s; const cid = REAL.cylIntDiam * s;
+
+  // 1. Soporte Base Pesada Inferior
+  ctx.fillStyle = '#2c3539'; ctx.beginPath(); ctx.roundRect(ox - bd/2, oy - bh, bd, bh, [10, 10, 2, 2]); ctx.fill();
+  
+  // 2. Poste Cilíndrico Central Metálico Receptor
+  const cylTopY = oy - bh - ch;
+  const cylGrad = ctx.createLinearGradient(ox - ced/2, cylTopY, ox + ced/2, cylTopY);
+  cylGrad.addColorStop(0, '#bdc3c7'); cylGrad.addColorStop(0.5, '#ffffff'); cylGrad.addColorStop(1, '#95a5a6');
+  ctx.fillStyle = cylGrad; ctx.beginPath(); ctx.roundRect(ox - ced/2, cylTopY, ced, ch, [ ced*0.4, ced*0.4, 1, 1]); ctx.fill();
+  ctx.fillStyle = '#dad6c5'; ctx.beginPath(); ctx.ellipse(ox, cylTopY, cid/2, cid/6, 0, 0, Math.PI*2); ctx.fill();
+
+  // 3. Lámina Elástica Acerada Curva
+  const restTipX = ox - REAL.plateSide * 0.55 * s;
+  const tip = getLaminaTip();
+  ctx.strokeStyle = '#475569'; ctx.lineWidth = 2.5; ctx.beginPath();
+  ctx.moveTo(restTipX, oy - bh - ch + ch * 0.15);
+  ctx.bezierCurveTo(restTipX + S.laminaTipX*s*0.2, oy - bh - ch, restTipX + S.laminaTipX*s, oy - bh - ch, tip.x, tip.y);
+  ctx.stroke();
+
+  // Cordon / Gatillo Elástico de Tracción
+  const cord = getCordEndPos();
+  ctx.strokeStyle = '#5a4a42'; ctx.lineWidth = 2.5; ctx.beginPath();
+  ctx.moveTo(cord.rootX, cord.rootY); ctx.lineTo(cord.endX, cord.endY); ctx.stroke();
+  ctx.fillStyle = '#b85a1c'; ctx.beginPath(); ctx.arc(cord.endX, cord.endY, 6, 0, Math.PI*2); ctx.fill();
+
+  // 4. Lámina Cuadrada Deslizable Superior (Soporte)
+  const sp = getSpherePixelPos();
+  ctx.save();
+  ctx.translate(S.plateX * s, 0);
+  const plateGrad = ctx.createLinearGradient(ox - (REAL.plateSide*s)/2, sp.cylTopY - sp.plateH, ox + (REAL.plateSide*s)/2, sp.cylTopY);
+  plateGrad.addColorStop(0, '#cbd5e1'); plateGrad.addColorStop(0.5, '#94a3b8'); plateGrad.addColorStop(1, '#64748b'); 
+  ctx.fillStyle = plateGrad; ctx.strokeStyle = '#475569'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.roundRect(ox - (REAL.plateSide*s)/2, sp.cylTopY - sp.plateH, REAL.plateSide*s, sp.plateH, 2); ctx.fill(); ctx.stroke();
+  ctx.restore();
+
+  // 5. Esfera Metálica Maciza Colectora
+  const sphGrad = ctx.createRadialGradient(sp.x - sp.sphereR*0.3, sp.y - sp.sphereR*0.3, 1, sp.x, sp.y, sp.sphereR);
+  sphGrad.addColorStop(0, '#ffffff'); sphGrad.addColorStop(0.3, '#7f8c8d'); sphGrad.addColorStop(1, '#2c3e50');       
+  ctx.fillStyle = sphGrad; ctx.beginPath(); ctx.arc(sp.x, sp.y, sp.sphereR, 0, Math.PI*2); ctx.fill();
+
+  // 6. Capa Dinámica de Vectores de Fuerza Convencionales
+  if (S.showForces) {
+    const pVal = S.sphereMass * S.gravity;
+    const arrowScale = 40 / (0.091 * 9.81); 
+    
+    if (S.phase === 'IDLE' || S.phase === 'PULLING' || S.phase === 'STRIKING') {
+      drawVector(sp.x, sp.y, 0, pVal * arrowScale, '#b91c1c', 'P (Peso)');
+      drawVector(sp.x, sp.y, 0, -pVal * arrowScale, '#2b7bb9', 'N (Normal)');
+    } 
+    else if (S.phase === 'EJECTING') {
+      drawVector(sp.x, sp.y, 0, pVal * arrowScale, '#b91c1c', 'P');
+      drawVector(sp.x, sp.y, 0, -pVal * arrowScale, '#2b7bb9', 'N');
+      const f_roz = S.friction * pVal;
+      drawVector(sp.x, sp.y, f_roz * arrowScale * 2.5, 0, '#b85a1c', 'fr (Fricción)');
+    } 
+    else if (S.phase === 'FALLING') {
+      drawVector(sp.x, sp.y, 0, pVal * arrowScale, '#b91c1c', 'P (Gravedad)');
+    }
+  }
+
+  // Partículas y destellos cinéticos
+  S.particles.forEach(p => { ctx.fillStyle = p.color; ctx.globalAlpha = p.life; ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1; });
+  if (S.flashAlpha > 0) { ctx.fillStyle = 'white'; ctx.globalAlpha = S.flashAlpha * 0.15; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.globalAlpha = 1; }
+  
+  // Cartel Estático de Pausa de la Simulación Virtual
+  if (S.isPaused) {
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.35)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#ffffff'; ctx.font = '900 18px Outfit'; ctx.textAlign = 'center';
+    ctx.fillText('SIMULACIÓN EN PAUSA', canvas.width / (2 * window.devicePixelRatio), canvas.height / (4 * window.devicePixelRatio));
+    ctx.textAlign = 'left'; 
+  }
+}
+
+function loop(ts) {
+  if (!S.lastFpsTime) S.lastFpsTime = ts;
+  S.frameCount++;
+  if (ts - S.lastFpsTime >= 1000) {
+    S.fps = S.frameCount; S.frameCount = 0; S.lastFpsTime = ts;
+    document.getElementById('fpsLabel').textContent = S.fps + ' FPS';
+  }
+  if (!S.isPaused) { stepPhysics(); updateDataUI(); }
+  draw();
+  requestAnimationFrame(loop);
+}
+
+resize();
+initTimeline();
+updateParams();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

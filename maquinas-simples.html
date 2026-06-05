@@ -15,42 +15,77 @@
         }
         .container { max-width: 1200px; margin: 0 auto; }
         header { text-align: center; color: white; margin-bottom: 40px; }
-        header h1 { font-size: 2.8em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
+        header h1 { font-size: 2.8em; margin-bottom: 15px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
         .breadcrumb { margin-bottom: 30px; font-size: 1.1em; text-align: center; }
         .breadcrumb a { color: #fff; text-decoration: none; font-weight: bold; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; transition: background 0.2s; }
-        .breadcrumb a:hover { background: rgba(255,255,255,0.4); }
-        .simulators-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 40px; }
-        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 16px rgba(0,0,0,0.15); display: flex; flex-direction: column; transition: transform 0.3s; }
+        .breadcrumb a:hover { background: rgba(255,255,255,0.3); }
+
+        .simulators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
         .card:hover { transform: translateY(-5px); }
-        .card-header { background: #f8fafc; padding: 20px; border-bottom: 1px solid #e2e8f0; text-align: center; }
-        .card-header .icon { font-size: 3em; margin-bottom: 8px; display: block; }
-        .card-header h2 { font-size: 1.3em; color: #1e293b; }
-        .card-body { padding: 20px; flex-grow: 1; color: #64748b; line-height: 1.5; font-size: 0.95em; }
-        .card-footer { padding: 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; }
-        .btn { display: inline-block; background: #0284c7; color: white; padding: 10px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; width: 100%; transition: background 0.2s; }
-        .btn:hover { background: #0369a1; }
-        footer { text-align: center; color: white; font-size: 0.9em; margin-top: 40px; }
+
+        .card-header { background: #0f172a; color: white; padding: 18px; display: flex; align-items: center; gap: 12px; }
+        .card-header .icon { font-size: 1.8em; }
+        .card-header h2 { font-size: 1.25em; font-weight: 600; }
+
+        .card-body { padding: 20px; flex: 1; }
+        .card-body p { color: #64748b; line-height: 1.5; }
+
+        .card-footer { padding: 15px; background: #f8fafc; border-top: 1px solid #e2e8f0; }
+        .btn {
+            display: block; width: 100%; text-align: center; background: #2563eb; color: white;
+            text-decoration: none; padding: 10px; border-radius: 6px; font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #1d4ed8; }
+        
+        footer { text-align: center; color: white; margin-top: 50px; font-size: 0.9em; opacity: 0.8; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🛠️ Kit de Máquinas Simples</h1>
-            <p style="color: white; opacity: 0.9; margin-top: 5px;">Selecciona el simulador mecánico que deseas utilizar</p>
+            <h1>Kit de Máquinas Simples</h1>
+            <div class="breadcrumb">
+                <a href="index.html">🏠 Volver al Menú Principal</a>
+            </div>
         </header>
-
-        <div class="breadcrumb">
-            <a href="index.html">🏠 Volver al Panel Principal</a>
-        </div>
 
         <div class="simulators-grid">
             <div class="card">
                 <div class="card-header">
-                    <span class="icon">⚖️</span>
-                    <h2>Simulador de Palancas</h2>
+                    <span class="icon">📐</span>
+                    <h2>Plano Inclinado</h2>
                 </div>
                 <div class="card-body">
-                    <p>Estudia las leyes del equilibrio rotacional variando la posición del fulcro, los brazos mecánicos de potencia y resistencia en palancas de 1°, 2° y 3° grado.</p>
+                    <p>Descompón el vector peso en sus componentes normal y tangencial. Modifica el ángulo de elevación y los coeficientes de fricción sobre la rampa experimental.</p>
+                </div>
+                <div class="card-footer">
+                    <a href="simulador1.html" class="btn">Abrir Simulador</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="icon">⚖️</span>
+                    <h2>Módulo de Palancas</h2>
+                </div>
+                <div class="card-body">
+                    <p>Estudia palancas de primer, segundo y tercer grado. Modifica las posiciones del fulcro, cargas y fuerzas para balancear los momentos de torque estático.</p>
                 </div>
                 <div class="card-footer">
                     <a href="simulador2.html" class="btn">Abrir Simulador</a>
@@ -60,26 +95,13 @@
             <div class="card">
                 <div class="card-header">
                     <span class="icon">🛞</span>
-                    <h2>Sistemas de Poleas</h2>
+                    <h2>Sistema de Poleas</h2>
                 </div>
                 <div class="card-body">
-                    <p>Configura poleas fijas, móviles y polipastos mecánicos. Analiza cómo se reduce la fuerza necesaria para elevar cargas pesadas según el número de cuerdas.</p>
+                    <p>Configura poleas fijas, móviles y polipastos mecánicos. Analiza cómo se reduce la fuerza necesaria para elevar cargas según el número de cuerdas activas.</p>
                 </div>
                 <div class="card-footer">
-                    <a href="simulador-poleas.html" class="btn">Abrir Simulador</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <span class="icon">📐</span>
-                    <h2>Plano Inclinado</h2>
-                </div>
-                <div class="card-body">
-                    <p>Descompón el vector peso en sus componentes normal y tangencial. Modifica el ángulo de elevación y los coeficientes de fricción sobre la rampa.</p>
-                </div>
-                <div class="card-footer">
-                    <a href="simulador1.html" class="btn">Abrir Simulador</a>
+                    <a href="simulador3.html" class="btn">Abrir Simulador</a>
                 </div>
             </div>
         </div>

@@ -14,35 +14,53 @@
             color: #333;
         }
         .container { max-width: 1200px; margin: 0 auto; }
-        header { text-align: center; color: white; margin-bottom: 60px; animation: fadeIn 0.8s ease-in; }
+        header { text-align: center; color: white; margin-bottom: 60px; padding-top: 20px; }
         header h1 { font-size: 3em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
         header p { font-size: 1.2em; opacity: 0.95; }
+        
         .simulators-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; margin-bottom: 50px; }
-        .card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.15); transition: transform 0.3s, box-shadow 0.3s; display: flex; flex-direction: column; }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.25); }
-        .card-header { background: #f8fafc; padding: 25px; border-bottom: 1px solid #e2e8f0; text-align: center; }
-        .card-header .icon { font-size: 3.5em; margin-bottom: 10px; display: block; }
-        .card-header h2 { font-size: 1.5em; color: #2d3748; }
-        .card-body { padding: 25px; flex-grow: 1; }
-        .card-body p { color: #4a5568; line-height: 1.6; margin-bottom: 20px; }
-        .card-body ul { list-style-type: none; }
-        .card-body ul li { margin-bottom: 10px; position: relative; padding-left: 25px; color: #4a5568; }
-        .card-body ul li::before { content: "✓"; color: #4c51bf; font-weight: bold; position: absolute; left: 0; }
-        .card-footer { padding: 25px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; }
-        .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: opacity 0.2s; }
-        .btn:hover { opacity: 0.9; }
-        .info-section { background: rgba(255, 255, 255, 0.9); padding: 40px; border-radius: 15px; margin-bottom: 50px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .info-section h2 { color: #2d3748; margin-bottom: 15px; }
-        .info-section p { color: #4a5568; line-height: 1.7; }
-        footer { text-align: center; color: white; padding: 20px 0; font-size: 0.9em; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card { 
+            background: white; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+        }
+        .card:hover { transform: translateY(-5px); }
+        
+        .card-header { background: #0f172a; padding: 20px; display: flex; align-items: center; gap: 15px; }
+        .card-header .icon { font-size: 2em; }
+        .card-header h2 { font-size: 1.4em; color: #fff; }
+        
+        .card-body { padding: 25px; flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .card-body p { color: #64748b; line-height: 1.6; }
+        .card-body ul { list-style: none; padding-left: 0; }
+        .card-body li { margin-bottom: 10px; color: #334155; display: flex; align-items: center; gap: 10px; }
+        .card-body li::before { content: "⚡"; color: #764ba2; }
+        
+        .card-footer { padding: 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; }
+        .btn {
+            display: block; width: 100%; text-align: center; background: #2563eb; color: white; 
+            text-decoration: none; padding: 12px; border-radius: 8px; font-weight: bold; 
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #1d4ed8; }
+
+        .info-section { background: white; padding: 30px; border-radius: 12px; margin-bottom: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .info-section h2 { margin-bottom: 15px; color: #0f172a; }
+        .info-section p { color: #64748b; line-height: 1.6; }
+        
+        footer { text-align: center; padding: 20px; font-size: 0.9em; color: white; opacity: 0.8; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🔬 Física Interactiva</h1>
-            <p>Laboratorio Virtual de Mecánica y Máquinas Simples</p>
+            <h1>Simuladores de Física - Laboratorio Virtual</h1>
+            <p>Plataforma modular interactiva para experimentación científica</p>
         </header>
 
         <div class="simulators-grid">
@@ -52,45 +70,43 @@
                     <h2>Kit de Máquinas Simples</h2>
                 </div>
                 <div class="card-body">
-                    <p>Explora los principios fundamentales de la ventaja mecánica a través de herramientas clásicas de la ingeniería.</p>
+                    <p>Explora los principios fundamentales de la ventaja mecánica, condiciones de equilibrio estático y conservación del trabajo mecánico.</p>
                     <ul>
-                        <li>Simulador de Palancas (1°, 2° y 3° grado)</li>
-                        <li>Sistemas de Poleas (Fijas y Móviles)</li>
-                        <li>Plano Inclinado Profesional</li>
+                        <li>Simulador de Plano Inclinado</li>
+                        <li>Sistema de Poleas Mecánicas</li>
+                        <li>Módulo de Palancas Calibradas</li>
                     </ul>
                 </div>
                 <div class="card-footer">
-                    <a href="maquinas-simples.html" class="btn">Abrir Módulo del Kit</a>
+                    <a href="maquinas-simples.html" class="btn">Abrir Módulo de Kit</a>
                 </div>
             </div>
 
             <div class="card">
-                <div class="card-header">
+                <div class="card-header" style="background: #1e293b;">
                     <span class="icon">💪</span>
                     <h2>Kit de Fuerza y Dinámica</h2>
                 </div>
                 <div class="card-body">
-                    <p>Experimenta con las Leyes de Newton, la relación entre fuerza, masa, aceleración y los efectos de la fricción dinámica.</p>
+                    <p>Experimenta con las Leyes de Newton, la conservación de la cantidad de movimiento, los estados inerciales y los efectos disipativos de la fricción.</p>
                     <ul>
-                        <li>Análisis de fuerzas dinámicas</li>
-                        <li>Simulación con fricción regulable</li>
-                        <li>Vectores en tiempo real</li>
+                        <li>Ensayo de Inercia en Riel de Precisión</li>
+                        <li>Análisis de Vectores y Rozamiento</li>
                     </ul>
                 </div>
                 <div class="card-footer">
-                    <a href="#" class="btn" onclick="alert('Módulo de Dinámica en desarrollo')">Abrir Simulador</a>
+                    <a href="kit_dinamica.html" class="btn" style="background: #a855f7;">Abrir Módulo de Kit</a>
                 </div>
             </div>
         </div>
 
         <div class="info-section">
             <h2>📚 Acerca de este Laboratorio Virtual</h2>
-            <p>Este laboratorio virtual ha sido diseñado para estudiantes de física que desean profundizar en la comprensión de conceptos fundamentales mediante simulaciones interactivas. Cada simulador permite manipular variables clave y observar resultados numéricos y gráficos en tiempo real.</p>
+            <p>Este entorno digital interactivo permite simular montajes físicos reales basados en catálogos de laboratorio certificados. Cada módulo cuenta con un motor de cálculo síncrono que resuelve ecuaciones dinámicas frame a frame para un riguroso análisis académico.</p>
         </div>
 
         <footer>
-            <p>&copy; 2026 Simuladores de Física - Laboratorio Virtual</p>
-            <p><a href="https://github.com/budyroberth-glitch/Simuladores-de-Fsica" style="color: white; text-decoration: underline;">Ver en GitHub</a></p>
+            <p>&copy; 2026 Simuladores de Física - Laboratorio Virtual de Ingeniería</p>
         </footer>
     </div>
 </body>
