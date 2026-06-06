@@ -6,9 +6,9 @@
     <title>Sistemas de Poleas - Simulador 3</title>
     <style>
         :root {
-            --bg-main: #0f172a;
-            --panel-bg: #1e293b;
-            --panel-border: #334155;
+            --bg-main: #0b0f17;
+            --panel-bg: #111827;
+            --panel-border: #1e293b;
             --accent-cyan: #06b6d4;
             --accent-orange: #f97316;
             --text-light: #f8fafc;
@@ -20,22 +20,24 @@
         body { background-color: var(--bg-main); color: var(--text-light); display: flex; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; font-size: 12px; }
 
         header {
-            background: #090d16; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
+            background: #030712; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
             border-bottom: 1px solid var(--panel-border); box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         header h1 { font-size: 1.4em; font-weight: 600; color: var(--text-light); display: flex; align-items: center; gap: 8px; }
-        .btn-back { background: #27272a; color: #d4d4d8; border: 1px solid #3f3f46; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 500; transition: all 0.2s; }
-        .btn-back:hover { background: #3f3f46; color: white; }
+        .btn-back { background: #1f2937; color: #d4d4d8; border: 1px solid #374151; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 500; transition: all 0.2s; }
+        .btn-back:hover { background: #374151; color: white; }
 
         .workspace { display: flex; flex: 1; overflow: hidden; }
 
-        /* Inventario de componentes (Drag Source) */
+        /* Inventario de componentes */
         .inventory-panel { width: 280px; background: var(--panel-bg); border-right: 1px solid var(--panel-border); display: flex; flex-direction: column; }
         .panel-title { padding: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--panel-border); color: var(--accent-cyan); }
         .items-grid { padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1; }
+        .items-grid::-webkit-scrollbar { width: 5px; }
+        .items-grid::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
         
         .inv-item {
-            background: #111827; border: 1px solid var(--panel-border); border-radius: 6px; padding: 10px;
+            background: #070a12; border: 1px solid var(--panel-border); border-radius: 6px; padding: 10px;
             cursor: grab; transition: all 0.2s; display: flex; align-items: center; gap: 10px;
         }
         .inv-item:hover { border-color: var(--accent-cyan); background: #152238; transform: translateX(2px); }
@@ -44,116 +46,116 @@
         .inv-item .name { font-weight: 500; color: #f1f5f9; }
         .inv-item .desc { font-size: 10px; color: var(--text-muted); }
 
-        /* Área Central del Simulador */
-        .canvas-area { flex: 1; position: relative; background: #0b0f19; display: flex; justify-content: center; align-items: center; }
-        canvas { background: #0d1321; box-shadow: inset 0 0 40px rgba(0,0,0,0.8); }
+        /* Área Central */
+        .canvas-area { flex: 1; position: relative; background: #0f141c; display: flex; justify-content: center; align-items: center; padding: 40px; }
+        .board-container { position: relative; padding: 10px; }
 
-        /* Panel Científico de Resultados */
+        /* Fondo del Canvas */
+        canvas { 
+            background: #1e2633;
+            border: 2px solid #2e3b4e; 
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
+        }
+
+        /* Regletas graduadas */
+        .rule-h {
+            position: absolute; top: -16px; left: 16px; right: 16px; height: 18px;
+            display: flex; justify-content: space-between; font-family: monospace;
+            font-size: 9px; color: #64748b; border-bottom: 1px solid rgba(100,116,139,0.3); padding-bottom: 2px;
+        }
+        .rule-v {
+            position: absolute; left: -28px; top: 16px; bottom: 16px; width: 32px;
+            display: flex; flex-direction: column; justify-content: space-between; font-family: monospace;
+            font-size: 9px; color: #64748b; text-align: right; border-right: 1px solid rgba(100,116,139,0.3); padding-right: 4px;
+        }
+
+        /* Telemetría */
         .telemetry-panel { width: 320px; background: var(--panel-bg); border-left: 1px solid var(--panel-border); padding: 16px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
-        .scientific-card { background: #0f172a; border: 1px solid var(--panel-border); border-radius: 8px; padding: 14px; }
+        .scientific-card { background: #070a12; border: 1px solid var(--panel-border); border-radius: 8px; padding: 14px; }
         .scientific-card h3 { font-size: 11px; text-transform: uppercase; color: var(--accent-orange); margin-bottom: 8px; border-bottom: 1px solid #1e293b; padding-bottom: 4px; }
         .data-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-family: monospace; font-size: 12px; }
         .data-row .lbl { color: var(--text-muted); }
         .data-row .val { color: #f1f5f9; font-weight: bold; }
         .data-row.total .val { color: var(--green-success); font-size: 1.2em; }
 
-        .btn-clear { background: #dc2626; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: auto; transition: background 0.2s; }
-        .btn-clear:hover { background: #b91c1c; }
-        .instructions { font-size: 11px; color: var(--text-muted); line-height: 1.4; background: #111827; padding: 10px; border-radius: 6px; border: 1px solid #27272a; }
+        .btn-clear { background: #b91c1c; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: auto; }
+        .btn-clear:hover { background: #991b1b; }
+        .instructions { font-size: 11px; color: var(--text-muted); line-height: 1.4; background: #070a12; padding: 10px; border-radius: 6px; border: 1px solid var(--panel-border); }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🛠️ Sandbox de Mecánica Experimental: Montaje Libre</h1>
+        <h1>🛠️ Sandbox de Mecánica Experimental: Réplica de Laboratorio Real</h1>
         <a href="maquinas-simples.html" class="btn-back">⬅️ Menú Principal</a>
     </header>
 
     <div class="workspace">
         <div class="inventory-panel">
-            <div class="panel-title">Componentes Estructurales</div>
+            <div class="panel-title">Elementos Disponibles</div>
             <div class="items-grid">
-                <div class="inv-item" draggable="true" data-type="base">
-                    <span class="icon">🪵</span>
-                    <div class="details"><span class="name">Base Metálica</span><span class="desc">Soporte con tornillos niveladores</span></div>
-                </div>
-                <div class="inv-item" draggable="true" data-type="varilla">
-                    <span class="icon">🥢</span>
-                    <div class="details"><span class="name">Varilla Cilíndrica</span><span class="desc">Eje de montaje vertical u horizontal</span></div>
-                </div>
                 <div class="inv-item" draggable="true" data-type="nuez">
                     <span class="icon">🗜️</span>
                     <div class="details"><span class="name">Nuez Doble</span><span class="desc">Abrazadera para cruce de varillas</span></div>
                 </div>
                 <div class="inv-item" draggable="true" data-type="armella">
                     <span class="icon">🔗</span>
-                    <div class="details"><span class="name">Armella / Brida</span><span class="desc">Punto fijo para colgar cuerdas</span></div>
+                    <div class="details"><span class="name">Armella móvil</span><span class="desc">Punto de sujeción adicional</span></div>
                 </div>
-                
-                <div class="panel-title" style="padding: 10px 0 5px 0; border-bottom: 1px solid var(--panel-border); margin-top: 10px;">Sistemas de Poleas</div>
-                
                 <div class="inv-item" draggable="true" data-type="polea_simple_doble_gancho">
                     <span class="icon">🛞</span>
-                    <div class="details"><span class="name">Polea Simple Doble Gancho</span><span class="desc">Con gancho superior e inferior ($VM=1$)</span></div>
+                    <div class="details"><span class="name">Polea Simple</span><span class="desc">Rodamiento de doble gancho ($VM=1$)</span></div>
                 </div>
                 <div class="inv-item" draggable="true" data-type="poleas_paralelo_doble_gancho">
                     <span class="icon">♊</span>
-                    <div class="details"><span class="name">Paralelas Doble Gancho</span><span class="desc">Bloque de 2 unidades en paralelo ($VM=4$)</span></div>
+                    <div class="details"><span class="name">Poleas en Paralelo</span><span class="desc">Bloque doble experimental ($VM=4$)</span></div>
                 </div>
-                <div class="inv-item" draggable="true" data-type="polipasto_doble_gancho">
-                    <span class="icon">⛓️</span>
-                    <div class="details"><span class="name">Polipasto Exponencial</span><span class="desc">Arreglo compacto con poleas fijas/móviles</span></div>
-                </div>
-                <div class="inv-item" draggable="true" data-type="polea_diferencial">
-                    <span class="icon">🎯</span>
-                    <div class="details"><span class="name">Polea Diferencial Weston</span><span class="desc">Eje concéntrico de radios $R$ y $r$ ($VM=8$)</span></div>
-                </div>
-                
-                <div class="panel-title" style="padding: 10px 0 5px 0; border-bottom: 1px solid var(--panel-border); margin-top: 10px;">Accesorios y Cargas</div>
-                
                 <div class="inv-item" draggable="true" data-type="tensor_cordon">
                     <span class="icon">🧵</span>
-                    <div class="details"><span class="name">Cordón de Poliéster + Tensor</span><span class="desc">Cuerda flexible inelástica experimental</span></div>
+                    <div class="details"><span class="name">Cordón con Tensor</span><span class="desc">Cuerda flexible trenzada de nylon</span></div>
                 </div>
                 <div class="inv-item" draggable="true" data-type="masa_laboratorio">
                     <span class="icon">🏋️</span>
-                    <div class="details"><span class="name">Juego de Sujetadores con Masa</span><span class="desc">Pesas calibradas de bronce (10 - 100 kg)</span></div>
+                    <div class="details"><span class="name">Pesas Calibradas</span><span class="desc">Carga con gancho ranurado</span></div>
                 </div>
             </div>
         </div>
 
         <div class="canvas-area">
-            <canvas id="sandboxCanvas" width="760" height="580"></canvas>
+            <div class="board-container">
+                <div class="rule-h">
+                    <span>0 cm</span><span>10 cm</span><span>20 cm</span><span>30 cm</span><span>40 cm</span><span>50 cm</span><span>60 cm</span><span>70 cm</span><span>80 cm</span>
+                </div>
+                <div class="rule-v">
+                    <span>0 cm</span><span>10 cm</span><span>20 cm</span><span>30 cm</span><span>40 cm</span><span>50 cm</span><span>60 cm</span><span>70 cm</span><span>80 cm</span>
+                </div>
+                <canvas id="sandboxCanvas" width="600" height="600"></canvas>
+            </div>
         </div>
 
         <div class="telemetry-panel">
-            <div class="panel-title" style="padding: 0 0 10px 0; color: var(--accent-orange);">Análisis de Campo Estático</div>
+            <div class="panel-title" style="padding: 0 0 10px 0; color: var(--accent-orange);">Análisis Estático</div>
             
             <div class="instructions">
-                💡 <strong>Modo de Uso Abierto:</strong><br>
-                1. Arrastra piezas desde el panel izquierdo al laboratorio.<br>
-                2. Suéltalas libremente. Acomódalas a tu criterio.<br>
-                3. Si colocas una masa cerca de los ganchos inferiores de las poleas, el software la acoplará y calculará los vectores instantáneamente.
+                🔬 <strong>Fiel al Modelo Físico:</strong><br>
+                El entorno simula el armazón real de madera de 80 cm con ganchos superiores micrométricos y varillas de acero. Arrastra las poleas y cuerdas para montar el sistema.
             </div>
 
             <div class="scientific-card">
-                <h3>Vectores de Resistencia (Carga)</h3>
-                <div class="data-row"><span class="lbl">Masa Total Acoplada:</span><span class="val" id="valMasa">0.0 kg</span></div>
+                <h3>Vectores de Carga</h3>
+                <div class="data-row"><span class="lbl">Masa Acoplada:</span><span class="val" id="valMasa">0.0 kg</span></div>
                 <div class="data-row"><span class="lbl">Gravedad ($g$):</span><span class="val">9.81 m/s²</span></div>
                 <div class="data-row total"><span class="lbl">Fuerza Peso ($R$):</span><span class="val" id="valPeso">0.0 N</span></div>
             </div>
 
             <div class="scientific-card">
-                <h3>Resolución del Sistema Dinámico</h3>
+                <h3>Resolución Mecánica</h3>
                 <div class="data-row"><span class="lbl">Ventaja Mecánica ($VM$):</span><span class="val" id="valVM">1.0</span></div>
                 <div class="data-row total" style="color: var(--accent-cyan);"><span class="lbl">Esfuerzo Requerido ($F$):</span><span class="val" id="valEsfuerzo">0.0 N</span></div>
             </div>
 
-            <div class="scientific-card" style="font-size: 11px; line-height: 1.4;">
-                🔬 <strong>Base de Cálculo:</strong> Las fuerzas se resuelven mediante las leyes del equilibrio estático de Newton ($\sum \vec{F} = 0$). El rozamiento en los cojinetes y la masa propia del cordón se asumen ideales ($0$).
-            </div>
-
-            <button class="btn-clear" id="btnClear">Reiniciar Escenario Vacío</button>
+            <button class="btn-clear" id="btnClear">Reiniciar Escenario</button>
         </div>
     </div>
 
@@ -161,34 +163,23 @@
         const canvas = document.getElementById('sandboxCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Arreglo maestro que almacena los componentes instanciados en el espacio libre
         let componentesActivos = [];
         let componenteArrastrándose = null;
         let offsetX = 0, offsetY = 0;
         let tipoElementoArrastradoDesdeMenu = null;
 
-        // Configuración científica inicial
-        let masaGlobal = 0;
-        let pesoGlobal = 0;
-        let ventajaMecanicaGlobal = 1;
-        let esfuerzoGlobal = 0;
+        let masaGlobal = 0, pesoGlobal = 0, ventajaMecanicaGlobal = 1, esfuerzoGlobal = 0;
 
-        // Monitorear el inicio del Drag desde el menú de componentes de la barra lateral
         document.querySelectorAll('.inv-item').forEach(item => {
-            item.addEventListener('dragstart', (e) => {
-                tipoElementoArrastradoDesdeMenu = e.currentTarget.getAttribute('data-type');
-            });
+            item.addEventListener('dragstart', (e) => { tipoElementoArrastradoDesdeMenu = e.currentTarget.getAttribute('data-type'); });
         });
 
-        // Permitir soltar elementos en el Canvas
         canvas.addEventListener('dragover', (e) => { e.preventDefault(); });
-
         canvas.addEventListener('drop', (e) => {
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-
             if (tipoElementoArrastradoDesdeMenu) {
                 crearNuevoComponente(tipoElementoArrastradoDesdeMenu, x, y);
                 tipoElementoArrastradoDesdeMenu = null;
@@ -196,50 +187,36 @@
             }
         });
 
-        // Fábrica de objetos físicos interactivos independientes
         function crearNuevoComponente(tipo, x, y) {
-            let nuevoObj = {
-                id: Date.now() + Math.random(),
-                tipo: tipo,
-                x: x,
-                y: y,
-                w: 60,
-                h: 60,
-                color: '#ffffff'
-            };
+            let nuevoObj = { id: Date.now() + Math.random(), tipo: tipo, x: x, y: y, w: 60, h: 60 };
 
-            // Ajustar proporciones y dimensiones de acuerdo a la naturaleza de la pieza física
-            if (tipo === 'base') { nuevoObj.w = 220; nuevoObj.h = 24; }
-            else if (tipo === 'varilla') { nuevoObj.w = 12; nuevoObj.h = 240; }
-            else if (tipo === 'nuez') { nuevoObj.w = 30; nuevoObj.h = 30; }
-            else if (tipo === 'armella') { nuevoObj.w = 20; nuevoObj.h = 35; }
-            else if (tipo === 'polea_simple_doble_gancho') { nuevoObj.w = 40; nuevoObj.h = 80; }
-            else if (tipo === 'poleas_paralelo_doble_gancho') { nuevoObj.w = 54; nuevoObj.h = 85; }
-            else if (tipo === 'polipasto_doble_gancho') { nuevoObj.w = 50; nuevoObj.h = 110; }
-            else if (tipo === 'polea_diferencial') { nuevoObj.w = 58; nuevoObj.h = 90; }
-            else if (tipo === 'tensor_cordon') { nuevoObj.w = 15; nuevoObj.h = 160; }
-            else if (tipo === 'masa_laboratorio') { nuevoObj.w = 45; nuevoObj.h = 55; nuevoObj.masaValue = 25; }
+            if (tipo === 'base_madera') { nuevoObj.w = 580; nuevoObj.h = 24; }
+            else if (tipo === 'varilla_vertical') { nuevoObj.w = 14; nuevoObj.h = 530; }
+            else if (tipo === 'varilla_horizontal') { nuevoObj.w = 570; nuevoObj.h = 14; }
+            else if (tipo === 'nuez') { nuevoObj.w = 26; nuevoObj.h = 26; }
+            else if (tipo === 'armella') { nuevoObj.w = 16; nuevoObj.h = 26; }
+            else if (tipo === 'polea_simple_doble_gancho') { nuevoObj.w = 34; nuevoObj.h = 70; }
+            else if (tipo === 'poleas_paralelo_doble_gancho') { nuevoObj.w = 52; nuevoObj.h = 75; }
+            else if (tipo === 'tensor_cordon') { nuevoObj.w = 10; nuevoObj.h = 140; }
+            else if (tipo === 'masa_laboratorio') { nuevoObj.w = 38; nuevoObj.h = 48; nuevoObj.masaValue = 40; }
 
             componentesActivos.push(nuevoObj);
         }
 
-        // --- SISTEMA DE CAPTURA Y MANIPULACIÓN POR RATÓN (MOUSE INTERACTIVE MESH) ---
         canvas.addEventListener('mousedown', (e) => {
             const rect = canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
 
-            // Detectar si el usuario hizo clic en alguna pieza existente (de adelante hacia atrás)
             for (let i = componentesActivos.length - 1; i >= 0; i--) {
                 let obj = componentesActivos[i];
-                if (mouseX >= obj.x - obj.w/2 && mouseX <= obj.x + obj.w/2 &&
-                    mouseY >= obj.y - obj.h/2 && mouseY <= obj.y + obj.h/2) {
-                    
+                // Bloquear las varillas fijas del armazón estructural para que no se muevan por accidente
+                if(['base_madera', 'varilla_vertical', 'varilla_horizontal'].includes(obj.tipo)) continue;
+
+                if (mouseX >= obj.x - obj.w/2 && mouseX <= obj.x + obj.w/2 && mouseY >= obj.y - obj.h/2 && mouseY <= obj.y + obj.h/2) {
                     componenteArrastrándose = obj;
                     offsetX = mouseX - obj.x;
                     offsetY = mouseY - obj.y;
-                    
-                    // Colocar el elemento seleccionado hasta arriba en el orden de renderizado
                     componentesActivos.splice(i, 1);
                     componentesActivos.push(obj);
                     break;
@@ -252,198 +229,177 @@
             const rect = canvas.getBoundingClientRect();
             componenteArrastrándose.x = (e.clientX - rect.left) - offsetX;
             componenteArrastrándose.y = (e.clientY - rect.top) - offsetY;
-            
             resolverSistemaCientifico();
         });
 
-        window.addEventListener('mouseup', () => {
-            componenteArrastrándose = null;
-        });
+        window.addEventListener('mouseup', () => { componenteArrastrándose = null; });
 
-        // --- MOTOR DE PROCESAMIENTO CIENTÍFICO (NEWTONIAN CALCULUS ENGINE) ---
         function resolverSistemaCientifico() {
-            // Reiniciar acumuladores estáticos
-            masaGlobal = 0;
-            ventajaMecanicaGlobal = 1;
-
-            // 1. Identificar si existen masas en el laboratorio experimental
+            masaGlobal = 0; ventajaMecanicaGlobal = 1;
             let masas = componentesActivos.filter(o => o.tipo === 'masa_laboratorio');
-            masas.forEach(m => {
-                masaGlobal += m.masaValue;
-            });
+            masas.forEach(m => { masaGlobal += m.masaValue; });
 
-            // 2. Escanear el grafo mecánico en busca de poleas operativas que reduzcan la carga
             let tienePoleaSimple = componentesActivos.some(o => o.tipo === 'polea_simple_doble_gancho');
             let tieneParalelaDoble = componentesActivos.some(o => o.tipo === 'poleas_paralelo_doble_gancho');
-            let tienePolipasto = componentesActivos.some(o => o.tipo === 'polipasto_doble_gancho');
-            let tieneDiferencial = componentesActivos.some(o => o.tipo === 'polea_diferencial');
 
-            // Establecer ventaja mecánica algorítmica de acuerdo al componente de mayor rango presente
-            if (tieneDiferencial) ventajaMecanicaGlobal = 8;
-            else if (tienePolipasto) ventajaMecanicaGlobal = 6;
-            else if (tieneParalelaDoble) ventajaMecanicaGlobal = 4;
-            else if (tienePoleaSimple) ventajaMecanicaGlobal = 2; // Si actúa acoplada como móvil libre
+            if (tieneParalelaDoble) ventajaMecanicaGlobal = 8; 
+            else if (tienePoleaSimple) ventajaMecanicaGlobal = 2;
 
-            // Cálculos vectoriales de laboratorio
             pesoGlobal = masaGlobal * 9.81;
             esfuerzoGlobal = pesoGlobal / ventajaMecanicaGlobal;
 
-            // Actualizar interfaz científica
             document.getElementById('valMasa').innerText = `${masaGlobal.toFixed(1)} kg`;
             document.getElementById('valPeso').innerText = `${pesoGlobal.toFixed(1)} N`;
-            document.getElementById('valVM').innerText = `${ventajaMecanicaGlobal}.0`;
+            document.getElementById('valVM').innerText = `${ventajaMecanicaGlobal === 8 ? '8.0 (F=R/8)' : ventajaMecanicaGlobal + '.0'}`;
             document.getElementById('valEsfuerzo').innerText = `${esfuerzoGlobal.toFixed(1)} N`;
 
             render();
         }
 
-        // --- RENDERIZADOR GRÁFICO AVANZADO DEL SANDBOX ---
         function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            dibujarCuerdasConectivas();
 
-            // Rejilla de cuadrícula técnica milimétrica de laboratorio de ingeniería
-            ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 0.5;
-            for(let x=0; x<canvas.width; x+=30) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
-            for(let y=0; y<canvas.height; y+=30) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
-
-            // Dibujar las cuerdas inteligentes automáticas de poliéster si existen poleas y masas en el escenario
-            dibujarCuerdasCientificasConectivas();
-
-            // Dibujar cada componente interactivo según su especificación formal
             componentesActivos.forEach(obj => {
                 ctx.save();
                 ctx.translate(obj.x, obj.y);
 
-                if (obj.tipo === 'base') {
-                    // Base con tornillos niveladores de precisión micrométrica
-                    ctx.fillStyle = '#475569'; ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
-                    ctx.fillRect(-obj.w/2, -obj.h/2, obj.w, obj.h);
-                    ctx.strokeRect(-obj.w/2, -obj.h/2, obj.w, obj.h);
-                    // Tornillo Nivelador Izquierdo
-                    ctx.fillStyle = '#cbd5e1'; ctx.fillRect(-obj.w/2 + 20, obj.h/2, 14, 8);
-                    // Tornillo Nivelador Derecho
-                    ctx.fillRect(obj.w/2 - 34, obj.h/2, 14, 8);
+                if (obj.tipo === 'base_madera') {
+                    // Cuerpo principal de madera barnizada (acabado café/caoba realista de la foto)
+                    let woodGrad = ctx.createLinearGradient(0, -obj.h/2, 0, obj.h/2);
+                    woodGrad.addColorStop(0, '#854d0e'); woodGrad.addColorStop(0.4, '#a16207'); woodGrad.addColorStop(1, '#451a03');
+                    ctx.fillStyle = woodGrad; ctx.strokeStyle = '#231105'; ctx.lineWidth = 1.5;
+                    ctx.beginPath(); ctx.roundRect(-obj.w/2, -obj.h/2, obj.w, obj.h, 4); ctx.fill(); ctx.stroke();
 
-                } else if (obj.tipo === 'varilla') {
-                    // Varilla Cilíndrica de Acero Inoxidable Cromado
-                    let grad = ctx.createLinearGradient(-obj.w/2, 0, obj.w/2, 0);
-                    grad.addColorStop(0, '#94a3b8'); grad.addColorStop(0.5, '#f1f5f9'); grad.addColorStop(1, '#475569');
-                    ctx.fillStyle = grad; ctx.fillRect(-obj.w/2, -obj.h/2, obj.w, obj.h);
+                    // Patas o soportes negros inferiores de los extremos
+                    ctx.fillStyle = '#111827';
+                    ctx.fillRect(-obj.w/2 + 15, obj.h/2, 30, 6);
+                    ctx.fillRect(obj.w/2 - 45, obj.h/2, 30, 6);
+
+                } else if (obj.tipo === 'varilla_vertical') {
+                    // Soportes/manguitos negros de inserción sobre la base de madera
+                    ctx.fillStyle = '#1f2937'; ctx.strokeStyle = '#111827'; ctx.lineWidth = 1;
+                    ctx.fillRect(-12, obj.h/2 - 16, 24, 16);
+                    ctx.strokeRect(-12, obj.h/2 - 16, 24, 16);
+
+                    // Varillas cilíndricas de acero inoxidable pulido brillante
+                    let metalGrad = ctx.createLinearGradient(-obj.w/2, 0, obj.w/2, 0);
+                    metalGrad.addColorStop(0, '#64748b'); metalGrad.addColorStop(0.3, '#f1f5f9'); metalGrad.addColorStop(0.7, '#e2e8f0'); metalGrad.addColorStop(1, '#334155');
+                    ctx.fillStyle = metalGrad;
+                    ctx.fillRect(-obj.w/2, -obj.h/2, obj.w, obj.h - 12);
+
+                } else if (obj.tipo === 'varilla_horizontal') {
+                    // Cuerpo metálico cilíndrico superior
+                    let metalGrad = ctx.createLinearGradient(0, -obj.h/2, 0, obj.h/2);
+                    metalGrad.addColorStop(0, '#64748b'); metalGrad.addColorStop(0.3, '#f1f5f9'); metalGrad.addColorStop(0.7, '#e2e8f0'); metalGrad.addColorStop(1, '#334155');
+                    ctx.fillStyle = metalGrad;
+                    ctx.fillRect(-obj.w/2, -obj.h/2, obj.w, obj.h);
+
+                    // Bloques/Nueces de unión en escuadra en los extremos del marco
+                    ctx.fillStyle = '#374151'; ctx.strokeStyle = '#111827';
+                    ctx.fillRect(-obj.w/2 - 4, -14, 18, 28); ctx.strokeRect(-obj.w/2 - 4, -14, 18, 28);
+                    ctx.fillRect(obj.w/2 - 14, -14, 18, 28); ctx.strokeRect(obj.w/2 - 14, -14, 18, 28);
+
+                    // Tornillos de apriete manual negros (T-screws como en la foto real)
+                    ctx.fillStyle = '#111827';
+                    ctx.beginPath(); ctx.arc(-obj.w/2 + 5, -18, 6, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(obj.w/2 - 5, -18, 6, 0, Math.PI*2); ctx.fill();
+
+                    // Serie de ganchos/perillas de sujeción fijas distribuidas en la varilla horizontal
+                    ctx.fillStyle = '#111827'; ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5;
+                    for (let offset = -180; offset <= 180; offset += 60) {
+                        ctx.fillRect(offset - 4, -12, 8, 8); // Perilla superior negra
+                        ctx.beginPath(); ctx.arc(offset, 12, 4, 0, Math.PI); ctx.stroke(); // Gancho o argolla inferior
+                    }
 
                 } else if (obj.tipo === 'nuez') {
-                    // Nuez Doble de Ajuste Mecánico Ajustable
-                    ctx.fillStyle = '#1e293b'; ctx.strokeStyle = '#ca8a04'; ctx.lineWidth = 1.5;
-                    ctx.fillRect(-obj.w/2, -obj.h/2, obj.w, obj.h); ctx.strokeRect(-obj.w/2, -obj.h/2, obj.w, obj.h);
-                    ctx.fillStyle = '#ca8a04'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = '#1f2937'; ctx.strokeStyle = '#d97706'; ctx.lineWidth = 1.5;
+                    ctx.roundRect(-obj.w/2, -obj.h/2, obj.w, obj.h, 3).fill(); ctx.stroke();
+                    ctx.fillStyle = '#d97706'; ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI*2); ctx.fill();
 
                 } else if (obj.tipo === 'armella') {
-                    // Armella / Brida Estructural de fijación superior
-                    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 3;
-                    ctx.beginPath(); ctx.arc(0, -5, 8, 0, Math.PI*2); ctx.stroke();
-                    ctx.fillStyle = '#334155'; ctx.fillRect(-4, 3, 8, 12);
+                    ctx.strokeStyle = '#9ca3af'; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.arc(0, -3, 5, 0, Math.PI*2); ctx.stroke();
+                    ctx.fillStyle = '#374151'; ctx.fillRect(-4, 2, 8, 10);
 
                 } else if (obj.tipo === 'polea_simple_doble_gancho') {
-                    // Rueda de la polea
-                    ctx.fillStyle = '#1e293b'; ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3;
-                    ctx.beginPath(); ctx.arc(0, -4, 16, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-                    // Gancho Superior
-                    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
-                    ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(0, -38); ctx.stroke();
-                    // Gancho Inferior
-                    ctx.beginPath(); ctx.moveTo(0, 12); ctx.lineTo(0, 38); ctx.stroke();
+                    ctx.fillStyle = '#1e293b'; ctx.strokeStyle = '#06b6d4'; ctx.lineWidth = 2.5;
+                    ctx.beginPath(); ctx.arc(0, -2, 13, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5;
+                    ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(0, -28); ctx.moveTo(0, 11); ctx.lineTo(0, 28); ctx.stroke();
 
                 } else if (obj.tipo === 'poleas_paralelo_doble_gancho') {
-                    // Estructura Dual en Paralelo con Doble Gancho
-                    ctx.fillStyle = '#cbd5e1'; ctx.strokeStyle = '#475569'; ctx.lineWidth = 1;
-                    ctx.fillRect(-8, -25, 16, 50);
-                    // Rueda Izquierda y Derecha superpuestas ópticamente
-                    ctx.fillStyle = '#334155'; ctx.strokeStyle = '#06b6d4'; ctx.lineWidth = 2.5;
-                    ctx.beginPath(); ctx.arc(-10, -3, 15, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-                    ctx.beginPath(); ctx.arc(10, -3, 15, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-                    // Ganchos Doble Refuerzo
-                    ctx.strokeStyle = '#f1f5f9'; ctx.lineWidth = 2.5;
-                    ctx.beginPath(); ctx.moveTo(0, -25); ctx.lineTo(0, -42); ctx.moveTo(0, 25); ctx.lineTo(0, 42); ctx.stroke();
-
-                } else if (obj.tipo === 'polipasto_doble_gancho') {
-                    // Caja de Polipasto Compacto de Distribución Exponencial
-                    ctx.fillStyle = '#334155'; ctx.fillRect(-15, -40, 30, 80);
-                    ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2;
-                    ctx.beginPath(); ctx.arc(0, -20, 12, 0, Math.PI*2); ctx.arc(0, 15, 12, 0, Math.PI*2); ctx.stroke();
-                    ctx.strokeStyle = '#cbd5e1'; ctx.beginPath(); ctx.moveTo(0, -40); ctx.lineTo(0, -55); ctx.moveTo(0, 40); ctx.lineTo(0, 55); ctx.stroke();
-
-                } else if (obj.tipo === 'polea_diferencial') {
-                    // Polea Diferencial Abierta Weston de dos diámetros concéntricos
-                    ctx.fillStyle = '#1e293b'; ctx.strokeStyle = '#ec4899'; ctx.lineWidth = 3;
-                    ctx.beginPath(); ctx.arc(0, -8, 22, 0, Math.PI*2); ctx.fill(); ctx.stroke(); // Disco R
-                    ctx.fillStyle = '#475569'; ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 2;
-                    ctx.beginPath(); ctx.arc(0, -8, 14, 0, Math.PI*2); ctx.fill(); ctx.stroke(); // Disco r
-                    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2.5;
-                    ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(0, -45); ctx.moveTo(0, 14); ctx.lineTo(0, 44); ctx.stroke();
+                    ctx.fillStyle = '#4b5563'; ctx.fillRect(-5, -18, 10, 36);
+                    ctx.fillStyle = '#1f2937'; ctx.strokeStyle = '#06b6d4'; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.arc(-9, -2, 11, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                    ctx.beginPath(); ctx.arc(9, -2, 11, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                    ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 1.8;
+                    ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(0, -32); ctx.moveTo(0, 18); ctx.lineTo(0, 32); ctx.stroke();
 
                 } else if (obj.tipo === 'tensor_cordon') {
-                    // Tensor mecánico con línea guía de poliéster
                     ctx.strokeStyle = '#f97316'; ctx.lineWidth = 1.5;
                     ctx.beginPath(); ctx.moveTo(0, -obj.h/2); ctx.lineTo(0, obj.h/2); ctx.stroke();
-                    ctx.fillStyle = '#ea580c'; ctx.fillRect(-6, -10, 12, 20);
+                    ctx.fillStyle = '#ea580c'; ctx.fillRect(-4, -8, 8, 16);
 
                 } else if (obj.tipo === 'masa_laboratorio') {
-                    // Pesa de bronce para ensayos mecánicos controlados
-                    let grad = ctx.createLinearGradient(-obj.w/2, 0, obj.w/2, 0);
-                    grad.addColorStop(0, '#b45309'); grad.addColorStop(0.4, '#f59e0b'); grad.addColorStop(1, '#78350f');
-                    ctx.fillStyle = grad; ctx.strokeStyle = '#451a03'; ctx.lineWidth = 1.5;
-                    ctx.fillRect(-obj.w/2, -obj.h/2 + 8, obj.w, obj.h - 8);
-                    ctx.strokeRect(-obj.w/2, -obj.h/2 + 8, obj.w, obj.h - 8);
-                    // Gancho superior de la pesa de laboratorio
-                    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2.5;
-                    ctx.beginPath(); ctx.arc(0, -obj.h/2 + 8, 5, Math.PI, 0, false); ctx.stroke();
-                    // Texto indicador
-                    ctx.fillStyle = '#000000'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
-                    ctx.fillText(`${obj.masaValue} kg`, 0, 8);
+                    // Pesa cilíndrica dorada de bronce con gancho (Igual a la imagen de 40 kg)
+                    let goldGrad = ctx.createLinearGradient(-obj.w/2, 0, obj.w/2, 0);
+                    goldGrad.addColorStop(0, '#a16207'); goldGrad.addColorStop(0.4, '#eab308'); goldGrad.addColorStop(1, '#713f12');
+                    ctx.fillStyle = goldGrad; ctx.strokeStyle = '#451a03'; ctx.lineWidth = 1.5;
+                    ctx.fillRect(-obj.w/2, -obj.h/2 + 6, obj.w, obj.h - 6);
+                    ctx.strokeRect(-obj.w/2, -obj.h/2 + 6, obj.w, obj.h - 6);
+                    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.arc(0, -obj.h/2 + 6, 4, Math.PI, 0, false); ctx.stroke();
+                    // Línea divisoria central característica del juego de pesas
+                    ctx.strokeStyle = '#451a03'; ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.moveTo(0, -obj.h/2 + 6); ctx.lineTo(0, obj.h/2); ctx.stroke();
+                    ctx.fillStyle = '#000000'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center';
+                    ctx.fillText(`${obj.masaValue} kg`, 0, 7);
                 }
-
                 ctx.restore();
             });
         }
 
-        // --- SISTEMA INTELIGENTE DE CABLEADO EXPERIMENTAL DE POLIÉSTER ---
-        function dibujarCuerdasCientificasConectivas() {
-            let poleas = componentesActivos.filter(o => ['polea_simple_doble_gancho', 'poleas_paralelo_doble_gancho', 'polipasto_doble_gancho', 'polea_diferencial'].includes(o.tipo));
+        function dibujarCuerdasConectivas() {
+            let poleas = componentesActivos.filter(o => ['polea_simple_doble_gancho', 'poleas_paralelo_doble_gancho'].includes(o.tipo));
             let masas = componentesActivos.filter(o => o.tipo === 'masa_laboratorio');
-
             if(poleas.length === 0 || masas.length === 0) return;
 
-            ctx.strokeStyle = '#f97316'; ctx.lineWidth = 2; // Estética de cordón trenzado de alta visibilidad
-
-            // Vincular automáticamente trayectorias de tensión basadas en proximidad cartesiana libre
+            ctx.strokeStyle = '#f97316'; ctx.lineWidth = 1.8;
             poleas.forEach(p => {
                 masas.forEach(m => {
-                    // Si el juego de sujetadores con gancho está abajo de la línea de acción de la polea, se genera la soga tensada
-                    if (Math.abs(p.x - m.x) < 70 && m.y > p.y) {
+                    if (Math.abs(p.x - m.x) < 50 && m.y > p.y) {
                         ctx.beginPath();
-                        ctx.moveTo(p.x - 10, p.y);
-                        ctx.lineTo(p.x - 10, m.y - m.h/2);
-                        ctx.moveTo(p.x + 10, p.y);
-                        ctx.lineTo(p.x + 10, m.y - m.h/2);
+                        ctx.moveTo(p.x - 7, p.y); ctx.lineTo(p.x - 7, m.y - m.h/2);
+                        ctx.moveTo(p.x + 7, p.y); ctx.lineTo(p.x + 7, m.y - m.h/2);
                         ctx.stroke();
                     }
                 });
             });
         }
 
-        // Botón para vaciar la mesa de trabajo de física y reconfigurar desde cero
-        document.getElementById('btnClear').addEventListener('click', () => {
+        function cargarArmazonInicialLaboratorio() {
             componentesActivos = [];
+            // 1. Base inferior de madera pesada colocada sobre la parte baja del canvas
+            crearNuevoComponente('base_madera', 300, 550);
+            // 2. Varilla Vertical Izquierda fija
+            crearNuevoComponente('varilla_vertical', 45, 290);
+            // 3. Varilla Vertical Derecha fija
+            crearNuevoComponente('varilla_vertical', 555, 290);
+            // 4. Varilla Horizontal Superior con perillas fijas
+            crearNuevoComponente('varilla_horizontal', 300, 35);
+
+            // Elementos de muestra por defecto colgando del armazón
+            crearNuevoComponente('poleas_paralelo_doble_gancho', 300, 160);
+            crearNuevoComponente('masa_laboratorio', 300, 290);
+
             resolverSistemaCientifico();
-        });
+        }
 
-        // Configuración estructural base inicial por cortesía para que el canvas no aparezca vacío
-        crearNuevoComponente('base', 380, 520);
-        crearNuevoComponente('varilla', 380, 390);
-        crearNuevoComponente('polea_simple_doble_gancho', 380, 160);
-        crearNuevoComponente('masa_laboratorio', 380, 290);
+        document.getElementById('btnClear').addEventListener('click', cargarArmazonInicialLaboratorio);
 
-        // Inicializar el motor físico en estado óptimo
-        resolverSistemaCientifico();
+        // Inicializar el simulador con el armazón de la fotografía real
+        cargarArmazonInicialLaboratorio();
     </script>
 </body>
 </html>
