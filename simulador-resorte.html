@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador — Juego de Resortes con Soporte Universal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{--bg:#f3f4f6;--bg2:#ffffff;--card:#ffffff;--card2:#f9fafb;--border:#e5e7eb;--fg:#1f2937;--muted:#6b7280;--accent:#2563eb;--accent2:#1d4ed8;--cyan:#06b6d4;--red:#ef4444;--green:#10b981}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(37,99,235,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,.015) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+.mono{font-family:'JetBrains Mono',monospace}
+.glass{background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border:1px solid var(--border);box-shadow:0 4px 6px -1px rgba(0,0,0,0.05),0 2px 4px -1px rgba(0,0,0,0.03)}
+.btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#ffffff;font-weight:700;padding:11px 20px;border-radius:10px;border:none;cursor:pointer;transition:all .25s;font-family:inherit;font-size:13px}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(37,99,235,.25)}
+.btn-p:disabled{opacity:.3;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.btn-d{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-weight:700;padding:9px 16px;border-radius:9px;border:none;cursor:pointer;transition:all .25s;font-family:inherit;font-size:12px}
+.btn-d:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(239,68,68,.2)}
+.btn-s{background:var(--card2);color:var(--fg);font-weight:600;padding:8px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;transition:all .2s;font-family:inherit;font-size:12px}
+.btn-s:hover{border-color:var(--accent);color:var(--accent)}
+.btn-s.on{border-color:var(--accent);color:var(--accent);background:rgba(37,99,235,.05);box-shadow:0 0 12px rgba(37,99,235,.05)}
+.tab-btn{padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:var(--card2);color:var(--muted);cursor:pointer;font-weight:700;font-size:12px;font-family:inherit;transition:all .25s}
+.tab-btn.on{background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(37,99,235,.03));border-color:var(--accent);color:var(--accent);box-shadow:0 0 20px rgba(37,99,235,.05)}
+.tab-btn:hover:not(.on){border-color:rgba(37,99,235,.4);color:var(--fg)}
+select{background:var(--card2);color:var(--fg);border:1px solid var(--border);padding:8px 12px;border-radius:8px;font-family:inherit;font-size:13px;outline:none;cursor:pointer;width:100%}
+select:focus{border-color:var(--accent)}
+.toast{position:fixed;bottom:28px;right:28px;padding:14px 22px;border-radius:12px;font-weight:600;font-size:13px;z-index:9999;transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.18,.89,.32,1.27);pointer-events:none;max-width:360px}
+.toast.show{transform:translateY(0);opacity:1}
+.t-ok{background:linear-gradient(135deg,#10b981,#059669);color:#fff}
+.t-er{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+.t-in{background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff}
+.dt{width:100%;border-collapse:separate;border-spacing:0}
+.dt th{background:var(--card2);color:var(--accent);padding:9px 10px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:1.2px;border-bottom:2px solid var(--accent)}
+.dt td{padding:7px 10px;border-bottom:1px solid var(--border);font-size:11px}
+.dt tr:hover td{background:rgba(37,99,235,.02)}
+.readout{background:linear-gradient(180deg,#f9fafb,#f3f4f6);border:1px solid var(--border);border-radius:10px;padding:12px 16px;text-align:center;position:relative;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.02)}
+.readout::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(37,99,235,.2),transparent)}
+.readout-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
+.readout-val{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;line-height:1.1}
+.readout-unit{font-size:10px;color:var(--muted);font-weight:400;margin-left:2px}
+@keyframes fi{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.fi{animation:fi .55s ease forwards}.d1{animation-delay:.08s;opacity:0}.d2{animation-delay:.16s;opacity:0}.d3{animation-delay:.24s;opacity:0}.d4{animation-delay:.32s;opacity:0}
+.step-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;background:var(--card2);border:1px solid var(--border);transition:all .35s}
+.step-item.active{border-color:var(--accent);background:rgba(37,99,235,.03);box-shadow:0 0 16px rgba(37,99,235,.04)}
+.step-item.done{border-color:var(--green);background:rgba(16,185,129,.02)}
+.step-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0;background:var(--border);color:var(--muted);transition:all .35s}
+.step-item.active .step-num{background:var(--accent);color:#ffffff}
+.step-item.done .step-num{background:var(--green);color:#ffffff}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+@media(max-width:1140px){.mgrid{grid-template-columns:1fr!important}}
+.spring-chip{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:8px;border:1px solid var(--border);cursor:pointer;transition:all .2s;background:var(--card2)}
+.spring-chip:hover{border-color:rgba(37,99,235,.3);transform:translateY(-1px)}
+.spring-chip.sel{border-color:var(--accent);background:rgba(37,99,235,.04);box-shadow:0 0 10px rgba(37,99,235,.04)}
+</style>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+<header class="glass" style="position:sticky;top:0;z-index:100;border-radius:0;border-top:none;border-left:none;border-right:none">
+<div style="max-width:1600px;margin:0 auto;padding:11px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+<div style="display:flex;align-items:center;gap:14px">
+<div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(37,99,235,.15)"><i class="fas fa-weight-hanging" style="color:#ffffff;font-size:18px"></i></div>
+<div><h1 style="font-size:16px;font-weight:800;letter-spacing:-.4px">Juego de Resortes con Soporte Universal</h1><p style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:1px">Kit de Fuerza y Dinámica - Simulador Interactivo N°2</p></div>
+</div>
+<div style="display:flex;gap:8px;align-items:center">
+<button onclick="toggleMute()" id="btnMute" class="btn-s" style="padding:8px 12px"><i class="fas fa-volume-up" id="muteIcon"></i></button>
+<button onclick="resetAll()" class="btn-d"><i class="fas fa-redo" style="margin-right:5px"></i>Reiniciar</button>
+</div>
+</div>
+</header>
+<main style="max-width:1600px;margin:0 auto;padding:18px;position:relative;z-index:1">
+<section class="fi" style="border-radius:14px;padding:18px 22px;margin-bottom:18px;display:grid;grid-template-columns:repeat(5,1fr);gap:12px;background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(249,250,251,.95));border:1px solid var(--border);backdrop-filter:blur(14px)">
+<div class="readout"><div class="readout-label">Ley de Hooke</div><div class="readout-val" style="color:var(--accent);font-size:24px">F = k · x</div></div>
+<div class="readout"><div class="readout-label">Fuerza (peso)</div><div class="readout-val"><span id="lvF" style="color:#f97316">0.000</span><span class="readout-unit">N</span></div></div>
+<div class="readout"><div class="readout-label">Elongacion</div><div class="readout-val"><span id="lvX" style="color:var(--cyan)">0.00</span><span class="readout-unit">cm</span></div></div>
+<div class="readout"><div class="readout-label">k equivalente</div><div class="readout-val"><span id="lvK" style="color:var(--green)">0.00</span><span class="readout-unit">g/cm</span></div></div>
+<div class="readout" style="position:relative"><div class="readout-label">Masa colgante</div><div class="readout-val"><span id="lvM" style="color:var(--fg)">20</span><span class="readout-unit">g</span></div><div id="limitBadge" style="display:none;position:absolute;top:6px;right:8px;padding:2px 8px;border-radius:6px;background:rgba(239,68,96,.1);color:var(--red);font-size:8px;font-weight:700;letter-spacing:.5px"><i class="fas fa-exclamation-triangle" style="margin-right:2px"></i>LIMITE</div></div>
+</section>
+<div class="mgrid" style="display:grid;grid-template-columns:1fr 400px;gap:18px">
+<div style="display:flex;flex-direction:column;gap:18px">
+<div class="glass fi d1" style="border-radius:14px;padding:16px;box-shadow:0 8px 32px rgba(0,0,0,.03)">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+<h2 style="font-size:14px;font-weight:800"><i class="fas fa-flask" style="color:var(--accent);margin-right:8px"></i>Experimento en Tiempo Real</h2>
+<div style="display:flex;gap:6px">
+<button onclick="toggleOsc()" id="btnOsc" class="btn-s" style="padding:6px 12px;font-size:11px"><i class="fas fa-wave-square" style="margin-right:4px"></i>Oscilar</button>
+<button onclick="toggleRef()" id="btnRef" class="btn-s on" style="padding:6px 12px;font-size:11px"><i class="fas fa-ruler-horizontal" style="margin-right:4px"></i>Referencia</button>
+</div>
+</div>
+<canvas id="simCanvas" width="1020" height="720" style="width:100%;background:linear-gradient(180deg,#f8fafc,#f1f5f9);border:1px solid var(--border);border-radius:12px"></canvas>
+</div>
+<div style="display:grid;grid-template-columns:280px 1fr;gap:18px">
+<div style="display:flex;flex-direction:column;gap:14px">
+<div class="glass fi d2" style="border-radius:14px;padding:16px">
+<h2 style="font-size:13px;font-weight:800;margin-bottom:12px"><i class="fas fa-shoe-prints" style="color:var(--accent);margin-right:7px"></i>Pasos</h2>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div class="step-item active" id="step1"><div class="step-num">1</div><div><p style="font-size:11px;font-weight:700">Elige configuracion y resortes</p><p style="font-size:9px;color:var(--muted)">Simple, serie o paralelo</p></div></div>
+<div class="step-item" id="step2"><div class="step-num">2</div><div><p style="font-size:11px;font-weight:700">Agrega pesas</p><p style="font-size:9px;color:var(--muted)">Observa la elongacion</p></div></div>
+<div class="step-item" id="step3"><div class="step-num">3</div><div><p style="font-size:11px;font-weight:700">Registra medicion</p><p style="font-size:9px;color:var(--muted)">Guarda F y x en la tabla</p></div></div>
+<div class="step-item" id="step4"><div class="step-num">4</div><div><p style="font-size:11px;font-weight:700">Analiza la grafica</p><p style="font-size:9px;color:var(--muted)">La recta confirma Hooke</p></div></div>
+</div>
+</div>
+<div class="glass fi d2" style="border-radius:14px;padding:16px">
+<h2 style="font-size:13px;font-weight:800;margin-bottom:10px"><i class="fas fa-cogs" style="color:var(--cyan);margin-right:7px"></i>Configuracion</h2>
+<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+<button onclick="setConfig('simple')" id="cfgSimple" class="tab-btn on" style="width:100%;text-align:left"><i class="fas fa-link" style="margin-right:6px;width:14px"></i>Resorte Simple</button>
+<button onclick="setConfig('serie')" id="cfgSerie" class="tab-btn" style="width:100%;text-align:left"><i class="fas fa-link" style="margin-right:6px;width:14px"></i>Asociacion en Serie</button>
+<button onclick="setConfig('parallel')" id="cfgParalelo" class="tab-btn" style="width:100%;text-align:left"><i class="fas fa-grip-lines" style="margin-right:6px;width:14px"></i>Asociacion en Paralelo</button>
+</div>
+<div style="padding:10px 12px;border-radius:9px;background:rgba(37,99,235,.04);border:1px solid rgba(37,99,235,.08);margin-bottom:10px">
+<p style="font-size:10px;color:var(--accent);line-height:1.5" id="configText"><i class="fas fa-info-circle" style="margin-right:4px"></i>Un solo resorte cuelga de la varilla horizontal. k_eq = k del resorte.</p>
+</div>
+<div style="margin-bottom:8px"><label style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px">Resorte 1</label><select id="sel1" onchange="updateSpring1()"></select></div>
+<div id="sel2Wrap" style="display:none;margin-bottom:8px"><label style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px">Resorte 2</label><select id="sel2" onchange="updateSpring2()"></select></div>
+<div style="padding:10px 12px;border-radius:9px;background:var(--card2);text-align:center"><p class="mono" style="font-size:11px;color:var(--green)" id="keqText">k_eq = k₁ = 10.00 g/cm</p></div>
+</div>
+</div>
+<div class="glass fi d3" style="border-radius:14px;padding:16px;display:flex;flex-direction:column">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+<h2 style="font-size:13px;font-weight:800"><i class="fas fa-chart-line" style="color:var(--green);margin-right:7px"></i>F vs x — Verificacion de Hooke</h2>
+<span class="mono" style="font-size:10px;color:var(--accent)" id="kCalc"></span>
+</div>
+<div style="flex:1;position:relative;min-height:280px"><canvas id="hookeChart"></canvas></div>
+<div style="margin-top:10px;padding:8px 12px;border-radius:8px;background:rgba(16,185,129,.04);border:1px solid rgba(16,185,129,.08)">
+<p style="font-size:10px;color:var(--green);text-align:center"><i class="fas fa-lightbulb" style="margin-right:5px"></i>Si los puntos forman una linea recta que pasa por el origen, se verifica la Ley de Hooke. La pendiente es k.</p>
+</div>
+</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<div class="glass fi d1" style="border-radius:14px;padding:14px"><h2 style="font-size:13px;font-weight:800;margin-bottom:10px"><i class="fas fa-th" style="color:var(--accent);margin-right:7px"></i>Resortes disponible en Kit</h2><div id="springCards" style="display:grid;grid-template-columns:1fr 1fr;gap:6px"></div></div>
+<div class="glass fi d2" style="border-radius:14px;padding:14px">
+<h2 style="font-size:13px;font-weight:800;margin-bottom:10px"><i class="fas fa-weight-hanging" style="color:var(--accent2);margin-right:7px"></i>Colocar Pesas en Soporte</h2>
+<div style="display:flex;flex-direction:column;gap:5px" id="pesaControls"></div>
+<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div style="padding:10px;border-radius:9px;background:var(--card2)"><p style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Masa total</p><p class="mono" style="font-size:18px;font-weight:700;color:var(--accent)" id="pesaList">20 g</p></div>
+<div style="padding:10px;border-radius:9px;background:var(--card2)"><p style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Peso (F)</p><p class="mono" style="font-size:18px;font-weight:700;color:#f97316" id="pesaForce">0.196 N</p></div>
+</div></div>
+<div class="glass fi d2" style="border-radius:14px;padding:14px">
+<h2 style="font-size:13px;font-weight:800;margin-bottom:10px"><i class="fas fa-clipboard-check" style="color:var(--green);margin-right:7px"></i>Acciones</h2>
+<div style="display:flex;flex-direction:column;gap:8px">
+<button onclick="recordMeas()" class="btn-p" style="width:100%;font-size:14px"><i class="fas fa-plus-circle" style="margin-right:7px"></i>Registrar Medicion</button>
+<div style="display:flex;gap:8px"><button onclick="calcK()" class="btn-s" style="flex:1"><i class="fas fa-calculator" style="margin-right:5px"></i>Calcular k</button><button onclick="clearData()" class="btn-s" style="flex:1"><i class="fas fa-eraser" style="margin-right:5px"></i>Limpiar</button></div>
+</div></div>
+<div class="glass fi d3" style="border-radius:14px;padding:14px">
+<h2 style="font-size:13px;font-weight:800;margin-bottom:10px"><i class="fas fa-stopwatch" style="color:var(--cyan);margin-right:7px"></i>Movimiento Armonico Simple</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+<div class="readout" style="padding:10px"><div class="readout-label">T teorico</div><div class="readout-val" style="font-size:15px;color:var(--cyan)" id="tTeorico">—</div></div>
+<div class="readout" style="padding:10px"><div class="readout-label">Cronometro</div><div class="readout-val" style="font-size:15px;color:var(--accent)" id="cronoVal">0.000 s</div></div>
+</div>
+<div style="display:flex;gap:6px"><button onclick="startCrono()" id="btnCronoStart" class="btn-s" style="flex:1"><i class="fas fa-play" style="margin-right:4px"></i>Iniciar</button><button onclick="stopCrono()" id="btnCronoStop" class="btn-s" style="flex:1" disabled><i class="fas fa-stop" style="margin-right:4px"></i>Detener</button><button onclick="resetCrono()" class="btn-s"><i class="fas fa-undo"></i></button></div>
+<p style="font-size:9px;color:var(--muted);margin-top:8px;text-align:center">T = 2π√(m/k) — Activa "Oscilar" y cronometra una oscilacion completa.</p>
+</div>
+<div class="glass fi d4" style="border-radius:14px;padding:14px;max-height:240px;overflow-y:auto">
+<h2 style="font-size:13px;font-weight:800;margin-bottom:8px"><i class="fas fa-table" style="color:var(--accent);margin-right:7px"></i>Datos <span id="dcnt" class="mono" style="font-size:10px;color:var(--muted)">(0)</span></h2>
+<table class="dt"><thead><tr><th>#</th><th>Config</th><th>m (g)</th><th>F (N)</th><th>x (cm)</th><th>k (g/cm)</th></tr></thead><tbody id="dBody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;font-size:11px"><i class="fas fa-flask" style="font-size:18px;display:block;margin-bottom:6px;opacity:.25"></i>Aun sin mediciones</td></tr></tbody></table>
+</div>
+</div>
+</div>
+</main>
+<script>
+// ═══ SONIDO ═══
+let audioCtx=null,muted=false;
+function getAudioCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx;}
+function toggleMute(){muted=!muted;document.getElementById('muteIcon').className=muted?'fas fa-volume-mute':'fas fa-volume-up';if(!muted)playSound('click');}
+function playSound(type){if(muted)return;const ctx=getAudioCtx(),now=ctx.currentTime;switch(type){
+case'click':{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.setValueAtTime(800,now);o.frequency.exponentialRampToValueAtTime(600,now+.06);g.gain.setValueAtTime(.12,now);g.gain.exponentialRampToValueAtTime(.001,now+.08);o.start(now);o.stop(now+.08);break;}
+case'addPesa':{const o1=ctx.createOscillator(),o2=ctx.createOscillator(),g1=ctx.createGain(),g2=ctx.createGain();o1.connect(g1);g1.connect(ctx.destination);o2.connect(g2);g2.connect(ctx.destination);o1.type='sine';o1.frequency.setValueAtTime(420,now);o1.frequency.exponentialRampToValueAtTime(180,now+.15);o2.type='triangle';o2.frequency.setValueAtTime(900,now);o2.frequency.exponentialRampToValueAtTime(300,now+.1);g1.gain.setValueAtTime(.18,now);g1.gain.exponentialRampToValueAtTime(.001,now+.2);g2.gain.setValueAtTime(.08,now);g2.gain.exponentialRampToValueAtTime(.001,now+.12);o1.start(now);o1.stop(now+.2);o2.start(now);o2.stop(now+.12);break;}
+case'removePesa':{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.setValueAtTime(300,now);o.frequency.exponentialRampToValueAtTime(600,now+.08);g.gain.setValueAtTime(.1,now);g.gain.exponentialRampToValueAtTime(.001,now+.1);o.start(now);o.stop(now+.1);break;}
+case'springSelect':{const o=ctx.createOscillator(),g=ctx.createGain(),lfo=ctx.createOscillator(),lg=ctx.createGain();o.connect(g);g.connect(ctx.destination);lfo.connect(lg);lg.connect(o.frequency);o.type='sine';o.frequency.setValueAtTime(500,now);lfo.type='sine';lfo.frequency.setValueAtTime(30,now);lg.gain.setValueAtTime(200,now);lg.gain.exponentialRampToValueAtTime(1,now+.3);g.gain.setValueAtTime(.15,now);g.gain.exponentialRampToValueAtTime(.001,now+.35);o.start(now);o.stop(now+.35);lfo.start(now);lfo.stop(now+.35);break;}
+case'configChange':{[0,.08].forEach((d,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.setValueAtTime(i===0?440:660,now+d);g.gain.setValueAtTime(.1,now+d);g.gain.exponentialRampToValueAtTime(.001,now+d+.1);o.start(now+d);o.stop(now+d+.1);});break;}
+case'record':{[0,.07,.14].forEach((d,i)=>{const f=[880,1100,1320][i],o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.setValueAtTime(f,now+d);g.gain.setValueAtTime(.14,now+d);g.gain.exponentialRampToValueAtTime(.001,now+d+.15);o.start(now+d);o.stop(now+d+.15);});break;}
+case'calcSuccess':{[523.25,659.25,783.99].forEach((f,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.setValueAtTime(f,now+i*.06);g.gain.setValueAtTime(.1,now+i*.06);g.gain.exponentialRampToValueAtTime(.001,now+i*.06+.4);o.start(now+i*.06);o.stop(now+i*.06+.4);});break;}
+case'warning':{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sawtooth';o.frequency.setValueAtTime(120,now);g.gain.setValueAtTime(.12,now);g.gain.exponentialRampToValueAtTime(.001,now+.25);o.start(now);o.stop(now+.25);break;}
+case'error':{[0,.12].forEach(d=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='square';o.frequency.setValueAtTime(200,now+d);g.gain.setValueAtTime(.08,now+d);g.gain.exponentialRampToValueAtTime(.001,now+d+.15);o.start(now+d);o.stop(now+d+.15);});break;}
+case'toggle':{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.setValueAtTime(600,now);o.frequency.exponentialRampToValueAtTime(900,now+.05);g.gain.setValueAtTime(.1,now);g.gain.exponentialRampToValueAtTime(.001,now+.08);o.start(now);o.stop(now+.08);break;}
+case'cronoStart':{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.setValueAtTime(1000,now);g.gain.setValueAtTime(.15,now);g.gain.exponentialRampToValueAtTime(.001,now+.1);o.start(now);o.stop(now+.1);break;}
+case'cronoStop':{[0,.06].forEach(d=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.setValueAtTime(800,now+d);g.gain.setValueAtTime(.12,now+d);g.gain.exponentialRampToValueAtTime(.001,now+d+.08);o.start(now+d);o.stop(now+d+.08);});break;}
+case'stepDing':{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.setValueAtTime(1200,now);g.gain.setValueAtTime(.1,now);g.gain.exponentialRampToValueAtTime(.001,now+.2);o.start(now);o.stop(now+.2);break;}
+case'clear':{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.setValueAtTime(800,now);o.frequency.exponentialRampToValueAtTime(200,now+.2);g.gain.setValueAtTime(.08,now);g.gain.exponentialRampToValueAtTime(.001,now+.25);o.start(now);o.stop(now+.25);break;}
+case'reset':{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='triangle';o.frequency.setValueAtTime(600,now);o.frequency.exponentialRampToValueAtTime(100,now+.35);g.gain.setValueAtTime(.1,now);g.gain.exponentialRampToValueAtTime(.001,now+.4);o.start(now);o.stop(now+.4);break;}
+}}
+
+// ═══ DATOS KIT MINEDU ═══
+const SPRINGS=[{k:5,color:'#10b981',name:'Verde',coils:14,natLen:12},{k:10,color:'#cbd5e1',name:'Crema',coils:12,natLen:10},{k:15,color:'#facc15',name:'Amarillo',coils:10,natLen:9},{k:20,color:'#f97316',name:'Anaranjado',coils:9,natLen:8},{k:30,color:'#06b6d4',name:'Celeste',coils:7,natLen:7},{k:50,color:'#ef4444',name:'Rojo',coils:5,natLen:6}];
+const PESAS=[{mass:10,label:'10 g',qty:2,height:12,width:34},{mass:20,label:'20 g',qty:2,height:15,width:38},{mass:50,label:'50 g',qty:1,height:20,width:44},{mass:100,label:'100 g',qty:1,height:24,width:50},{mass:200,label:'200 g',qty:1,height:30,width:56}];
+const SOP_MASS=20,SOP_ROJO=8,G=9.81;
+
+// ═══ ESTADO ═══
+let S={config:'simple',s1:1,s2:1,pesas:{},oscillating:false,oscTime:0,showRef:true,currentElong:0,targetElong:0,measurements:[],cronoRunning:false,cronoStart:0,cronoElapsed:0,activeStep:1,prevOverLimit:false};
+PESAS.forEach(p=>S.pesas[p.mass]=0);
+
+// ═══ FÍSICA ═══
+const getK_SI=i=>SPRINGS[i].k*0.981;
+function getTotalMassGrams(){let m=SOP_MASS;PESAS.forEach(p=>m+=p.mass*S.pesas[p.mass]);if(S.config==='paralelo')m+=SOP_ROJO;return m;}
+function getKeq_gcm(){const k1=SPRINGS[S.s1].k,k2=SPRINGS[S.s2].k;if(S.config==='simple')return k1;if(S.config==='serie')return(k1*k2)/(k1+k2);return k1+k2;}
+const getKeq_SI=()=>getKeq_gcm()*0.981;const getForce=()=>getTotalMassGrams()/1000*G;
+function getElongation_cm(){const F=getForce(),k=getKeq_SI();return k>0?(F/k)*100:0;}
+function getPeriod(){const m=getTotalMassGrams()/1000,k=getKeq_SI();return k>0?2*Math.PI*Math.sqrt(m/k):0;}
+function isOverLimit(){if(S.config==='simple')return getElongation_cm()>SPRINGS[S.s1].natLen;const F=getForce();return(F/getK_SI(S.s1)*100)>SPRINGS[S.s1].natLen||(F/getK_SI(S.s2)*100)>SPRINGS[S.s2].natLen;}
+function setActiveStep(n){if(n!==S.activeStep)playSound('stepDing');S.activeStep=n;[1,2,3,4].forEach(i=>{const el=document.getElementById('step'+i);el.classList.remove('active','done');if(i===n)el.classList.add('active');else if(i<n)el.classList.add('done');});}
+
+// ═══ CANVAS ═══
+const canvas=document.getElementById('simCanvas');const ctx=canvas.getContext('2d');
+function resizeCanvas(){const r=canvas.getBoundingClientRect(),d=window.devicePixelRatio||1;canvas.width=r.width*d;canvas.height=r.height*d;ctx.scale(d,d);}
+resizeCanvas();window.addEventListener('resize',resizeCanvas);
+
+const SC=7.8;
+const BASE_Y=640,BASE_CX=340,ROD_TOP=50,H_ROD_Y=80,H_ROD_END=BASE_CX+240,SPR_X=BASE_CX+160,RULER_X=SPR_X-55;
+
+function drawAll(){
+  const W=canvas.getBoundingClientRect().width,H=canvas.getBoundingClientRect().height;
+  ctx.clearRect(0,0,W,H);
+  
+  const bg=ctx.createRadialGradient(W*.38,H*.28,60,W*.5,H*.55,W*.85);
+  bg.addColorStop(0,'#f8fafc');bg.addColorStop(1,'#f1f5f9');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  
+  ctx.strokeStyle='rgba(37,99,235,.025)';ctx.lineWidth=.5;
+  for(let x=0;x<W;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  
+  const amb=ctx.createRadialGradient(SPR_X,H_ROD_Y+180,30,SPR_X,H_ROD_Y+280,300);
+  amb.addColorStop(0,'rgba(37,99,235,.02)');amb.addColorStop(1,'transparent');ctx.fillStyle=amb;ctx.fillRect(0,0,W,H);
+
+  drawApparatus();drawSpringsAndLoad();drawForces();drawLabels(W);
+}
+
+function drawApparatus(){
+  ctx.fillStyle='rgba(0,0,0,.06)';ctx.beginPath();ctx.ellipse(BASE_CX,BASE_Y+24,80,12,0,0,Math.PI*2);ctx.fill();
+
+  const bw=140,bh=20;
+  const bG=ctx.createLinearGradient(BASE_CX-bw/2,BASE_Y,BASE_CX-bw/2,BASE_Y+bh);
+  bG.addColorStop(0,'#94a3b8');bG.addColorStop(.3,'#64748b');bG.addColorStop(.7,'#475569');bG.addColorStop(1,'#334155');
+  ctx.fillStyle=bG;ctx.beginPath();ctx.roundRect(BASE_CX-bw/2,BASE_Y,bw,bh,5);ctx.fill();ctx.strokeStyle='#cbd5e1';ctx.lineWidth=.7;ctx.stroke();
+  
+  ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(BASE_CX-bw/2+5,BASE_Y+1);ctx.lineTo(BASE_CX+bw/2-5,BASE_Y+1);ctx.stroke();
+
+  [-45,-15,15,45].forEach(sx=>{
+    ctx.fillStyle='#cbd5e1';ctx.beginPath();ctx.roundRect(BASE_CX+sx-3,BASE_Y+bh,6,12,2);ctx.fill();
+    ctx.fillStyle='#64748b';ctx.beginPath();ctx.ellipse(BASE_CX+sx,BASE_Y+bh+14,7,3.5,0,0,Math.PI*2);ctx.fill();
+  });
+  
+  ctx.fillStyle='#1e293b';ctx.beginPath();ctx.roundRect(BASE_CX-25,BASE_Y+3,50,13,6);ctx.fill();
+  
+  const vW=12;
+  const vG=ctx.createLinearGradient(BASE_CX-vW/2,ROD_TOP,BASE_CX+vW/2,ROD_TOP);
+  vG.addColorStop(0,'#94a3b8');vG.addColorStop(.2,'#cbd5e1');vG.addColorStop(.5,'#ffffff');vG.addColorStop(.8,'#cbd5e1');vG.addColorStop(1,'#94a3b8');
+  ctx.fillStyle=vG;ctx.fillRect(BASE_CX-vW/2,ROD_TOP,vW,BASE_Y-ROD_TOP);
+
+  const nW=30,nH=20;
+  const nG=ctx.createLinearGradient(BASE_CX-nW/2,H_ROD_Y-nH/2,BASE_CX+nW/2,H_ROD_Y-nH/2);
+  nG.addColorStop(0,'#475569');nG.addColorStop(.5,'#64748b');nG.addColorStop(1,'#475569');
+  ctx.fillStyle=nG;ctx.beginPath();ctx.roundRect(BASE_CX-nW/2,H_ROD_Y-nH/2,nW,nH,5);ctx.fill();ctx.strokeStyle='#94a3b8';ctx.lineWidth=.7;ctx.stroke();
+  
+  ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(BASE_CX+nW/2-6,H_ROD_Y,5,0,Math.PI*2);ctx.fill();
+
+  const hG=ctx.createLinearGradient(BASE_CX,H_ROD_Y-5,BASE_CX,H_ROD_Y+5);
+  hG.addColorStop(0,'#cbd5e1');hG.addColorStop(.4,'#f1f5f9');hG.addColorStop(1,'#94a3b8');
+  ctx.fillStyle=hG;ctx.fillRect(BASE_CX,H_ROD_Y-5,H_ROD_END-BASE_CX,10);
+
+  const rTop=H_ROD_Y+20,rH=510;
+  const rG=ctx.createLinearGradient(RULER_X-10,rTop,RULER_X+10,rTop);
+  rG.addColorStop(0,'#94a3b8');rG.addColorStop(.3,'#cbd5e1');rG.addColorStop(.5,'#f8fafc');rG.addColorStop(1,'#64748b');
+  ctx.fillStyle=rG;ctx.fillRect(RULER_X-10,rTop,20,rH);
+  ctx.strokeStyle='#475569';ctx.lineWidth=1;ctx.strokeRect(RULER_X-10,rTop,20,rH);
+
+  // MEJORA: Letras más nítidas y oscuras en la regla
+  ctx.fillStyle='#0f172a';ctx.font='700 10px "Space Grotesk"';ctx.textAlign='center';
+  ctx.fillText("cm",RULER_X,rTop-6);
+
+  ctx.lineWidth=.6;ctx.textAlign='left';
+  for(let i=0;i<=50;i++){
+    const y=rTop+(i*SC);if(y>rTop+rH)break;
+    ctx.beginPath();
+    if(i%10===0){
+      ctx.strokeStyle='#000000';ctx.moveTo(RULER_X-10,y);ctx.lineTo(RULER_X,y);
+      ctx.font='700 10px "JetBrains Mono"';ctx.fillStyle='#0f172a';
+      ctx.fillText(i,RULER_X+2,y+3.5);
+    }else if(i%5===0){
+      ctx.strokeStyle='#1e293b';ctx.moveTo(RULER_X-10,y);ctx.lineTo(RULER_X-3,y);
+    }else{
+      ctx.strokeStyle='#475569';ctx.moveTo(RULER_X-10,y);ctx.lineTo(RULER_X-5,y);
+    }
+    ctx.stroke();
+  }
+}
+
+function drawSpring(x,yStart,lengthCm,springIndex){
+  const sp=SPRINGS[springIndex],pixels=lengthCm*SC,turns=sp.coils,r=11;
+  ctx.strokeStyle=sp.color;ctx.lineWidth=2.8;ctx.lineJoin='round';ctx.lineCap='round';
+  
+  ctx.beginPath();ctx.moveTo(x,yStart);ctx.lineTo(x,yStart+12);
+  
+  const cyStart=yStart+12,cyEnd=yStart+pixels-12,h=(cyEnd-cyStart)/turns;
+  for(let i=0;i<=turns;i++){
+    const py=cyStart+i*h;
+    if(i===0){ctx.lineTo(x,py);}
+    else{
+      const prevY=cyStart+(i-1)*h;
+      ctx.bezierCurveTo(x+r,prevY+h*.35,x+r,py-h*.35,x,py);
+      ctx.bezierCurveTo(x-r,py-h*.35,x-r,prevY+h*.35,x,prevY+h);
+    }
+  }
+  ctx.lineTo(x,cyEnd);ctx.lineTo(x,cyEnd+12);ctx.stroke();
+  
+  ctx.strokeStyle='#475569';ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.arc(x,yStart+4,4,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.arc(x,cyEnd+8,4,0,Math.PI*2);ctx.stroke();
+}
+
+function drawSpringsAndLoad(){
+  const curX=S.currentElong;
+  const rTop=H_ROD_Y+20;
+
+  if(S.config==='simple'){
+    const nat=SPRINGS[S.s1].natLen;
+    drawSpring(SPR_X,H_ROD_Y,nat+curX,S.s1);
+    
+    // MEJORA: Sistema de referencia de elongación sumamente nítido y visible
+    if(S.showRef){
+      const yNat=H_ROD_Y+(nat*SC);
+      const yCur=H_ROD_Y+((nat+curX)*SC);
+      
+      // Línea de longitud natural
+      ctx.strokeStyle='#94a3b8';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+      ctx.beginPath();ctx.moveTo(RULER_X-12,yNat);ctx.lineTo(SPR_X+45,yNat);ctx.stroke();
+      
+      // Línea de elongación actual
+      ctx.strokeStyle='rgba(6,182,212,0.8)';ctx.lineWidth=1.2;
+      ctx.beginPath();ctx.moveTo(RULER_X-12,yCur);ctx.lineTo(SPR_X+45,yCur);ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // Indicador lateral de elongación (flecha/corchete estilizado)
+      if(curX > 0.05){
+        ctx.strokeStyle='#06b6d4';ctx.lineWidth=1.5;
+        ctx.beginPath();
+        ctx.moveTo(SPR_X+35, yNat);ctx.lineTo(SPR_X+40, yNat);
+        ctx.lineTo(SPR_X+40, yCur);ctx.lineTo(SPR_X+35, yCur);
+        ctx.stroke();
+        
+        // Texto de elongación con fondo de alta calidad
+        ctx.font='700 11px "Space Grotesk"';
+        const txt=`x = ${curX.toFixed(2)} cm`;
+        const tw=ctx.measureText(txt).width;
+        ctx.fillStyle='rgba(6,182,212,0.15)';
+        ctx.beginPath();ctx.roundRect(SPR_X+46, (yNat+yCur)/2 - 9, tw+10, 18, 4);ctx.fill();
+        ctx.fillStyle='#0891b2';ctx.textAlign='left';
+        ctx.fillText(txt, SPR_X+51, (yNat+yCur)/2 + 3.5);
+      }
+    }
+    drawSoportePlates(SPR_X,H_ROD_Y+((nat+curX)*SC)+12);
+
+  }else if(S.config==='serie'){
+    const nat1=SPRINGS[S.s1].natLen, nat2=SPRINGS[S.s2].natLen;
+    const ext1=curX*(SPRINGS[S.s2].k/(SPRINGS[S.s1].k+SPRINGS[S.s2].k));
+    const ext2=curX*(SPRINGS[S.s1].k/(SPRINGS[S.s1].k+SPRINGS[S.s2].k));
+    
+    const midY=H_ROD_Y+((nat1+ext1)*SC)+16;
+    drawSpring(SPR_X,H_ROD_Y,nat1+ext1,S.s1);
+    
+    ctx.fillStyle='#475569';ctx.beginPath();ctx.arc(SPR_X,midY-4,3,0,Math.PI*2);ctx.fill();
+    drawSpring(SPR_X,midY,nat2+ext2,S.s2);
+    
+    if(S.showRef){
+      const yNat=H_ROD_Y+((nat1+nat2)*SC)+16;
+      const yCur=H_ROD_Y+((nat1+nat2+curX)*SC)+16;
+      
+      ctx.strokeStyle='#94a3b8';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+      ctx.beginPath();ctx.moveTo(RULER_X-12,yNat);ctx.lineTo(SPR_X+45,yNat);ctx.stroke();
+      ctx.strokeStyle='rgba(6,182,212,0.8)';ctx.lineWidth=1.2;
+      ctx.beginPath();ctx.moveTo(RULER_X-12,yCur);ctx.lineTo(SPR_X+45,yCur);ctx.stroke();
+      ctx.setLineDash([]);
+      
+      if(curX > 0.05){
+        ctx.strokeStyle='#06b6d4';ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.moveTo(SPR_X+35,yNat);ctx.lineTo(SPR_X+40,yNat);ctx.lineTo(SPR_X+40,yCur);ctx.lineTo(SPR_X+35,yCur);ctx.stroke();
+        
+        ctx.font='700 11px "Space Grotesk"';
+        const txt=`x = ${curX.toFixed(2)} cm`;
+        const tw=ctx.measureText(txt).width;
+        ctx.fillStyle='rgba(6,182,212,0.15)';
+        ctx.beginPath();ctx.roundRect(SPR_X+46,(yNat+yCur)/2-9,tw+10,18,4);ctx.fill();
+        ctx.fillStyle='#0891b2';ctx.textAlign='left';
+        ctx.fillText(txt,SPR_X+51,(yNat+yCur)/2+3.5);
+      }
+    }
+    drawSoportePlates(SPR_X,H_ROD_Y+((nat1+nat2+curX)*SC)+28);
+
+  }else if(S.config==='parallel'){
+    const nat=Math.max(SPRINGS[S.s1].natLen,SPRINGS[S.s2].natLen);
+    const gL=nat+curX;
+    
+    ctx.fillStyle='#ef4444';ctx.beginPath();ctx.roundRect(SPR_X-26,H_ROD_Y,52,5,2);ctx.fill();
+    drawSpring(SPR_X-16,H_ROD_Y+5,gL,S.s1);
+    drawSpring(SPR_X+16,H_ROD_Y+5,gL,S.s2);
+    
+    const barY=H_ROD_Y+5+(gL*SC)+12;
+    const rG=ctx.createLinearGradient(SPR_X-24,barY,SPR_X+24,barY);
+    rG.addColorStop(0,'#dc2626');rG.addColorStop(.5,'#ef4444');rG.addColorStop(1,'#b91c1c');
+    ctx.fillStyle=rG;ctx.beginPath();ctx.roundRect(SPR_X-26,barY,52,7,3);ctx.fill();
+    
+    if(S.showRef){
+      const yNat=H_ROD_Y+5+(nat*SC)+12;
+      const yCur=H_ROD_Y+5+(gL*SC)+12;
+      
+      ctx.strokeStyle='#94a3b8';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+      ctx.beginPath();ctx.moveTo(RULER_X-12,yNat);ctx.lineTo(SPR_X+45,yNat);ctx.stroke();
+      ctx.strokeStyle='rgba(6,182,212,0.8)';ctx.lineWidth=1.2;
+      ctx.beginPath();ctx.moveTo(RULER_X-12,yCur);ctx.lineTo(SPR_X+45,yCur);ctx.stroke();
+      ctx.setLineDash([]);
+      
+      if(curX > 0.05){
+        ctx.strokeStyle='#06b6d4';ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.moveTo(SPR_X+35,yNat);ctx.lineTo(SPR_X+40,yNat);ctx.lineTo(SPR_X+40,yCur);ctx.lineTo(SPR_X+35,yCur);ctx.stroke();
+        
+        ctx.font='700 11px "Space Grotesk"';
+        const txt=`x = ${curX.toFixed(2)} cm`;
+        const tw=ctx.measureText(txt).width;
+        ctx.fillStyle='rgba(6,182,212,0.15)';
+        ctx.beginPath();ctx.roundRect(SPR_X+46,(yNat+yCur)/2-9,tw+10,18,4);ctx.fill();
+        ctx.fillStyle='#0891b2';ctx.textAlign='left';
+        ctx.fillText(txt,SPR_X+51,(yNat+yCur)/2+3.5);
+      }
+    }
+    drawSoportePlates(SPR_X,barY+7);
+  }
+}
+
+function drawSoportePlates(x,yStart){
+  ctx.strokeStyle='#475569';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(x,yStart);ctx.lineTo(x,yStart+14);ctx.stroke();
+  
+  ctx.fillStyle='#64748b';ctx.beginPath();ctx.roundRect(x-15,yStart+14,30,4,1);ctx.fill();
+  
+  ctx.fillStyle='#94a3b8';ctx.fillRect(x-2,yStart+18,4,84);
+  ctx.fillStyle='#334155';ctx.fillRect(x-18,yStart+102,36,5);
+
+  let curY=yStart+102;
+  PESAS.forEach(p=>{
+    const count=S.pesas[p.mass];
+    for(let i=0;i<count;i++){
+      curY-=p.height;
+      const gradient=ctx.createLinearGradient(x-p.width/2,curY,x+p.width/2,curY);
+      gradient.addColorStop(0,'#475569');gradient.addColorStop(.2,'#94a3b8');
+      gradient.addColorStop(.5,'#f1f5f9');gradient.addColorStop(.8,'#64748b');gradient.addColorStop(1,'#334155');
+      ctx.fillStyle=gradient;
+      ctx.beginPath();ctx.roundRect(x-p.width/2,curY,p.width,p.height,3);ctx.fill();
+      ctx.strokeStyle='rgba(0,0,0,.2)';ctx.lineWidth=.5;ctx.stroke();
+      
+      // MEJORA: Letras internas de las pesas ultranítidas y legibles
+      ctx.fillStyle='#0f172a';
+      ctx.font='700 9px "JetBrains Mono"';
+      ctx.textAlign='center';
+      ctx.fillText(p.label,x,curY+(p.height/2)+3.5);
+    }
+  });
+}
+
+function drawForces(){
+  const F=getForce();if(F<=0)return;
+  const nat=SPRINGS[S.s1].natLen;
+  let hookY=H_ROD_Y+(nat+S.currentElong)*SC+116;
+  if(S.config==='serie')hookY+=16+12;
+  if(S.config==='parallel')hookY+=12+7;
+  
+  const len=Math.min(30+(F*35),140);
+  
+  // Fuerza Peso (Flecha naranja hacia abajo)
+  ctx.strokeStyle='#f97316';ctx.lineWidth=3.5;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(SPR_X-20,hookY);ctx.lineTo(SPR_X-20,hookY+len);ctx.stroke();
+  ctx.fillStyle='#f97316';ctx.beginPath();
+  ctx.moveTo(SPR_X-25,hookY+len-4);ctx.lineTo(SPR_X-20,hookY+len+6);ctx.lineTo(SPR_X-15,hookY+len-4);
+  ctx.fill();
+  
+  // Fuerza Restauradora (Flecha azul hacia arriba)
+  ctx.strokeStyle='#2563eb';ctx.lineWidth=3.5;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(SPR_X-35,hookY+20);ctx.lineTo(SPR_X-35,hookY+20-len);ctx.stroke();
+  ctx.fillStyle='#2563eb';ctx.beginPath();
+  ctx.moveTo(SPR_X-40,hookY+20-len+4);ctx.lineTo(SPR_X-35,hookY+20-len-6);ctx.lineTo(SPR_X-30,hookY+20-len+4);
+  ctx.fill();
+}
+
+function drawLabels(W){
+  // MEJORA: Diseño de etiquetas dentro del Canvas optimizado para máxima calidad tipográfica
+  ctx.textAlign='center';
+  
+  // Etiqueta Fuerza Restauradora (Fe)
+  ctx.font='700 12px "Space Grotesk"';
+  const txtFe=`Fe = ${(getForce()).toFixed(3)} N`;
+  const w1=ctx.measureText(txtFe).width;
+  ctx.fillStyle='rgba(37,99,235,0.95)';
+  ctx.beginPath();ctx.roundRect(SPR_X-95-(w1/2),H_ROD_Y+45,w1+12,22,6);ctx.fill();
+  ctx.fillStyle='#ffffff';
+  ctx.fillText(txtFe,SPR_X-89,H_ROD_Y+60);
+
+  // Etiqueta Fuerza Peso (Fg)
+  const txtFg=`Ffg = ${(getForce()).toFixed(3)} N`;
+  const w2=ctx.measureText(txtFg).width;
+  ctx.fillStyle='rgba(249,115,22,0.95)';
+  ctx.beginPath();ctx.roundRect(SPR_X-95-(w2/2),H_ROD_Y+75,w2+12,22,6);ctx.fill();
+  ctx.fillStyle='#ffffff';
+  ctx.fillText(txtFg,SPR_X-89,H_ROD_Y+90);
+
+  // Información del Sistema en esquina superior derecha
+  const rTop=H_ROD_Y+20;
+  ctx.textAlign='right';
+  ctx.fillStyle='rgba(15,23,42,0.04)';
+  ctx.beginPath();ctx.roundRect(W-240,rTop,220,70,8);ctx.fill();
+  ctx.strokeStyle='rgba(15,23,42,0.08)';ctx.lineWidth=1;ctx.stroke();
+  
+  ctx.fillStyle='#0f172a';ctx.font='700 11px "Space Grotesk"';
+  ctx.fillText(`Masa Total: ${getTotalMassGrams().toFixed(1)} g`,W-35,rTop+20);
+  ctx.font='600 11px "Space Grotesk"';ctx.fillStyle='#64748b';
+  ctx.fillText(`Keq: ${getKeq_gcm().toFixed(2)} g/cm`,W-35,rTop+38);
+  ctx.fillText(`Elongación Real (x): ${getElongation_cm().toFixed(2)} cm`,W-35,rTop+54);
+}
+
+// ═══ ANIMACIÓN Y CICLO FÍSICO ═══
+let lastTime=performance.now();
+function tick(now){
+  let dt=(now-lastTime)/1000;if(dt>.1)dt=.1;lastTime=now;
+  
+  if(S.oscillating){
+    S.oscTime+=dt;
+    const T=getPeriod();
+    if(T>0){
+      const amp=Math.max(2,S.targetElong*.25);
+      const freq=2*Math.PI/T;
+      S.currentElong=S.targetElong+amp*Math.sin(freq*S.oscTime)*Math.exp(-0.4*S.oscTime);
+    }else{S.currentElong=0;}
+  }else{
+    S.currentElong+=(S.targetElong-S.currentElong)*12*dt;
+  }
+  
+  if(S.cronoRunning){
+    S.cronoElapsed=(performance.now()-S.cronoStart)/1000;
+    document.getElementById('cronoVal').innerText=S.cronoElapsed.toFixed(3)+' s';
+  }
+  
+  drawAll();
+  requestAnimationFrame(tick);
+}
+
+// ═══ ACTUALIZACIONES DE INTERFAZ ═══
+function updateUI(){
+  const m=getTotalMassGrams(),F=getForce(),x=getElongation_cm(),k=getKeq_gcm();
+  S.targetElong=x;
+  
+  document.getElementById('lvF').innerText=F.toFixed(3);
+  document.getElementById('lvX').innerText=x.toFixed(2);
+  document.getElementById('lvK').innerText=k.toFixed(2);
+  document.getElementById('lvM').innerText=m.toFixed(0);
+  
+  document.getElementById('pesaList').innerText=m+' g';
+  document.getElementById('pesaForce').innerText=F.toFixed(3)+' N';
+  
+  const T=getPeriod();
+  document.getElementById('tTeorico').innerText=T>0?T.toFixed(3)+' s':'—';
+  
+  const lim=document.getElementById('limitBadge');
+  const over=isOverLimit();
+  if(over){
+    lim.style.display='block';
+    if(!S.prevOverLimit){playSound('warning');showToast('¡Cuidado! Se ha superado el límite elástico del resorte.','error');}
+  }else{lim.style.display='none';}
+  S.prevOverLimit=over;
+  
+  if(S.activeStep===2 && m>SOP_MASS)setActiveStep(3);
+  renderSpringCards();
+}
+
+function setConfig(type){
+  if(S.config===type)return;
+  S.config=type;playSound('configChange');
+  
+  const cSimple=document.getElementById('cfgSimple'),cSerie=document.getElementById('cfgSerie'),cPara=document.getElementById('cfgParalelo');
+  const w2=document.getElementById('sel2Wrap'),t=document.getElementById('configText'),tk=document.getElementById('keqText');
+  
+  [cSimple,cSerie,cPara].forEach(b=>b.classList.remove('on'));
+  w2.style.display=(type==='simple')?'none':'block';
+  
+  if(type==='simple'){
+    cSimple.classList.add('on');
+    t.innerHTML='<i class="fas fa-info-circle" style="margin-right:4px"></i>Un solo resorte cuelga de la varilla horizontal. k_eq = k del resorte.';
+  }else if(type==='serie'){
+    cSerie.classList.add('on');
+    t.innerHTML='<i class="fas fa-info-circle" style="margin-right:4px"></i>Resortes uno tras otro. El conjunto es más blando: 1/k_eq = 1/k₁ + 1/k₂.';
+  }else{
+    cPara.classList.add('on');
+    t.innerHTML='<i class="fas fa-info-circle" style="margin-right:4px"></i>Resortes lado a lado cargando el soporte rojo (+8g). Más rígido: k_eq = k₁ + k₂.';
+  }
+  
+  updateKeqText();updateUI();
+}
+
+function updateKeqText(){
+  const k=getKeq_gcm();
+  if(S.config==='simple')document.getElementById('keqText').innerText=`k_eq = k₁ = ${k.toFixed(2)} g/cm`;
+  else if(S.config==='serie')document.getElementById('keqText').innerText=`k_eq = (k₁·k₂)/(k₁+k₂) = ${k.toFixed(2)} g/cm`;
+  else document.getElementById('keqText').innerText=`k_eq = k₁ + k₂ = ${k.toFixed(2)} g/cm`;
+}
+
+function changePesa(mass,dir){
+  const p=PESAS.find(x=>x.mass===mass);
+  const cur=S.pesas[mass]||0;
+  if(dir>0 && cur<p.qty){S.pesas[mass]++;playSound('addPesa');}
+  else if(dir<0 && cur>0){S.pesas[mass]--;playSound('removePesa');}
+  updateUI();
+}
+
+// ═══ INICIALIZACIÓN DE CONTROLES HTML ═══
+function initSelectors(){
+  const s1=document.getElementById('sel1'),s2=document.getElementById('sel2');
+  s1.innerHTML='';s2.innerHTML='';
+  SPRINGS.forEach((sp,i)=>{
+    s1.add(new Option(`${sp.name} (k=${sp.k} g/cm)`,i));
+    s2.add(new Option(`${sp.name} (k=${sp.k} g/cm)`,i));
+  });
+  s1.value=S.s1;s2.value=S.s2;
+}
+function updateSpring1(){S.s1=parseInt(document.getElementById('sel1').value);playSound('springSelect');updateKeqText();updateUI();}
+function updateSpring2(){S.s2=parseInt(document.getElementById('sel2').value);playSound('springSelect');updateKeqText();updateUI();}
+
+function renderPesaControls(){
+  const container=document.getElementById('pesaControls');container.innerHTML='';
+  PESAS.forEach(p=>{
+    const d=document.createElement('div');
+    d.className='flex items-center justify-between p-1.5 bg-gray-50 rounded-lg border border-gray-200';
+    d.innerHTML=`<div class="flex items-center gap-2"><i class="fas fa-weight-hanging text-gray-400 text-xs"></i><span class="text-xs font-bold">${p.label}</span><span class="text-[9px] text-gray-400">(Disponibles: ${p.qty})</span></div>
+    <div class="flex items-center gap-1">
+      <button onclick="changePesa(${p.mass},-1)" class="w-6 h-6 rounded bg-white border border-gray-300 flex items-center justify-center font-bold text-xs hover:border-red-400 hover:text-red-500 transition-colors">-</button>
+      <span class="w-6 text-center text-xs font-bold mono" id="cnt-${p.mass}">0</span>
+      <button onclick="changePesa(${p.mass},1)" class="w-6 h-6 rounded bg-white border border-gray-300 flex items-center justify-center font-bold text-xs hover:border-blue-400 hover:text-blue-500 transition-colors">+</button>
+    </div>`;
+    container.appendChild(d);
+  });
+}
+
+function renderSpringCards(){
+  const container=document.getElementById('springCards');container.innerHTML='';
+  SPRINGS.forEach((sp,i)=>{
+    const isSel=(S.config==='simple'&&S.s1===i)||(S.config!=='simple'&&(S.s1===i||S.s2===i));
+    const d=document.createElement('div');
+    d.className=`spring-chip ${isSel?'sel':''}`;
+    d.onclick=()=>{
+      if(S.config==='simple'){S.s1=i;document.getElementById('sel1').value=i;}
+      else{S.s2=S.s1;S.s1=i;document.getElementById('sel1').value=S.s1;document.getElementById('sel2').value=S.s2;}
+      playSound('springSelect');updateKeqText();updateUI();
+    };
+    d.innerHTML=`<div class="w-3 h-3 rounded-full" style="background:${sp.color};border:1px solid rgba(0,0,0,.15)"></div>
+    <div class="flex flex-col"><span class="text-[10px] font-bold leading-tight">${sp.name}</span><span class="text-[9px] text-gray-500 mono leading-none">${sp.k} g/cm</span></div>`;
+    container.appendChild(d);
+  });
+  PESAS.forEach(p=>{const el=document.getElementById(`cnt-${p.mass}`);if(el)el.innerText=S.pesas[p.mass]||0;});
+}
+
+// ═══ INTERACTIVOS Y TOAST ═══
+function toggleOsc(){S.oscillating=!S.oscillating;S.oscTime=0;playSound('toggle');document.getElementById('btnOsc').className=S.oscillating?'btn-s on':'btn-s';}
+function toggleRef(){S.showRef=!S.showRef;playSound('toggle');document.getElementById('btnRef').className=S.showRef?'btn-s on':'btn-s';}
+function showToast(m,type='ok'){
+  const t=document.getElementById('toast');t.className=`toast show t-${type}`;
+  t.innerHTML=type==='ok'?'<i class="fas fa-check-circle mr-2"></i>':type==='er'?'<i class="fas fa-times-circle mr-2"></i>':'<i class="fas fa-info-circle mr-2"></i>';
+  t.innerHTML+=m;setTimeout(()=>{t.classList.remove('show');},3500);
+}
+
+// ═══ CRONÓMETRO ═══
+function startCrono(){if(S.cronoRunning)return;playSound('cronoStart');S.cronoRunning=true;S.cronoStart=performance.now()-S.cronoElapsed*1000;document.getElementById('btnCronoStart').disabled=true;document.getElementById('btnCronoStop').disabled=false;}
+function stopCrono(){if(!S.cronoRunning)return;playSound('cronoStop');S.cronoRunning=false;document.getElementById('btnCronoStart').disabled=false;document.getElementById('btnCronoStop').disabled=true;}
+function resetCrono(){stopCrono();S.cronoElapsed=0;document.getElementById('cronoVal').innerText='0.000 s';}
+
+// ═══ REGISTRO DE DATOS Y GRÁFICO ═══
+let chart=null;
+function initChart(){
+  const ctxChart=document.getElementById('hookeChart').getContext('2d');
+  chart=new Chart(ctxChart,{
+    type:'scatter',
+    data:{datasets:[{label:'Mediciones',data:[],backgroundColor:'#2563eb',borderColor:'#2563eb',pointRadius:5,pointHoverRadius:7},{type:'line',label:'Ajuste Ideal',data:[],borderColor:'rgba(16,185,129,0.5)',borderWidth:1.5,borderDash:[5,5],fill:false,pointRadius:0}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{x:{title:{display:true,text:'Elongacion x (cm)',font:{family:'Space Grotesk',weight:'bold'}},ticks:{font:{family:'JetBrains Mono'}}},y:{title:{display:true,text:'Fuerza F (N)',font:{family:'Space Grotesk',weight:'bold'}},ticks:{font:{family:'JetBrains Mono'}},min:0}},plugins:{legend:{labels:{font:{family:'Space Grotesk',weight:600}}}}}
+  });
+}
+
+function recordMeas(){
+  const m=getTotalMassGrams(),F=getForce(),x=getElongation_cm(),k=getKeq_gcm();
+  if(m<=SOP_MASS){playSound('error');showToast('Coloca pesas antes de registrar.','er');return;}
+  if(isOverLimit()){playSound('error');showToast('No se puede registrar: ¡Límite elástico superado!','er');return;}
+  
+  S.measurements.push({cfg:S.config,m,F,x,k});playSound('record');
+  showToast('Medición guardada correctamente.');
+  if(S.activeStep===3)setActiveStep(4);
+  updateTable();updateChart();
+}
+
+function updateTable(){
+  document.getElementById('dcnt').innerText=`(${S.measurements.length})`;
+  const b=document.getElementById('dBody');b.innerHTML='';
+  if(S.measurements.length===0){
+    b.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;font-size:11px"><i class="fas fa-flask" style="font-size:18px;display:block;margin-bottom:6px;opacity:.25"></i>Aun sin mediciones</td></tr>';return;
+  }
+  S.measurements.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${i+1}</td><td class="capitalize">${r.cfg}</td><td class="mono">${r.m.toFixed(0)}</td><td class="mono">${r.F.toFixed(3)}</td><td class="mono">${r.x.toFixed(2)}</td><td class="mono">${r.k.toFixed(1)}</td>`;
+    b.appendChild(tr);
+  });
+}
+
+function updateChart(){
+  const pts=S.measurements.map(m=>({x:m.x,y:m.F}));
+  chart.data.datasets[0].data=pts;
+  if(pts.length>0){
+    const maxX=Math.max(...pts.map(p=>p.x),5);
+    const keqSI=getKeq_SI();
+    chart.data.datasets[1].data=[{x:0,y:0},{x:maxX,y:(keqSI*(maxX/100))}];
+  }else{chart.data.datasets[1].data=[];}
+  chart.update();
+}
+
+function calcK(){
+  if(S.measurements.length<2){playSound('error');showToast('Se necesitan al menos 2 mediciones para calcular k experimental.','in');return;}
+  let sumX2=0,sumXY=0;
+  S.measurements.forEach(m=>{sumX2+=m.x*m.x;sumXY+=m.x*m.F;});
+  const kExp_Ncm = sumX2>0 ? (sumXY/sumX2) : 0;
+  const kExp_gcm = kExp_Ncm / 0.000981;
+  playSound('calcSuccess');
+  document.getElementById('kCalc').innerText=`k exp = ${kExp_gcm.toFixed(2)} g/cm`;
+  showToast(`Cálculo exitoso: k = ${kExp_gcm.toFixed(2)} g/cm`,'ok');
+}
+
+function clearData(){S.measurements=[];playSound('clear');document.getElementById('kCalc').innerText='';updateTable();updateChart();if(S.activeStep===4)setActiveStep(1);}
+function resetAll(){
+  playSound('reset');S.s1=1;S.s2=1;S.config='simple';S.oscillating=false;S.showRef=true;S.oscTime=0;S.measurements=[];
+  PESAS.forEach(p=>S.pesas[p.mass]=0);
+  document.getElementById('sel1').value=1;document.getElementById('sel2').value=1;
+  document.getElementById('btnOsc').className='btn-s';document.getElementById('btnRef').className='btn-s on';
+  document.getElementById('kCalc').innerText='';
+  resetCrono();initSelectors();updateKeqText();updateTable();updateChart();updateUI();setActiveStep(1);
+}
+
+// ═══ INICIALIZACIÓN GLOBAL ═══
+window.onload=()=>{
+  initSelectors();renderPesaControls();renderSpringCards();initChart();updateUI();
+  requestAnimationFrame(tick);
+};
+</script>
+</body>
+</html>

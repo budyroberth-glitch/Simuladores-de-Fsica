@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acelerador Lineal de Gauss — Simulador Interactivo</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --bg:#f3f4f6;          /* Blanco humo / Gris muy claro premium */
+  --bg2:#e5e7eb;         /* Fondo interior del carril y canvas */
+  --card:#ffffff;        /* Paneles y tarjetas en blanco puro */
+  --card2:#f9fafb;       /* Filas y subelementos en blanco sutil */
+  --border:#cbd5e1;      /* Bordes definidos pero suaves */
+  --accent:#b45309;      /* Ámbar/Oro profundo para imanes y fuerzas */
+  --accent2:#047857;     /* Esmeralda técnico para Energía Cinética */
+  --accent-dim:rgba(180, 83, 9, 0.08);
+  --fg:#1f2937;          /* Texto principal carbón de alta legibilidad */
+  --fg2:#4b5563;         /* Texto secundario gris pizarra */
+  --muted:#9ca3af;       /* Elementos desactivados o tenues */
+  --danger:#dc2626;      /* Rojo vibrante para reinicio y alertas */
+  --warn:#d97706;        /* Naranja de aviso */
+  --info:#1d4ed8;        /* Azul eléctrico para Energía Potencial */
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:'Space Grotesk',sans-serif;min-height:100vh;overflow-x:hidden}
+#particleBg{position:fixed;inset:0;z-index:0;pointer-events:none}
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(180, 83, 9, 0.015)1px,transparent 1px),linear-gradient(90deg,rgba(180, 83, 9, 0.015)1px,transparent 1px);background-size:48px 48px}
+.app{position:relative;z-index:1;max-width:1480px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 26px;border-radius:13px;background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);margin-bottom:14px;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 4px 20px rgba(0,0,0,0.03)}
+header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),transparent)}
+.logo{display:flex;align-items:center;gap:13px}
+.logo-icon{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:19px;color:#ffffff}
+.logo h1{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.3rem;letter-spacing:1.5px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo p{font-size:.72rem;color:var(--fg2);margin-top:2px;letter-spacing:.5px;font-weight:500}
+.snd-btn{background:var(--card2);border:1px solid var(--border);color:var(--fg2);width:38px;height:38px;border-radius:99px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;transition:all .2s;flex-shrink:0}
+.snd-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--card)}
+.snd-btn.muted{color:var(--danger);border-color:rgba(220,38,38,0.25);background:rgba(220,38,38,0.02)}
+.main-grid{display:grid;grid-template-columns:290px 1fr;gap:14px}
+.sidebar{display:flex;flex-direction:column;gap:12px}
+.content{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.02)}
+.panel-hdr{padding:10px 15px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);font-family:'Rajdhani',sans-serif;font-size:.78rem;letter-spacing:1.4px;color:var(--accent);font-weight:700;background:var(--card2)}
+.panel-hdr i{font-size:.85rem}
+.panel-body{padding:13px 15px}
+.pg{margin-bottom:13px}.pg:last-child{margin-bottom:0}
+.pg-label{display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:var(--fg2);margin-bottom:5px;font-weight:500}
+.pg-val{font-family:'Rajdhani',sans-serif;font-size:.82rem;color:var(--accent);font-weight:700;background:var(--accent-dim);padding:1px 6px;border-radius:4px}
+input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:var(--bg2);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);border:2px solid var(--card);cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.15);transition:transform 0.1s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+.btn{width:100%;padding:10px;border:none;border-radius:8px;font-family:'Rajdhani',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 2px 5px rgba(0,0,0,0.04)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#9a3412);color:#ffffff}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(180,83,9,0.25)}
+.btn-secondary{background:var(--card2);color:var(--fg2);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);background:var(--card)}
+.btn-danger{background:rgba(220,38,38,0.05);color:var(--danger);border:1px solid rgba(220,38,38,0.15)}
+.btn-danger:hover{background:rgba(220,38,38,0.1);transform:translateY(-1px)}
+.btn-row{display:flex;gap:6px}.btn-row .btn{flex:1}
+.sim-box{background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.02)}
+.sim-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--card2)}
+.sim-status{display:flex;align-items:center;gap:6px;font-size:.76rem;color:var(--fg2);font-weight:500}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--muted);transition:all 0.3s}
+.sdot.on{background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 1.4s infinite}
+.sdot.done{background:var(--accent2);box-shadow:0 0 8px var(--accent2)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.spd-btns{display:flex;align-items:center;gap:4px}
+.spd-btns button{background:var(--card);border:1px solid var(--border);color:var(--fg2);padding:3px 8px;border-radius:5px;cursor:pointer;font-size:.68rem;font-weight:600;transition:all .15s}
+.spd-btns button:hover,.spd-btns button.act{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+#simCanvas{display:block;width:100%;cursor:pointer;background:#f8fafc}
+.phase-box{padding:10px 14px;background:var(--card2);border-top:1px solid var(--border);min-height:48px;display:flex;align-items:center;gap:9px}
+.phase-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0}
+.phase-icon.mag{background:rgba(180,83,9,0.1);color:var(--accent)}
+.phase-icon.col{background:rgba(220,38,38,0.1);color:var(--danger)}
+.phase-icon.ene{background:rgba(4,120,87,0.1);color:var(--accent2)}
+.phase-icon.idle{background:rgba(0,0,0,0.05);color:var(--fg2)}
+.phase-txt{font-size:.78rem;line-height:1.5;color:var(--fg2)}
+.phase-txt strong{color:var(--fg)}
+.data-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.dcard{background:var(--card);border:1px solid var(--border);border-radius:99px;padding:10px 12px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.01)}
+.dcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.dcard.v::before{background:var(--accent)}.dcard.ke::before{background:var(--accent2)}.dcard.pe::before{background:var(--info)}.dcard.st::before{background:var(--danger)}.dcard.mom::before{background:#8b5cf6}
+.dcard-lbl{font-size:.65rem;color:var(--fg2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px;font-weight:600}
+.dcard-val{font-family:'Rajdhani',sans-serif;font-size:1.25rem;font-weight:700}
+.dcard.v .dcard-val{color:var(--accent)}.dcard.ke .dcard-val{color:var(--accent2)}.dcard.pe .dcard-val{color:var(--info)}.dcard.st .dcard-val{color:var(--danger)}.dcard.mom .dcard-val{color:#8b5cf6}
+.dcard-unit{font-size:.62rem;color:var(--muted);margin-top:1px;font-weight:500}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chart-box{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:10px 12px;box-shadow:0 2px 10px rgba(0,0,0,0.01);max-height:142px;display:flex;flex-direction:column;justify-content:space-between}
+.chart-box canvas{max-height:95px !important;width:100% !important}
+.chart-title{font-family:'Rajdhani',sans-serif;font-size:.74rem;letter-spacing:1.1px;color:var(--accent);margin-bottom:5px;display:flex;align-items:center;gap:6px;font-weight:700}
+.edu-card{background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.02)}
+.edu-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--card2)}
+.edu-tab{flex:1;padding:10px;text-align:center;font-size:.76rem;color:var(--fg2);cursor:pointer;transition:all .15s;border:none;background:none;font-weight:700;font-family:'Rajdhani',sans-serif;letter-spacing:.5px}
+.edu-tab:hover{color:var(--fg);background:rgba(0,0,0,0.01)}.edu-tab.act{color:var(--accent);border-bottom:3px solid var(--accent);background:var(--card)}
+.edu-body{padding:15px;display:none;background:var(--card)}.edu-body.act{display:block}
+.edu-body h3{font-family:'Rajdhani',sans-serif;font-size:.95rem;color:var(--accent2);margin-bottom:8px;font-weight:700}
+.edu-body p{font-size:.8rem;line-height:1.65;color:var(--fg2);margin-bottom:8px}
+.edu-body ul{padding-left:18px}
+.edu-body li{font-size:.78rem;color:var(--fg2);line-height:1.65;margin-bottom:2px}
+.edu-formula{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:9px 13px;margin:8px 0;font-family:'Rajdhani',sans-serif;font-size:.9rem;color:var(--accent);text-align:center;letter-spacing:.7px;font-weight:700}
+.edu-specs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.edu-spec{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:.76rem}
+.edu-spec span{color:var(--fg2);display:block;font-size:.65rem;margin-bottom:2px;font-weight:500}
+.edu-spec strong{color:var(--fg);font-family:'Rajdhani',sans-serif;font-weight:700}
+.hist-tbl{width:100%;border-collapse:collapse;font-size:.74rem}
+.hist-tbl th{text-align:left;padding:6px 8px;color:var(--fg2);border-bottom:1px solid var(--border);font-weight:700;letter-spacing:.3px;font-size:.66rem;text-transform:uppercase;background:var(--card2)}
+.hist-tbl td{padding:7px 8px;color:var(--fg);border-bottom:1px solid #f0f0f0}
+.hist-tbl tr:hover td{background:var(--accent-dim)}
+.hist-tbl .mn{font-family:'Rajdhani',sans-serif;font-size:.76rem;color:var(--accent);font-weight:700}
+.toast-c{position:fixed;top:14px;right:14px;z-index:9999;display:flex;flex-direction:column;gap:5px}
+.toast{padding:10px 16px;border-radius:8px;font-size:.78rem;background:var(--card);border:1px solid var(--border);color:var(--fg);box-shadow:0 4px 12px rgba(0,0,0,0.08);animation:tin .3s ease-out;display:flex;align-items:center;gap:7px;font-weight:500}
+.toast.ok{border-left:4px solid var(--accent2)}.toast.ok i{color:var(--accent2)}
+@keyframes tin{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@media(max-width:1100px){.main-grid{grid-template-columns:1fr}.charts-row{grid-template-columns:1fr}.data-strip{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.app{padding:8px}header{padding:12px;flex-direction:column;gap:8px}.data-strip{grid-template-columns:1fr 1fr}.logo h1{font-size:1.1rem}}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+<canvas id="particleBg"></canvas>
+<div class="grid-bg"></div>
+<div class="toast-c" id="toastC"></div>
+<div class="app">
+<header>
+  <div class="logo">
+    <div class="logo-icon"><i class="fas fa-magnet"></i></div>
+    <div><h1>ACELERADOR LINEAL DE GAUSS</h1><p>Kit de Fuerza y Dinámica - Simulador Interactivo N°3</p></div>
+  </div>
+  <button class="snd-btn" id="muteBtn" onclick="toggleMute()" title="Silenciar/Activar sonido"><i class="fas fa-volume-up"></i></button>
+</header>
+<div class="main-grid">
+  <aside class="sidebar">
+    <div class="panel">
+      <div class="panel-hdr"><i class="fas fa-cogs"></i> PARAMETROS</div>
+      <div class="panel-body">
+        <div class="pg"><div class="pg-label"><span><i class="fas fa-layer-group"></i> Etapas (Imanes)</span><span class="pg-val" id="vStg">4</span></div><input type="range" id="sStg" min="1" max="5" value="4" step="1"></div>
+        <div class="pg"><div class="pg-label"><span><i class="fas fa-magnet"></i> Fuerza magnética</span><span class="pg-val" id="vFrc">8.0 N</span></div><input type="range" id="sFrc" min="2" max="20" value="8" step="0.5"></div>
+        <div class="pg"><div class="pg-label"><span><i class="fas fa-circle"></i> Masa esfera</span><span class="pg-val" id="vMas">60 g</span></div><input type="range" id="sMas" min="30" max="100" value="60" step="5"></div>
+        <div class="pg"><div class="pg-label"><span><i class="fas fa-ruler-horizontal"></i> Dist. liberación</span><span class="pg-val" id="vDst">40 mm</span></div><input type="range" id="sDst" min="20" max="80" value="40" step="5"></div>
+        <div class="pg"><div class="pg-label"><span><i class="fas fa-arrows-alt-h"></i> Separación imanes</span><span class="pg-val" id="vSep">160 mm</span></div><input type="range" id="sSep" min="100" max="250" value="160" step="10"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><i class="fas fa-play-circle"></i> CONTROLES</div>
+      <div class="panel-body">
+        <button class="btn btn-primary" onclick="launch()"><i class="fas fa-rocket"></i> LANZAR ESFERA</button>
+        <div style="height:6px"></div>
+        <div class="btn-row"><button class="btn btn-secondary" onclick="togglePause()"><i class="fas fa-pause"></i> PAUSA</button><button class="btn btn-danger" onclick="reset()"><i class="fas fa-undo"></i> REINICIAR</button></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <span><i class="fas fa-clipboard-list"></i> HISTORIAL DE ENSAYOS</span>
+        <button onclick="clearHistory()" style="background: none; border: none; color: var(--danger); font-family: 'Rajdhani', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; cursor: pointer; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(220, 38, 38, 0.2); transition: all 0.2s;"><i class="fas fa-trash-alt"></i> REINICIAR</button>
+      </div>
+      <div class="panel-body" style="padding:5px 7px"><table class="hist-tbl"><thead><tr><th>#</th><th>Etapas</th><th>V_max</th><th>E_k Final</th></tr></thead><tbody id="histBody"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:12px">Sin ensayos registrados</td></tr></tbody></table></div>
+    </div>
+  </aside>
+  <div class="content">
+    <div class="sim-box">
+      <div class="sim-bar">
+        <div class="sim-status"><div class="sdot" id="sDot"></div><span id="sTxt">Equipo nivelado — listo</span></div>
+        <div class="spd-btns"><span style="font-size:.68rem;color:var(--fg2);margin-right:2px;font-weight:500">Vel:</span><button onclick="setSpd(.25)" class="sp">0.25x</button><button onclick="setSpd(.5)" class="sp">0.5x</button><button onclick="setSpd(1)" class="sp act">1x</button><button onclick="setSpd(2)" class="sp">2x</button></div>
+      </div>
+      <canvas id="simCanvas" width="1140" height="340"></canvas>
+      <div class="phase-box" id="phaseBox"><div class="phase-icon idle"><i class="fas fa-info-circle"></i></div><div class="phase-txt">Haga clic en <strong>LANZAR ESFERA</strong> para iniciar el proceso de inducción magnética por impacto mecánico.</div></div>
+    </div>
+    <div class="data-strip">
+      <div class="dcard v"><div class="dcard-lbl">Velocidad Instantánea</div><div class="dcard-val" id="dVel">0.00</div><div class="dcard-unit">m/s</div></div>
+      <div class="dcard ke"><div class="dcard-lbl">Energía Cinética</div><div class="dcard-val" id="dKE">0.00</div><div class="dcard-unit">mJ</div></div>
+      <div class="dcard pe"><div class="dcard-lbl">E. Potencial Magnética</div><div class="dcard-val" id="dPE">0.00</div><div class="dcard-unit">mJ</div></div>
+      <div class="dcard st"><div class="dcard-lbl">Choques en Cadena</div><div class="dcard-val" id="dStg">0 / 0</div><div class="dcard-unit">Etapas completas</div></div>
+      <div class="dcard mom"><div class="dcard-lbl">Cant. de Movimiento</div><div class="dcard-val" id="dMom">0.00</div><div class="dcard-unit">g·m/s</div></div>
+    </div>
+     
+    <div class="charts-row">
+      <div class="chart-box"><div class="chart-title"><i class="fas fa-chart-line"></i> VELOCIDAD MÁXIMA POR ETAPA</div><canvas id="velChart" height="95"></canvas></div>
+      <div class="chart-box"><div class="chart-title"><i class="fas fa-chart-bar"></i> ENERGÍA CINÉTICA POR ETAPA</div><canvas id="eneChart" height="95"></canvas></div>
+    </div>
+     
+    <div class="edu-card">
+      <div class="edu-tabs">
+        <button class="edu-tab act" onclick="eduTab(0)"><i class="fas fa-microscope"></i> Ficha Técnica Kit Minedu</button>
+        <button class="edu-tab" onclick="eduTab(1)"><i class="fas fa-atom"></i> Explicación Física</button>
+        <button class="edu-tab" onclick="eduTab(2)"><i class="fas fa-flask"></i> Protocolo de Indagación</button>
+        <button class="edu-tab" onclick="eduTab(3)"><i class="fas fa-shield-alt"></i> Conservación del Kit</button>
+      </div>
+      <div class="edu-body act" id="edu0">
+        <h3>Componentes Oficiales del Acelerador</h3>
+        <div class="edu-specs">
+          <div class="edu-spec"><span>Carril de soporte</span><strong>Aluminio estructurado, 100 cm de longitud</strong></div>
+          <div class="edu-spec"><span>Base amortiguadora</span><strong>Madera tornillo noble con veteado pulido</strong></div>
+          <div class="edu-spec"><span>Carcasas de seguridad</span><strong>Bloques de policarbonato transparente</strong></div>
+          <div class="edu-spec"><span>Esferas de acero (15 uds)</span><strong>Acero magnético pulido de alta densidad (Ø 24.5 mm)</strong></div>
+          <div class="edu-spec"><span>Imanes de neodimio</span><strong>Bloques cilíndricos de alta potencia (24.8×5.5 mm)</strong></div>
+          <div class="edu-spec"><span>Niveladores de precisión</span><strong>4 pernos basculantes con base de jebe antideslizante</strong></div>
+        </div>
+        <p>Este simulador representa el módulo número 3 del Kit de Fuerzas y Dinámica distribuido por el Ministerio de Educación de Perú. Consiste en un carril rectilíneo perfectamente nivelado donde se disponen imanes potentes y esferas de acero encargadas de evidenciar macroscópicamente la conservación de la energía y el momento lineal.</p>
+      </div>
+      <div class="edu-body" id="edu1">
+        <h3>¿Cómo se justifica el aumento de velocidad?</h3>
+        <ul>
+          <li><strong>Fuerza Magnética No Lineal:</strong> El campo magnético del neodimio atrae a la esfera entrante con una fuerza inversamente proporcional a la distancia elevada a una potencia exponencial.</li>
+          <li><strong>Transferencia por Choque Elástico:</strong> Al colisionar, la esfera detiene por completo su movimiento en el imán. La energía electromecánica absorbida viaja en forma de onda de presión elástica a través del imán liberando de forma inmediata a la última esfera colocada en el lado opuesto.</li>
+          <li><strong>Ganancia Energética Neta:</strong> La esfera liberada arranca desde una posición fuera del rango de retención crítica del imán trasero, acumulando velocidad etapa tras etapa.</li>
+        </ul>
+      </div>
+      <div class="edu-body" id="edu2">
+        <h3>Variables y Ficha de Laboratorio</h3>
+        <ul>
+          <li><strong>Variable Independiente (Manipulable):</strong> Distancia de separación entre los imanes o número total de etapas instaladas.</li>
+          <li><strong>Variable Dependiente (Medible):</strong> Velocidad máxima de eyección del proyectil final.</li>
+          <li><strong>Variables Intervinientes:</strong> Masa invariable de la esfera (59.4 g), inclinación de la base (mantenida en 0° gracias a niveladores).</li>
+        </ul>
+      </div>
+      <div class="edu-body" id="edu3">
+        <h3>Normas de Cuidado y Almacenamiento</h3>
+        <ul>
+          <li><strong>Cuidado del Neodimio:</strong> Jamás permita impactos directos de imán contra imán; use siempre las carcasas protectoras provistas en el kit.</li>
+          <li><strong>Uso del Separador Técnico:</strong> Para despegar las esferas firmemente adheridas use la cuña plástica para evitar rayar el canal de aluminio.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// =====================================================
+// AUDIO EMULATION SYSTEM (WEB AUDIO API SYNTHESIZER)
+// =====================================================
+let audioCtx=null,masterVol=.4,isMuted=false;
+function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}
+function toggleMute(){isMuted=!isMuted;updMuteIcon();sndClick()}
+function updMuteIcon(){const b=document.getElementById('muteBtn');if(isMuted){b.innerHTML='<i class="fas fa-volume-mute"></i>';b.classList.add('muted')}else{b.innerHTML='<i class="fas fa-volume-up"></i>';b.classList.remove('muted')}}
+function vol(){return isMuted?0:masterVol}
+
+function sndCollision(intensity){if(vol()===0)return;initAudio();const v=vol()*Math.min(1,(intensity||1)),now=audioCtx.currentTime;const o1=audioCtx.createOscillator(),g1=audioCtx.createGain();o1.type='sine';o1.frequency.setValueAtTime(3200,now);o1.frequency.exponentialRampToValueAtTime(1400,now+.1);g1.gain.setValueAtTime(.25*v,now);g1.gain.exponentialRampToValueAtTime(.001,now+.16);o1.connect(g1);g1.connect(audioCtx.destination);o1.start(now);o1.stop(now+.18)}
+function sndRelease(){if(vol()===0)return;initAudio();const v=vol(),now=audioCtx.currentTime;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='triangle';o.frequency.setValueAtTime(600,now);o.frequency.linearRampToValueAtTime(1200,now+.1);g.gain.setValueAtTime(.05*v,now);g.gain.exponentialRampToValueAtTime(.001,now+.12);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+.12)}
+function sndLaunch(){if(vol()===0)return;initAudio();const v=vol(),now=audioCtx.currentTime;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.setValueAtTime(200,now);o.frequency.exponentialRampToValueAtTime(800,now+.15);g.gain.setValueAtTime(.1*v,now);g.gain.exponentialRampToValueAtTime(.001,now+.2);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+.2)}
+function sndComplete(){if(vol()===0)return;initAudio();const v=vol(),now=audioCtx.currentTime;[523.25,659.25,783.99].forEach((freq,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=freq;g.gain.setValueAtTime(0,now+i*.08);g.gain.linearRampToValueAtTime(.05*v,now+i*.08+.02);g.gain.exponentialRampToValueAtTime(.001,now+i*.08+.25);o.connect(g);g.connect(audioCtx.destination);o.start(now+i*.08);o.stop(now+i*.08+.26)})}
+function sndClick(){if(vol()===0)return;initAudio();const v=vol(),now=audioCtx.currentTime;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.setValueAtTime(800,now);g.gain.setValueAtTime(.04*v,now);g.gain.exponentialRampToValueAtTime(.001,now+.03);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+.03)}
+function sndTick(){if(vol()===0)return;initAudio();const v=vol(),now=audioCtx.currentTime;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=1200;g.gain.setValueAtTime(.02*v,now);g.gain.exponentialRampToValueAtTime(.001,now+.01);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+.015)}
+
+// =====================================================
+// FLOATING AMBIENT PARTICLES (LIGHT CONTRAST OPTIMIZED)
+// =====================================================
+(function(){const pc=document.getElementById('particleBg'),px=pc.getContext('2d');let dots=[];function rz(){pc.width=window.innerWidth;pc.height=window.innerHeight}rz();window.addEventListener('resize',rz);for(let i=0;i<20;i++)dots.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,r:Math.random()*1.2+0.5,vx:(Math.random()-.5)*.15,vy:(Math.random()-.5)*.15,a:Math.random()*.1+.02});function draw(){px.clearRect(0,0,pc.width,pc.height);dots.forEach(d=>{d.x+=d.vx;d.y+=d.vy;if(d.x<0)d.x=pc.width;if(d.x>pc.width)d.x=0;if(d.y<0)d.y=pc.height;if(d.y>pc.height)d.y=0;px.beginPath();px.arc(d.x,d.y,d.r,0,Math.PI*2);px.fillStyle=`rgba(180,83,9,${d.a})`;px.fill()});requestAnimationFrame(draw)}draw()})();
+
+// =====================================================
+// MAIN PHYSICS ENGINE AND INTERACTION CORE
+// =====================================================
+const C=document.getElementById('simCanvas'),X=C.getContext('2d');
+let P={stages:4,fMax:8,mass:.060,releaseDist:.04,stageSep:.16};
+const SPHERE_R=.01225,MAGNET_W=.0055,MAGNET_R=.0124,SIGMA=.018;
+let sim={running:false,paused:false,speed:1,time:0,phase:'idle',stageIdx:0,ballX:0,ballV:0,trail:[],stageV:[],stageKE:[]};
+
+let velChartInstance=null, eneChartInstance=null, trialCount=0;
+
+function getGeo(){const W=C.width,H=C.height,railY=H*.50,railL=60,railR=W-60,totalLen=P.releaseDist+P.stages*P.stageSep+.15,ppm=(railR-railL)/totalLen;let magnets=[];for(let i=0;i<P.stages;i++)magnets.push(P.releaseDist+i*P.stageSep);return{W,H,railY,railL,railR,ppm,magnets,totalLen}}
+function mPx(m){const g=getGeo();return g.railL+m*g.ppm}
+
+['sStg','sFrc','sMas','sDst','sSep'].forEach(id=>{document.getElementById(id).addEventListener('input',()=>{sndTick();readP();if(!sim.running)drawIdle()})});
+function readP(){P.stages=+document.getElementById('sStg').value;P.fMax=+document.getElementById('sFrc').value;P.mass=+document.getElementById('sMas').value/1000;P.releaseDist=+document.getElementById('sDst').value/1000;P.stageSep=+document.getElementById('sSep').value/1000;document.getElementById('vStg').textContent=P.stages;document.getElementById('vFrc').textContent=P.fMax.toFixed(1)+' N';document.getElementById('vMas').textContent=(P.mass*1000).toFixed(0)+' g';document.getElementById('vDst').textContent=(P.releaseDist*1000).toFixed(0)+' mm';document.getElementById('vSep').textContent=(P.stageSep*1000).toFixed(0)+' mm'}
+readP();
+
+function setSpd(s){sndClick();sim.speed=s;document.querySelectorAll('.sp').forEach(b=>b.classList.toggle('act',parseFloat(b.textContent)===s))}
+
+function magF(r){return (P.fMax * 0.45) * Math.pow(SIGMA/(Math.abs(r)+SIGMA), 2.5)}
+
+function drawBG(W,H){X.fillStyle='#f8fafc';X.fillRect(0,0,W,H);X.strokeStyle='rgba(180,83,9,0.02)';X.lineWidth=1;for(let x=0;x<W;x+=48){X.beginPath();X.moveTo(x,0);X.lineTo(x,H);X.stroke()}for(let y=0;y<H;y+=48){X.beginPath();X.moveTo(0,y);X.lineTo(W,y);X.stroke()}}
+
+function drawBase(W,H,rY){
+  const g=getGeo(),bTop=rY+12,bH=28,bL=g.railL-30,bR=g.railR+30;
+  X.fillStyle='rgba(0,0,0,0.03)';
+  X.fillRect(bL+4,bTop+4,bR-bL,bH);
+  const wg=X.createLinearGradient(0,bTop,0,bTop+bH);
+  wg.addColorStop(0,'#b45309');wg.addColorStop(.3,'#d97706');wg.addColorStop(1,'#78350f');
+  X.fillStyle=wg;X.fillRect(bL,bTop,bR-bL,bH);
+  X.fillStyle='rgba(255,255,255,0.2)';
+  X.font='bold 9px Rajdhani';X.textAlign='center';
+  X.fillText('SOPORTE ALINEADO DE MADERA TORNILLO - KIT DE FUERZAS MINEDU', (bL+bR)/2, bTop+17);
+}
+
+function drawRail(W,H,rY){
+  const g=getGeo(),rH=6;
+  X.fillStyle='#cbd5e1';
+  X.fillRect(g.railL-15,rY-rH/2,g.railR-g.railL+30,rH);
+  X.strokeStyle='#94a3b8';X.lineWidth=1.5;
+  X.beginPath();X.moveTo(g.railL-15,rY-rH/2);X.lineTo(g.railR+15,rY-rH/2);X.moveTo(g.railL-15,rY+rH/2);X.lineTo(g.railR+15,rY+rH/2);X.stroke();
+}
+
+function drawSystem(g){
+  drawBG(g.W,g.H);
+  drawBase(g.W,g.H,g.railY);
+  drawRail(g.W,g.H,g.railY);
+  const rY=g.railY,rPx=SPHERE_R*g.ppm;
+  g.magnets.forEach((mX,idx)=>{
+    const pX=mPx(mX),mW=MAGNET_W*g.ppm,mH=MAGNET_R*2*g.ppm;
+    X.fillStyle=idx<sim.stageIdx?'#94a3b8':'#475569';
+    X.fillRect(pX-mW/2,rY-mH/2,mW,mH);
+    X.fillStyle='#b45309';X.fillRect(pX-mW/2,rY-mH/2,2,mH);X.fillStyle='#1d4ed8';X.fillRect(pX+mW/2-2,rY-mH/2,2,mH);
+    X.fillStyle='rgba(0,0,0,0.1)';X.fillRect(pX-mW/2-10,rY-mH/2-4,mW+20,4);X.fillStyle='rgba(255,255,255,0.3)';X.fillRect(pX-mW/2,rY-mH/2,mW,2);
+    if(idx>=sim.stageIdx){
+      for(let n=0;n<2;n++){
+        const bX=pX+mW/2+rPx+n*rPx*2;
+        const sGrad=X.createRadialGradient(bX-rPx*0.3,rY-rPx*0.3,rPx*0.1,bX,rY,rPx);
+        sGrad.addColorStop(0,'#ffffff');sGrad.addColorStop(0.4,'#cbd5e1');sGrad.addColorStop(1,'#475569');
+        X.fillStyle=sGrad;X.beginPath();X.arc(bX,rY,rPx,0,Math.PI*2);X.fill();
+      }
+    }
+  });
+}
+
+function drawIdle(){const g=getGeo();sim.ballX=0;sim.ballV=0;sim.stageIdx=0;sim.trail=[];sim.phase='idle';drawSystem(g);drawSphereAt(g.railL,g.railY,SPHERE_R*g.ppm);updDom(0,0,0,0,0);updStatusBox()}
+
+function drawSphereAt(x,y,rPx){
+  const sGrad=X.createRadialGradient(x-rPx*0.3,y-rPx*0.3,rPx*0.1,x,y,rPx);
+  sGrad.addColorStop(0,'#ffffff');sGrad.addColorStop(0.3,'#94a3b8');sGrad.addColorStop(1,'#1e293b');
+  X.fillStyle=sGrad;X.beginPath();X.arc(x,y,rPx,0,Math.PI*2);X.fill();X.strokeStyle='#64748b';X.lineWidth=0.5;X.stroke();
+}
+
+function drawTrail(g){
+  if(sim.trail.length<2) return;
+  X.save();
+  const rPx=SPHERE_R*g.ppm;
+  const grad=X.createLinearGradient(mPx(sim.trail[0]),g.railY,mPx(sim.trail[sim.trail.length-1]),g.railY);
+  grad.addColorStop(0, 'rgba(255,255,255,0.0)');
+  grad.addColorStop(1, 'rgba(255,255,255,0.65)');
+  X.fillStyle=grad;
+  X.beginPath();
+  const firstX=mPx(sim.trail[0]);
+  const lastX=mPx(sim.trail[sim.trail.length-1]);
+  X.rect(firstX,g.railY-rPx*0.6,lastX-firstX,rPx*1.2);
+  X.fill();
+  X.restore();
+}
+
+function updDom(v, ke, pe, completedStages, mom) {
+  document.getElementById('dVel').textContent = v.toFixed(2);
+  document.getElementById('dKE').textContent = ke.toFixed(2);
+  document.getElementById('dPE').textContent = pe.toFixed(2);
+  document.getElementById('dStg').textContent = completedStages + ' / ' + P.stages;
+  document.getElementById('dMom').textContent = mom.toFixed(2);
+}
+
+// =====================================================
+// FIXED STEP PHYSICS ENGINE (INVARIANT SUBSTEPPING)
+// =====================================================
+function updatePhysics(dt){
+  sim.time += dt;
+  const g = getGeo();
+  
+  if(sim.stageIdx < P.stages){
+    sim.phase = 'acceleration';
+    let targetMagnetX = P.releaseDist + sim.stageIdx * P.stageSep;
+    let distanceToMagnet = targetMagnetX - sim.ballX;
+    
+    let force = magF(distanceToMagnet);
+    let acceleration = force / P.mass;
+    
+    sim.ballV += acceleration * dt;
+    sim.ballX += sim.ballV * dt;
+    
+    sim.trail.push(sim.ballX);
+    if(sim.trail.length > 25) sim.trail.shift();
+    
+    if(sim.ballX >= targetMagnetX){
+      sndCollision(sim.ballV / 6);
+      
+      // Transferencia elástica + boost técnico por cada imán
+      let boostFactor = 0.38 + (sim.stageIdx * 0.04);
+      sim.ballV = sim.ballV + boostFactor;
+      
+      sim.stageV.push(sim.ballV);
+      let calculatedKE = 0.5 * P.mass * sim.ballV * sim.ballV * 1000;
+      sim.stageKE.push(calculatedKE);
+      
+      sim.ballX = targetMagnetX + MAGNET_W + 2 * SPHERE_R;
+      sim.stageIdx++;
+      
+      if(sim.stageIdx < P.stages){
+        sndRelease();
+      } else {
+        sim.phase = 'extraction';
+      }
+    }
+  } else {
+    // Proyección fuera del carril (M.R.U)
+    sim.ballX += sim.ballV * dt;
+    sim.trail.push(sim.ballX);
+    if(sim.trail.length > 25) sim.trail.shift();
+    
+    if(sim.ballX >= g.totalLen){
+      sim.running = false;
+      sim.phase = 'done';
+      sndComplete();
+      addTrialToHistory();
+      updateCharts();
+      showToast('Ensayo completado exitosamente', 'ok');
+    }
+  }
+  
+  let currentV = sim.ballV;
+  let currentKE = 0.5 * P.mass * currentV * currentV * 1000;
+  let currentPE = 0;
+  
+  if(sim.stageIdx < P.stages){
+    let nextMagnetX = P.releaseDist + sim.stageIdx * P.stageSep;
+    let rNext = nextMagnetX - sim.ballX;
+    if(rNext > 0){
+      currentPE = P.fMax * 0.45 * SIGMA * (1 - Math.pow(SIGMA / (rNext + SIGMA), 1.5)) * 1000;
+    }
+  }
+  let currentMom = (P.mass * 1000) * currentV;
+  
+  updDom(currentV, currentKE, currentPE, sim.stageIdx, currentMom);
+}
+
+function updStatusBox(){
+  const dot = document.getElementById('sDot');
+  const txt = document.getElementById('sTxt');
+  const pBox = document.getElementById('phaseBox');
+  
+  if(sim.phase === 'idle'){
+    dot.className = 'sdot';
+    txt.textContent = 'Equipo nivelado — listo';
+    pBox.innerHTML = '<div class="phase-icon idle"><i class="fas fa-info-circle"></i></div><div class="phase-txt">Haga clic en <strong>LANZAR ESFERA</strong> para iniciar el proceso de inducción magnética por impacto mecánico.</div>';
+  } else if(sim.phase === 'acceleration'){
+    dot.className = 'sdot on';
+    txt.textContent = 'Simulación en curso...';
+    pBox.innerHTML = `<div class="phase-icon mag"><i class="fas fa-magnet"></i></div><div class="phase-txt">Etapa <strong>${sim.stageIdx + 1}</strong>: La esfera experimenta una fuerza de atracción magnética no lineal hacia el núcleo de Neodimio.</div>`;
+  } else if(sim.phase === 'extraction'){
+    dot.className = 'sdot on';
+    txt.textContent = 'Proyectil final eyectado...';
+    pBox.innerHTML = '<div class="phase-icon col"><i class="fas fa-bolt"></i></div><div class="phase-txt"><strong>¡Efecto Gauss Completado!</strong> Transferencia de cantidad de movimiento elástica completada con éxito.</div>';
+  } else if(sim.phase === 'done'){
+    dot.className = 'sdot done';
+    txt.textContent = 'Ensayo finalizado';
+    pBox.innerHTML = `<div class="phase-icon ene"><i class="fas fa-check-circle"></i></div><div class="phase-txt">Simulación finalizada. Velocidad máxima alcanzada: <strong>${sim.ballV.toFixed(2)} m/s</strong>. Datos registrados en el historial.</div>`;
+  }
+}
+
+// =====================================================
+// ANIMATION LOOP WITH INTEGRATION DECOUPLING
+// =====================================================
+function tick(){
+  if(sim.running && !sim.paused){
+    // Cantidad base de iteraciones para velocidad 1x usando un paso constante (fixedDt)
+    const BASE_STEPS_PER_FRAME = 140; 
+    const fixedDt = 0.0001;
+    
+    // Multiplicamos los pasos físicos idénticos según la velocidad de reproducción visual
+    let stepsToRun = Math.round(BASE_STEPS_PER_FRAME * sim.speed);
+    
+    for(let i = 0; i < stepsToRun; i++){
+      if(!sim.running || sim.paused) break;
+      updatePhysics(fixedDt);
+    }
+    updStatusBox();
+  }
+  
+  const g = getGeo();
+  drawSystem(g);
+  drawTrail(g);
+  
+  if(sim.running || sim.phase === 'done'){
+    drawSphereAt(mPx(sim.ballX), g.railY, SPHERE_R * g.ppm);
+  } else {
+    drawSphereAt(g.railL, g.railY, SPHERE_R * g.ppm);
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+// =====================================================
+// SIMULATION CONTROLES INTERACTION
+// =====================================================
+function launch(){
+  if(sim.running) return;
+  initAudio();
+  sndLaunch();
+  readP();
+  
+  sim.running = true;
+  sim.paused = false;
+  sim.time = 0;
+  sim.stageIdx = 0;
+  sim.ballX = 0;
+  sim.ballV = 0.35; // Pequeño impulso inicial de liberación manual
+  sim.trail = [];
+  sim.stageV = [];
+  sim.stageKE = [];
+  sim.phase = 'acceleration';
+  
+  const b = document.querySelector('button[onclick="togglePause()"]');
+  if(b) b.innerHTML = '<i class="fas fa-pause"></i> PAUSA';
+  showToast('Esfera liberada en el carril', 'ok');
+}
+
+function togglePause(){
+  if(!sim.running) return;
+  sndClick();
+  sim.paused = !sim.paused;
+  const b = document.querySelector('button[onclick="togglePause()"]');
+  b.innerHTML = sim.paused ? '<i class="fas fa-play"></i> REANUDAR' : '<i class="fas fa-pause"></i> PAUSA';
+}
+
+function reset(){
+  sndClick();
+  sim.running = false;
+  sim.paused = false;
+  const b = document.querySelector('button[onclick="togglePause()"]');
+  if(b) b.innerHTML = '<i class="fas fa-pause"></i> PAUSA';
+  drawIdle();
+  showToast('Simulador restablecido', 'ok');
+}
+
+// =====================================================
+// DATA PANEL AND CHART HISTORY MANAGEMENT
+// =====================================================
+function addTrialToHistory(){
+  trialCount++;
+  const tbody = document.getElementById('histBody');
+  if(trialCount === 1) tbody.innerHTML = '';
+  
+  let maxV = sim.ballV.toFixed(2);
+  let finalKE = (0.5 * P.mass * sim.ballV * sim.ballV * 1000).toFixed(1);
+  
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${trialCount}</td><td>${P.stages} imanes</td><td class="mn">${maxV} m/s</td><td>${finalKE} mJ</td>`;
+  tbody.prepend(tr);
+}
+
+function clearHistory(){
+  sndClick();
+  trialCount = 0;
+  document.getElementById('histBody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:12px">Sin ensayos registrados</td></tr>';
+  if(velChartInstance) { velChartInstance.destroy(); velChartInstance = null; }
+  if(eneChartInstance) { eneChartInstance.destroy(); eneChartInstance = null; }
+  initCharts();
+  showToast('Historial restablecido', 'ok');
+}
+
+function initCharts(){
+  const ctxV = document.getElementById('velChart').getContext('2d');
+  const ctxE = document.getElementById('eneChart').getContext('2d');
+  let lbls = [];
+  for(let i=1; i<=P.stages; i++) lbls.push('Etapa ' + i);
+  
+  velChartInstance = new Chart(ctxV, {
+    type: 'line',
+    data: {
+      labels: lbls,
+      datasets: [{
+        label: 'Velocidad (m/s)',
+        data: [],
+        borderColor: '#b45309',
+        backgroundColor: 'rgba(180, 83, 9, 0.05)',
+        borderWidth: 2,
+        tension: 0.2,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+    }
+  });
+  
+  eneChartInstance = new Chart(ctxE, {
+    type: 'bar',
+    data: {
+      labels: lbls,
+      datasets: [{
+        label: 'Energía (mJ)',
+        data: [],
+        backgroundColor: '#047857',
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+    }
+  });
+}
+
+function updateCharts(){
+  if(!velChartInstance || !eneChartInstance) return;
+  let lbls = [];
+  for(let i=1; i<=P.stages; i++) lbls.push('Etapa ' + i);
+  
+  velChartInstance.data.labels = lbls;
+  velChartInstance.data.datasets[0].data = sim.stageV;
+  velChartInstance.update();
+  
+  eneChartInstance.data.labels = lbls;
+  eneChartInstance.data.datasets[0].data = sim.stageKE;
+  eneChartInstance.update();
+}
+
+function eduTab(idx){
+  sndClick();
+  document.querySelectorAll('.edu-tab').forEach((b,i)=>b.classList.toggle('act', i===idx));
+  document.querySelectorAll('.edu-body').forEach((b,i)=>b.classList.toggle('act', i===idx));
+}
+
+function showToast(msg, type){
+  const container = document.getElementById('toastC');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = `<i class="fas fa-check-circle"></i> <span>${msg}</span>`;
+  container.appendChild(t);
+  setTimeout(()=>{ t.remove(); }, 2500);
+}
+
+window.onload = function(){
+  initCharts();
+  drawIdle();
+};
+</script>
+</body>
+</html>
