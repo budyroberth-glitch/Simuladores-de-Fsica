@@ -65,36 +65,6 @@
             border-color: #f1f5f9;
         }
 
-        .tabs {
-            display: flex;
-            background: #0f172a;
-            border-bottom: 1px solid #334155;
-            gap: 2px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 15px;
-            border: none;
-            background: #1e293b;
-            font-size: 0.95em;
-            font-weight: 600;
-            color: #94a3b8;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .tab-btn:hover {
-            background: #243249;
-            color: #f1f5f9;
-        }
-
-        .tab-btn.active {
-            background: #1e293b;
-            color: #3b82f6;
-            border-bottom: 3px solid #3b82f6;
-        }
-
         .workspace {
             display: grid;
             grid-template-columns: 1fr 380px;
@@ -261,21 +231,18 @@
 
     <div class="container">
         <header>
-            <h1>📐 Banco de Ensayos: Palancas de Laboratorio de Alta Fidelidad</h1>
+            <h1>📐 Banco de Ensayos: Palancas de Laboratorio Interactivas</h1>
             <a href="maquinas-simples.html" class="btn-back">🎛️ Volver al Kit</a>
         </header>
-
-        <div class="tabs">
-            <button class="tab-btn active" onclick="setDegree(1, this)">Configuración 1° Grado (Inter-apoyo)</button>
-            <button class="tab-btn" onclick="setDegree(2, this)">Configuración 2° Grado (Inter-resistencia)</button>
-            <button class="tab-btn" onclick="setDegree(3, this)">Configuración 3° Grado (Inter-potencia)</button>
-        </div>
 
         <div class="workspace">
             <div class="canvas-container">
                 <canvas id="blueprintCanvas" width="850" height="460"></canvas>
                 <div class="instructions-panel">
-                    <strong>Interacción de Laboratorio Real:</strong> Cree sujetadores corredizos usando el panel lateral. Arrástrelos libremente con el puntero del mouse sobre la regla perforada. Active los ganchos y modifique la cantidad de pesas ranuradas. La barra oscilará físicamente como una balanza real de acuerdo con las leyes de torques.
+                    <strong>Interacción Avanzada:</strong> 
+                    1. Arrastre la <strong>Base y Soporte Vertical (azul/naranja)</strong> desde su perno central para reubicar el fulcro.<br>
+                    2. Inyecte sujetadores, actíveles el gancho y añada pesas. <br>
+                    3. Arrastre los sujetadores libremente a lo largo de la barra. El sistema calculará automáticamente los torques izquierdos y derechos respecto a la posición actual del soporte.
                 </div>
             </div>
 
@@ -289,11 +256,15 @@
                 <div class="panel-title">Módulo Analítico de Torque Real</div>
                 <div class="results-panel">
                     <div class="result-row">
-                        <span>Momento Izquierdo ($\Sigma M_{Izq}$):</span>
+                        <span>Posición Fulcro:</span>
+                        <span id="txtPosFulcro" style="color: #f59e0b;">50.0 cm</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Momento Izquierdo (&Sigma; M<sub>Izq</sub>):</span>
                         <span id="txtTorqueIzq">0.00 N·m</span>
                     </div>
                     <div class="result-row">
-                        <span>Momento Derecho ($\Sigma M_{Der}$):</span>
+                        <span>Momento Derecho (&Sigma; M<sub>Der</sub>):</span>
                         <span id="txtTorqueDer">0.00 N·m</span>
                     </div>
                     <div class="result-row" style="border-top:1px solid #374151; padding-top:6px;">
@@ -310,38 +281,33 @@
         const canvas = document.getElementById('blueprintCanvas');
         const ctx = canvas.getContext('2d');
 
-        let currentDegree = 1;
-        const scale = 6.5; 
-
+        const scale = 7.5; // Ajustado ligeramente para centrar la barra de 0 a 100 cm
         const cx = canvas.width / 2;
         const cy = canvas.height / 2 - 30; 
 
         const barraLargo = 100 * scale;
         const barraEspesor = 2.4 * scale;
+        const barraStartX = cx - (barraLargo / 2);
 
+        // --- NUEVA VARIABLE: El Fulcro ahora es dinámico (en centímetros de 0 a 100) ---
+        let fulcroCm = 50; 
+        
         let sujetadores = [];
+        let activeDragType = null; // 'fulcro' o 'sujetador'
         let activeDragIndex = null;
         let anguloBalanza = 0; 
-
-        function setDegree(degree, element) {
-            currentDegree = degree;
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            element.classList.add('active');
-            sujetadores = [];
-            anguloBalanza = 0;
-            updateSimulation();
-        }
 
         function spawnSujetador() {
             if (sujetadores.length >= 4) {
                 alert("Límite de laboratorio: Máximo 4 abrazaderas simultáneas.");
                 return;
             }
-            let inicialCm = (sujetadores.length % 2 === 0) ? -20 - (sujetadores.length * 5) : 20 + (sujetadores.length * 5);
-            if (currentDegree !== 1) inicialCm = 20 + (sujetadores.length * 15);
+            // Los sujetadores se crean en posiciones absolutas de la regla (0 a 100 cm)
+            let inicialCm = 20 + (sujetadores.length * 20);
+            if(inicialCm === fulcroCm) inicialCm += 10;
 
             sujetadores.push({
-                cmRelativo: inicialCm, 
+                cmAbsoluto: inicialCm, 
                 hasGancho: false,
                 pesoTotal: 0,
                 discos: { 10: 0, 20: 0, 50: 0 }
@@ -380,13 +346,23 @@
             let torqueIzq = 0;
             let torqueDer = 0;
 
+            // Mostrar posición del Fulcro en la interfaz
+            document.getElementById('txtPosFulcro').innerText = fulcroCm.toFixed(1) + " cm";
+
+            // Cálculo de Torques Dinámicos en base a la posición del Fulcro
             sujetadores.forEach(s => {
                 if (!s.hasGancho || s.pesoTotal <= 0) return;
-                let brazoMetros = Math.abs(s.cmRelativo) / 100;
+                
+                // El brazo de palanca es la distancia relativa al fulcro dinámico
+                let brazoCm = s.cmAbsoluto - fulcroCm;
+                let brazoMetros = Math.abs(brazoCm) / 100;
                 let momento = s.pesoTotal * brazoMetros;
 
-                if (s.cmRelativo < 0) torqueIzq += momento;
-                else torqueDer += momento;
+                if (brazoCm < 0) {
+                    torqueIzq += momento; // A la izquierda del fulcro
+                } else if (brazoCm > 0) {
+                    torqueDer += momento; // A la derecha del fulcro
+                }
             });
 
             document.getElementById('txtTorqueIzq').innerText = torqueIzq.toFixed(2) + " N·m";
@@ -396,6 +372,7 @@
             if (sujetadores.length === 0) {
                 anguloBalanza = 0;
             } else {
+                // Pequeña amortiguación física para la inclinación visual
                 anguloBalanza = Math.max(-12, Math.min(12, diferencia * 2.5));
             }
 
@@ -426,7 +403,7 @@
                 div.className = "element-manager";
                 div.innerHTML = `
                     <div class="manager-row">
-                        <strong>Sujetador #${idx + 1} (${s.cmRelativo} cm)</strong>
+                        <strong>Sujetador #${idx + 1} (${s.cmAbsoluto} cm)</strong>
                         <button class="btn-delete" onclick="deleteSujetador(${idx})">Eliminar</button>
                     </div>
                     <div class="manager-row" style="margin-top: 6px;">
@@ -460,6 +437,7 @@
         function renderGraphics() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // Rejilla de fondo
             ctx.strokeStyle = "#1e293b"; ctx.lineWidth = 1;
             for (let x = 0; x < canvas.width; x += 25) {
                 ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
@@ -468,69 +446,77 @@
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
 
-            let fulcroX = (currentDegree === 1) ? cx : cx - (43 * scale);
+            // Coordenada X real en pixeles del fulcro interactivo
+            let fulcroX = barraStartX + (fulcroCm * scale);
             let groundY = canvas.height - 20;
 
+            // ---- DIBUJAR SOPORTE VERTICAL Y BASE (INTERACTIVO) ----
             ctx.fillStyle = "#334155"; ctx.strokeStyle = "#0f172a"; ctx.lineWidth = 2;
-            ctx.fillRect(fulcroX - 50, groundY - 15, 100, 15);
+            ctx.fillRect(fulcroX - 50, groundY - 15, 100, 15); // Base horizontal
             ctx.strokeRect(fulcroX - 50, groundY - 15, 100, 15);
 
+            // Columnas del soporte
             ctx.fillStyle = "#0284c7"; ctx.fillRect(fulcroX - 8, cy - 10, 6, groundY - cy - 5);
             ctx.fillStyle = "#38bdf8"; ctx.fillRect(fulcroX + 2, cy - 10, 6, groundY - cy - 5);
 
+            // Cabeza del soporte (unión)
             ctx.fillStyle = "#64748b"; ctx.beginPath();
             ctx.arc(fulcroX, cy, 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
-            // ---- SISTEMA ROTACIONAL (BALANZA) ----
+
+            // ---- SISTEMA ROTACIONAL (BARRA CENTRADA EN EL FULCRO) ----
             ctx.save();
             ctx.translate(fulcroX, cy);
             ctx.rotate(anguloBalanza * Math.PI / 180); 
 
+            // Cuerpo de la barra de laboratorio (Fija de 0 a 100 cm en su propio espacio)
+            let despX = barraStartX - fulcroX; // Desplazamiento respecto al pivote rotado
             ctx.fillStyle = "#cbd5e1"; ctx.strokeStyle = "#475569"; ctx.lineWidth = 2;
-            let barraStartX = (currentDegree === 1) ? -barraLargo / 2 : -5 * scale;
-            ctx.fillRect(barraStartX, -barraEspesor / 2, barraLargo, barraEspesor);
-            ctx.strokeRect(barraStartX, -barraEspesor / 2, barraLargo, barraEspesor);
+            ctx.fillRect(despX, -barraEspesor / 2, barraLargo, barraEspesor);
+            ctx.strokeRect(despX, -barraEspesor / 2, barraLargo, barraEspesor);
 
+            // Perforaciones de la regla de laboratorio
             ctx.fillStyle = "#111827";
             for (let i = 2.5; i < 100; i += 2.5) {
-                ctx.beginPath(); ctx.arc(barraStartX + (i * scale), 0, 2, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(despX + (i * scale), 0, 2, 0, Math.PI * 2); ctx.fill();
             }
 
+            // Marcas métricas fijas de la regla (0 cm a 100 cm)
             ctx.fillStyle = "#0f172a"; ctx.font = "bold 8px monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
             for (let i = 0; i <= 100; i += 5) {
-                let markX = barraStartX + (i * scale);
+                let markX = despX + (i * scale);
                 ctx.strokeStyle = "#334155";
                 ctx.lineWidth = (i % 10 === 0) ? 1.5 : 0.8;
                 ctx.beginPath(); ctx.moveTo(markX, -barraEspesor / 2); ctx.lineTo(markX, -barraEspesor / 2 + 5); ctx.stroke();
 
                 if (i % 10 === 0) {
-                    let labelNum = (currentDegree === 1) ? (i - 50) : i;
-                    ctx.fillText(labelNum, markX, barraEspesor/2 - 5);
+                    ctx.fillText(i, markX, barraEspesor/2 - 5);
                 }
             }
 
+            // Renderizado de Sujetadores con Pesas Corredizas
             sujetadores.forEach((s, idx) => {
-                let absX = s.cmRelativo * scale;
-                if (currentDegree !== 1) absX = (s.cmRelativo + 5) * scale; 
+                let absX = despX + (s.cmAbsoluto * scale);
                 let clampY = -barraEspesor / 2 - 1;
 
-                // Nueva mejora: Mostrar la distancia / número de regla exacto encima del riel
+                // Mostrar la distancia actual al Fulcro
+                let distAlFulcro = s.cmAbsoluto - fulcroCm;
                 ctx.fillStyle = "#fef08a"; ctx.font = "bold 10px monospace"; ctx.textAlign = "center";
-                ctx.fillText(`${s.cmRelativo > 0 ? '+' : ''}${s.cmRelativo} cm`, absX, clampY - 22);
+                ctx.fillText(`${distAlFulcro > 0 ? '+' : ''}${distAlFulcro} cm`, absX, clampY - 22);
 
-                // Dibujar línea de cota técnica (brazo de palanca) desde el centro hasta el riel
+                // Línea técnica de cota (Brazo de palanca)
                 ctx.strokeStyle = "rgba(254, 240, 138, 0.4)"; ctx.lineWidth = 1;
                 ctx.beginPath(); ctx.moveTo(0, clampY - 14); ctx.lineTo(absX, clampY - 14); ctx.stroke();
                 
-                // Puntas de flecha de la cota
+                // Flecha de cota
                 ctx.fillStyle = "rgba(254, 240, 138, 0.6)";
                 ctx.beginPath(); ctx.moveTo(absX, clampY - 14);
-                ctx.lineTo(absX - (s.cmRelativo >= 0 ? 5 : -5), clampY - 17);
-                ctx.lineTo(absX - (s.cmRelativo >= 0 ? 5 : -5), clampY - 11);
+                ctx.lineTo(absX - (distAlFulcro >= 0 ? 5 : -5), clampY - 17);
+                ctx.lineTo(absX - (distAlFulcro >= 0 ? 5 : -5), clampY - 11);
                 ctx.closePath(); ctx.fill();
 
-                // Cuerpo del sujetador
-                ctx.fillStyle = (activeDragIndex === idx) ? "#10b981" : "#64748b";
+                // Cuerpo físico del sujetador corredizo
+                ctx.fillStyle = (activeDragType === 'sujetador' && activeDragIndex === idx) ? "#10b981" : "#64748b";
                 ctx.strokeStyle = "#1e293b"; ctx.lineWidth = 1.5;
                 ctx.fillRect(absX - 10, clampY, 20, barraEspesor + 2);
                 ctx.strokeRect(absX - 10, clampY, 20, barraEspesor + 2);
@@ -538,6 +524,7 @@
                 ctx.fillStyle = "#ffffff"; ctx.font = "bold 9px sans-serif";
                 ctx.fillText(`S${idx+1}`, absX, clampY + barraEspesor/2 + 3);
 
+                // Render de Ganchos y Discos de pesas
                 if (s.hasGancho) {
                     let ganchoY = barraEspesor / 2 + 3;
                     ctx.strokeStyle = "#94a3b8"; ctx.lineWidth = 2;
@@ -549,22 +536,26 @@
                     let currentStackY = ganchoY + 35;
                     const diskH = 6;
 
+                    // Pesas de 50N (Rojas)
                     ctx.fillStyle = "#ef4444"; ctx.strokeStyle = "#7f1d1d";
                     for(let i=0; i<s.discos[50]; i++) {
                         ctx.fillRect(absX - 18, currentStackY - diskH, 36, diskH); ctx.strokeRect(absX - 18, currentStackY - diskH, 36, diskH);
                         currentStackY -= diskH;
                     }
+                    // Pesas de 20N (Naranjas)
                     ctx.fillStyle = "#f59e0b"; ctx.strokeStyle = "#78350f";
                     for(let i=0; i<s.discos[20]; i++) {
                         ctx.fillRect(absX - 14, currentStackY - diskH, 28, diskH); ctx.strokeRect(absX - 14, currentStackY - diskH, 28, diskH);
                         currentStackY -= diskH;
                     }
+                    // Pesas de 10N (Verdes)
                     ctx.fillStyle = "#10b981"; ctx.strokeStyle = "#064e3b";
                     for(let i=0; i<s.discos[10]; i++) {
                         ctx.fillRect(absX - 10, currentStackY - diskH, 20, diskH); ctx.strokeRect(absX - 10, currentStackY - diskH, 20, diskH);
                         currentStackY -= diskH;
                     }
 
+                    // Vector dinámico de Fuerza (Flecha azul hacia abajo)
                     if (s.pesoTotal > 0) {
                         let vectorY = ganchoY + 42;
                         ctx.strokeStyle = "#3b82f6"; ctx.fillStyle = "#3b82f6"; ctx.lineWidth = 2;
@@ -576,10 +567,12 @@
 
             ctx.restore(); 
 
-            ctx.fillStyle = "#f59e0b"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.arc(fulcroX, cy, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            // Perno central indicador del fulcro (Naranja brillante)
+            ctx.fillStyle = "#f59e0b"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.arc(fulcroX, cy, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
         }
 
+        // --- MANEJO DE MOUSE E INTERACCIONES COORDENADAS ---
         function getCanvasCoords(e) {
             let rect = canvas.getBoundingClientRect();
             return {
@@ -590,19 +583,29 @@
 
         canvas.addEventListener('mousedown', function(e) {
             let pos = getCanvasCoords(e);
-            let fulcroX = (currentDegree === 1) ? cx : cx - (43 * scale);
+            let fulcroX = barraStartX + (fulcroCm * scale);
 
+            // 1. Detectar si hace click en el Perno del Fulcro Central para arrastrar el soporte entero
+            let distAlFulcro = Math.hypot(pos.x - fulcroX, pos.y - cy);
+            if (distAlFulcro < 18) {
+                activeDragType = 'fulcro';
+                canvas.style.cursor = "ew-resize";
+                return;
+            }
+
+            // 2. Detectar si hace click en algún sujetador (considerando la rotación de la regla)
             let rad = (anguloBalanza * Math.PI / 180);
             let dx = pos.x - fulcroX;
             let dy = pos.y - cy;
             let rotX = dx * Math.cos(-rad) - dy * Math.sin(-rad);
             let rotY = dx * Math.sin(-rad) + dy * Math.cos(-rad);
 
-            for (let i = 0; i < sujetadores.length; i++) {
-                let targetX = sujetadores[i].cmRelativo * scale;
-                if (currentDegree !== 1) targetX = (sujetadores[i].cmRelativo + 5) * scale;
+            let despX = barraStartX - fulcroX;
 
+            for (let i = 0; i < sujetadores.length; i++) {
+                let targetX = despX + (sujetadores[i].cmAbsoluto * scale);
                 if (Math.abs(rotX - targetX) < 16 && Math.abs(rotY) < 25) {
+                    activeDragType = 'sujetador';
                     activeDragIndex = i;
                     canvas.style.cursor = "ew-resize";
                     break;
@@ -611,30 +614,33 @@
         });
 
         canvas.addEventListener('mousemove', function(e) {
-            if (activeDragIndex === null) return;
+            if (activeDragType === null) return;
             
             let pos = getCanvasCoords(e);
-            let fulcroX = (currentDegree === 1) ? cx : cx - (43 * scale);
-            
-            let rad = (anguloBalanza * Math.PI / 180);
-            let dx = pos.x - fulcroX;
-            let dy = pos.y - cy;
-            let rotX = dx * Math.cos(-rad) - dy * Math.sin(-rad);
 
-            let targetCm = Math.round(rotX / scale);
-            if (currentDegree !== 1) targetCm = Math.round(rotX / scale) - 5;
+            if (activeDragType === 'fulcro') {
+                // Mover el Fulcro a lo largo del eje horizontal de la regla
+                let targetCm = Math.round((pos.x - barraStartX) / scale);
+                fulcroCm = Math.max(5, Math.min(95, targetCm)); // Límites para evitar salirse de la barra
+            } 
+            else if (activeDragType === 'sujetador' && activeDragIndex !== null) {
+                // Mover el sujetador seleccionado calculando su proyección rotada
+                let fulcroX = barraStartX + (fulcroCm * scale);
+                let rad = (anguloBalanza * Math.PI / 180);
+                let dx = pos.x - fulcroX;
+                let dy = pos.y - cy;
+                let rotX = dx * Math.cos(-rad) - dy * Math.sin(-rad);
 
-            if (currentDegree === 1) {
-                targetCm = Math.max(-48, Math.min(48, targetCm));
-            } else {
-                targetCm = Math.max(0, Math.min(92, targetCm));
+                let despX = barraStartX - fulcroX;
+                let targetCm = Math.round((rotX - despX) / scale);
+                sujetadores[activeDragIndex].cmAbsoluto = Math.max(0, Math.min(100, targetCm));
             }
 
-            sujetadores[activeDragIndex].cmRelativo = targetCm;
             updateSimulation();
         });
 
         window.addEventListener('mouseup', function() {
+            activeDragType = null;
             activeDragIndex = null;
             canvas.style.cursor = "default";
         });
