@@ -43,6 +43,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .header-title { font-weight: 600; font-size: 16px; letter-spacing: 0.5px; }
+        .btn-back { color: white; text-decoration: none; background: #334155; padding: 6px 12px; border-radius: 4px; font-weight: 600; }
 
         .app-main-section {
             display: flex;
@@ -171,7 +172,7 @@
 
     <header>
         <div class="header-title">💻 Virtual Physics Lab — Simulador Plano Inclinado Profesional</div>
-        <div style="font-size: 12px; color: #94a3b8;" id="liveDate">21 de Mayo, 2026</div>
+        <a href="maquinas-simples.html" class="btn-back">🎛️ Volver al Kit</a>
     </header>
 
     <div class="app-main-section">
@@ -207,8 +208,8 @@
                 <div style="color: #334155; line-height: 1.3; font-size: 11px;" id="methodologySteps">
                     <b>Acciones requeridas:</b><br>
                     1. Fije la masa base y el ángulo de inclinación.<br>
-                    2. Opcional: Arrastre componentes si requiere acoplamiento por hilo.<br>
-                    3. Presione "Iniciar" para verificar el comportamiento del MRUA.
+                    2. Mantenga presionado y arrastre el carro para reubicarlo manualmente en la rampa.<br>
+                    3. Presione "Iniciar" para verificar el comportamiento dinámico.
                 </div>
             </div>
         </div>
@@ -303,11 +304,9 @@
         </div>
         <table class="data-table">
             <thead>
-                <tr id="tableHeadRow">
-                    </tr>
+                <tr id="tableHeadRow"></tr>
             </thead>
-            <tbody id="tableBody">
-                </tbody>
+            <tbody id="tableBody"></tbody>
         </table>
     </div>
 
@@ -340,23 +339,29 @@
         let hasHilo = false;
 
         let maxTravel = PLANE_L - CART_L;
-        let posX = maxTravel;
+        let posX = maxTravel; // x representa la distancia desde la base (0 = abajo, maxTravel = arriba)
         let velV = 0;
         let acelA = 0;
+        let direction = 0; // 1: baja, -1: sube, 0: quieto
         let timeT = 0;
         let isRunning = false;
         let dt = 0.01;
         let recordsCount = 0;
 
-        let targetCarroZone = { x: 0, y: 0, r: 55 };
+        // Variables para reubicación manual (arrastrar carro en la rampa)
+        let isDraggingCart = false;
+        let targetCarroZone = { x: 0, y: 0, r: 50 };
         let targetGanchoZone = { x: 0, y: 0, r: 45 };
         let draggedType = null;
         let draggedValue = null;
 
+        // Variables auxiliares de proyección de la escena
+        let cachedOrigin = { ox: 0, oy: 0, scale: 1 };
+
         const studyGuides = {
             cinematica: {
                 title: "Guía: Cinemática (MRUA)",
-                formula: "a = constante, v = a·t, x = x₀ - ½·a·t²",
+                formula: "a = constante, v = a·t, x = x₀ ± ½·a·t²",
                 steps: "Demuestra de forma empírica el MRUA. Al deslizar el carro, se registra el perfil cinemático completo respecto al cronómetro."
             },
             dinamica: {
@@ -381,6 +386,7 @@
             }
         };
 
+        // Eventos de selección de estudio
         document.getElementById('studyList').addEventListener('click', (e) => {
             let item = e.target.closest('.study-item');
             if (!item) return;
@@ -396,6 +402,7 @@
             resetSimulation();
         });
 
+        // Configuración Drag & Drop de Pesas y Herramientas
         document.querySelectorAll('.drag-item').forEach(item => {
             item.addEventListener('dragstart', (e) => {
                 draggedType = item.getAttribute('data-type');
@@ -433,12 +440,55 @@
             recalculatePhysics();
         });
 
+        // Eventos del Mouse para Fijar el Carro Manualmente en el Canvas
+        canvas.addEventListener('mousedown', (e) => {
+            if (isRunning) return; // Desactivado durante la animación activa
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            // Verificar si el clic se hizo sobre la zona del carro
+            let distCarro = Math.hypot(mouseX - targetCarroZone.x, mouseY - targetCarroZone.y);
+            if (distCarro < targetCarroZone.r) {
+                isDraggingCart = true;
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDraggingCart) return;
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            // Proyectar el mouse sobre la línea de la rampa inclinada
+            let dx = mouseX - cachedOrigin.ox;
+            let dy = cachedOrigin.oy - mouseY; // Invertir Y para coordenadas físicas normales
+
+            // Resolver distancia escalar a lo largo de la rampa usando el producto punto
+            let rampaX = dx * Math.cos(theta) + dy * Math.sin(theta);
+            let pX = rampaX / cachedOrigin.scale;
+
+            // Limitar dentro del rango físico válido de la rampa
+            if (pX < 0.005) pX = 0.005;
+            if (pX > maxTravel) pX = maxTravel;
+
+            posX = pX;
+            velV = 0;
+            timeT = 0;
+            recalculatePhysics();
+        });
+
+        canvas.addEventListener('mouseup', () => { isDraggingCart = false; });
+        canvas.addEventListener('mouseleave', () => { isDraggingCart = false; });
+
+        // Inputs dinámicos
         document.getElementById('slGrav').addEventListener('input', (e) => { env_g = parseFloat(e.target.value); document.getElementById('valGrav').innerText = env_g.toFixed(2) + " m/s²"; recalculatePhysics(); });
         document.getElementById('slAngle').addEventListener('input', (e) => { angleDeg = parseInt(e.target.value); document.getElementById('valAngle').innerText = angleDeg + "°"; theta = angleDeg * Math.PI / 180; recalculatePhysics(); });
         document.getElementById('slM1').addEventListener('input', (e) => { baseM1 = parseFloat(e.target.value)/1000; recalculatePhysics(); });
         document.getElementById('slM2').addEventListener('input', (e) => { baseM2 = parseFloat(e.target.value)/1000; recalculatePhysics(); });
         document.getElementById('slMuk').addEventListener('input', (e) => { muk = parseFloat(e.target.value); document.getElementById('valMuk').innerText = muk.toFixed(2); recalculatePhysics(); });
 
+        // Ecuaciones de Física Avanzada Bidireccional
         function recalculatePhysics() {
             let totalM1 = baseM1 + addedM1;
             let totalM2 = baseM2 + addedM2;
@@ -454,26 +504,42 @@
             let Fr = muk * N;
             
             let T = 0;
-            let netForce = 0;
             let totalMass = totalM1;
 
             if (hasPolea && hasHilo) {
                 let W2 = totalM2 * env_g;
-                netForce = W1x - W2 - Fr;
                 totalMass = totalM1 + totalM2;
-                if (netForce > 0) {
-                    acelA = netForce / totalMass;
+                
+                // Fuerza impulsora si el carro BAJA por la rampa
+                let forceDown = W1x - W2;
+                // Fuerza impulsora si el carro SUBE arrastrado por M2
+                let forceUp = W2 - W1x;
+
+                if (forceDown > Fr) {
+                    // El carro vence la fricción y BAJA
+                    acelA = (forceDown - Fr) / totalMass;
+                    direction = 1; 
                     T = W2 + totalM2 * acelA;
+                } else if (forceUp > Fr) {
+                    // M2 es pesado, vence la fricción y SUBE el carro
+                    acelA = (forceUp - Fr) / totalMass;
+                    direction = -1; 
+                    T = W2 - totalM2 * acelA;
                 } else {
+                    // Equilibrio: Las fuerzas no superan el umbral de rozamiento
                     acelA = 0;
+                    direction = 0;
                     T = W2;
                 }
             } else {
-                netForce = W1x - Fr;
-                if (netForce > 0) {
-                    acelA = netForce / totalM1;
+                // Sin acoplamiento (Solo el carro M1 libre en la rampa)
+                let forceDown = W1x;
+                if (forceDown > Fr) {
+                    acelA = (forceDown - Fr) / totalM1;
+                    direction = 1;
                 } else {
                     acelA = 0;
+                    direction = 0;
                 }
             }
 
@@ -486,7 +552,10 @@
 
         function toggleSimulation() {
             if (!isRunning) {
-                if (posX <= 0.005) posX = maxTravel; // Reinicia si ya llegó abajo
+                // Si está en los extremos según la dirección del movimiento, auto-reiniciar
+                if (direction === 1 && posX <= 0.005) posX = maxTravel;
+                if (direction === -1 && posX >= maxTravel) posX = 0.005;
+
                 isRunning = true;
                 document.getElementById('btnPlay').innerText = "Pausar";
                 document.getElementById('btnPlay').style.background = "#eab308";
@@ -502,6 +571,8 @@
             isRunning = false;
             posX = maxTravel;
             velV = 0;
+            acelA = 0;
+            direction = 0;
             timeT = 0;
             addedM1 = 0;
             addedM2 = 0;
@@ -521,29 +592,46 @@
 
             let physicalData = recalculatePhysics();
 
-            if (acelA > 0) {
+            if (acelA > 0 && direction !== 0) {
                 timeT += dt;
                 velV += acelA * dt;
-                posX -= velV * dt;
-
-                if (posX <= 0.005) {
-                    posX = 0.005;
-                    let finalV = velV;
-                    let finalT = timeT;
-                    let finalAcel = acelA; // Guarda el valor antes de detenerlo
-                    velV = 0; isRunning = false;
-                    document.getElementById('btnPlay').innerText = "Iniciar";
-                    document.getElementById('btnPlay').style.background = "var(--green-success)";
-                    saveScientificLog(physicalData, finalV, finalT, finalAcel);
+                
+                // Variación de posición según el vector dirección
+                if (direction === 1) {
+                    posX -= velV * dt; // Baja de la rampa (Hacia x = 0)
+                    if (posX <= 0.005) {
+                        posX = 0.005;
+                        stopAndLog(physicalData);
+                    }
+                } else if (direction === -1) {
+                    posX += velV * dt; // Sube por la rampa (Hacia x = maxTravel)
+                    if (posX >= maxTravel) {
+                        posX = maxTravel;
+                        stopAndLog(physicalData);
+                    }
                 }
             } else {
+                // Se detiene de inmediato por falta de fuerzas netas suficientes
                 isRunning = false;
                 document.getElementById('btnPlay').innerText = "Iniciar";
                 document.getElementById('btnPlay').style.background = "var(--green-success)";
             }
 
             drawScene();
-            requestAnimationFrame(runLoop);
+            if (isRunning) {
+                requestAnimationFrame(runLoop);
+            }
+        }
+
+        function stopAndLog(physicalData) {
+            let finalV = velV;
+            let finalT = timeT;
+            let finalAcel = acelA * direction; // Conservar el sentido del vector
+            velV = 0; 
+            isRunning = false;
+            document.getElementById('btnPlay').innerText = "Iniciar";
+            document.getElementById('btnPlay').style.background = "var(--green-success)";
+            saveScientificLog(physicalData, finalV, finalT, finalAcel);
         }
 
         function configureTableHeaders() {
@@ -552,13 +640,13 @@
             
             switch (currentStudy) {
                 case 'cinematica':
-                    headerRow.innerHTML = baseCols + `<th>Inclinación (θ)</th><th>Tiempo Recorrido (s)</th><th>Velocidad Final (m/s)</th><th>Aceleración (m/s²)</th><th>Anotaciones Observacionales del Ensayo</th>`;
+                    headerRow.innerHTML = baseCols + `<th>Inclinación (θ)</th><th>Tiempo Recorrido (s)</th><th>Velocidad Final (m/s)</th><th>Aceleración Vectorial (m/s²)</th><th>Anotaciones Observacionales del Ensayo</th>`;
                     break;
                 case 'dinamica':
-                    headerRow.innerHTML = baseCols + `<th>Masa Total Carro (kg)</th><th>Componente Peso W_x (N)</th><th>Fuerza Normal N (N)</th><th>Aceleración (m/s²)</th><th>Anotaciones Observacionales del Ensayo</th>`;
+                    headerRow.innerHTML = baseCols + `<th>Masa Total Carro (kg)</th><th>Componente Peso W_x (N)</th><th>Fuerza Normal N (N)</th><th>Aceleración Neta (m/s²)</th><th>Anotaciones Observacionales del Ensayo</th>`;
                     break;
                 case 'friccion':
-                    headerRow.innerHTML = baseCols + `<th>Coef. Fricción (μ_k)</th><th>Fuerza Rozamiento F_r (N)</th><th>¿Deslizó?</th><th>Aceleración Neta (m/s²)</th><th>Anotaciones Observacionales del Ensayo</th>`;
+                    headerRow.innerHTML = baseCols + `<th>Coef. Fricción (μ_k)</th><th>Fuerza Rozamiento F_r (N)</th><th>Sentido de Movimiento</th><th>Aceleración (m/s²)</th><th>Anotaciones Observacionales del Ensayo</th>`;
                     break;
                 case 'energia':
                     headerRow.innerHTML = baseCols + `<th>Altura Inicial H (m)</th><th>Energía Potencial Ep_0 (J)</th><th>Energía Cinética Ec_f (J)</th><th>Trabajo por Fricción (J)</th><th>Anotaciones Observacionales del Ensayo</th>`;
@@ -574,13 +662,15 @@
             let body = document.getElementById('tableBody');
             let row = document.createElement('tr');
             
-            let initialHeight = maxTravel * Math.sin(theta);
+            let initialHeight = posX * Math.sin(theta);
             let Ep = phys.totalM1 * env_g * initialHeight;
             let Ec = 0.5 * phys.totalM1 * Math.pow(finalV, 2);
-            let WorkLoss = phys.Fr * maxTravel;
-            let deducg = finalAcel / Math.sin(theta);
+            let WorkLoss = phys.Fr * Math.abs(maxTravel - posX);
+            let deducg = Math.abs(finalAcel) / Math.sin(theta);
 
             let rowContent = `<td>#${recordsCount}</td><td><b>${currentStudy.toUpperCase()}</b></td>`;
+
+            let txtDirection = direction === 1 ? "BAJA (Directo)" : (direction === -1 ? "SUBE (Arrastrado)" : "ESTÁTICO");
 
             switch (currentStudy) {
                 case 'cinematica':
@@ -590,13 +680,13 @@
                     rowContent += `<td>${phys.totalM1.toFixed(3)} kg</td><td>${phys.W1x.toFixed(3)} N</td><td>${phys.W1y.toFixed(3)} N</td><td>${finalAcel.toFixed(2)} m/s²</td>`;
                     break;
                 case 'friccion':
-                    rowContent += `<td>${muk.toFixed(2)}</td><td>${phys.Fr.toFixed(3)} N</td><td>${finalAcel > 0 ? 'SÍ' : 'NO (Bloqueado)'}</td><td>${finalAcel.toFixed(2)} m/s²</td>`;
+                    rowContent += `<td>${muk.toFixed(2)}</td><td>${phys.Fr.toFixed(3)} N</td><td>${txtDirection}</td><td>${Math.abs(finalAcel).toFixed(2)} m/s²</td>`;
                     break;
                 case 'energia':
                     rowContent += `<td>${initialHeight.toFixed(3)} m</td><td>${Ep.toFixed(3)} J</td><td>${Ec.toFixed(3)} J</td><td>${WorkLoss.toFixed(3)} J</td>`;
                     break;
                 case 'galileo':
-                    rowContent += `<td>${angleDeg}°</td><td>${finalT.toFixed(3)} s</td><td>${finalAcel.toFixed(2)} m/s²</td><td>${angleDeg > 0 ? deducg.toFixed(2)+' m/s²' : 'Indefinido'}</td>`;
+                    rowContent += `<td>${angleDeg}°</td><td>${finalT.toFixed(3)} s</td><td>${Math.abs(finalAcel).toFixed(2)} m/s²</td><td>${angleDeg > 0 ? deducg.toFixed(2)+' m/s²' : 'Indefinido'}</td>`;
                     break;
             }
 
@@ -628,12 +718,26 @@
             dclCtx.fillRect(-22, -11, 44, 22);
             dclCtx.strokeRect(-22, -11, 44, 22);
 
+            // Vector Normal (Siempre perpendicular al plano)
             drawVector(dclCtx, 0, -11, 0, -55, "#ef4444", "N");
+            
+            // Tensión (Hacia la polea)
             if (hasHilo && hasPolea) drawVector(dclCtx, 22, 0, 60, 0, "#10b981", "T");
-            drawVector(dclCtx, -22, 0, -55, 0, "#f97316", "Fr");
+            
+            // Fricción (Siempre opuesta al movimiento inminente o activo)
+            if (direction === -1) {
+                // Si sube, la fricción apunta hacia abajo de la rampa
+                drawVector(dclCtx, -22, 0, -55, 0, "#f97316", "Fr");
+            } else {
+                // Si baja o está quieto con tendencia a bajar
+                drawVector(dclCtx, -22, 0, -55, 0, "#f97316", "Fr");
+            }
+            
+            // Componente rectangular del Peso Y
             drawVector(dclCtx, 0, 11, 0, 45, "#8b5cf6", "W_y");
 
             dclCtx.restore();
+            // Peso gravitacional neto (Siempre vertical absoluto hacia abajo)
             drawVector(dclCtx, cx, cy + 11, cx, cy + 60, "#334155", "W (m₁g)");
         }
 
@@ -663,22 +767,31 @@
             let ox = (canvas.width - totalW) / 2 - 40;
             let oy = (canvas.height + totalH) / 2 + 20;
 
+            // Guardar en caché el origen y la escala proyectada para el cálculo de reubicación por clic
+            cachedOrigin.ox = ox;
+            cachedOrigin.oy = oy;
+            cachedOrigin.scale = scale;
+
             let ex = ox + PLANE_L * scale * Math.cos(theta);
             let ey = oy - PLANE_L * scale * Math.sin(theta);
 
+            // Suelo base
             ctx.fillStyle = "#e2e8f0";
             ctx.fillRect(ox, oy, (ex - ox), 20);
             ctx.strokeRect(ox, oy, (ex - ox), 20);
 
+            // Soportes del plano
             ctx.strokeStyle = "#94a3b8"; ctx.lineWidth = 5;
             ctx.beginPath();
             ctx.moveTo(ox + (ex-ox)*0.72, oy); ctx.lineTo(ox + (ex-ox)*0.72, ey + 30);
             ctx.moveTo(ox + (ex-ox)*0.76, oy); ctx.lineTo(ox + (ex-ox)*0.76, ey + 15);
             ctx.stroke();
 
+            // Superficie de la rampa
             ctx.strokeStyle = "#334155"; ctx.lineWidth = 8;
             ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ex, ey); ctx.stroke();
 
+            // Regla graduada métrica
             ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.2;
             for(let i=0; i<=80; i+=2) {
                 let f = i / 80.5;
@@ -689,9 +802,10 @@
                 ctx.stroke();
             }
 
-            ctx.fillStyle = "rgba(148, 163, 184, 0.6)";
+            // Transportador de ángulos visual
+            ctx.fillStyle = "rgba(148, 163, 184, 0.2)";
             ctx.beginPath(); ctx.moveTo(ox, oy);
-            ctx.arc(ox, oy, 70, 0, -Math.PI/4, true); ctx.lineTo(ox, oy); ctx.fill();
+            ctx.arc(ox, oy, 70, 0, -theta, true); ctx.lineTo(ox, oy); ctx.fill();
             ctx.stroke();
 
             let pRadius = (PULLEY_D/2) * scale;
@@ -705,26 +819,31 @@
                 ctx.fillStyle = "#fff"; ctx.fill();
             }
 
+            // Coordenadas dinámicas del Carro M1
             let cx = ox + posX * scale * Math.cos(theta);
             let cy = oy - posX * scale * Math.sin(theta);
 
-            targetCarroZone.x = cx + (CART_L*scale/2)*Math.cos(theta);
-            targetCarroZone.y = cy - (CART_L*scale/2)*Math.sin(theta);
+            // Actualizar la zona interactiva del carro (centro de su masa)
+            targetCarroZone.x = cx + (CART_L * scale / 2) * Math.cos(theta);
+            targetCarroZone.y = cy - (CART_L * scale / 2) * Math.sin(theta);
 
             ctx.save();
             ctx.translate(cx, cy);
             ctx.rotate(-theta);
 
-            ctx.fillStyle = "#0284c7";
+            // Dibujar Carro de Hall
+            ctx.fillStyle = isDraggingCart ? "#026ca3" : "#0284c7";
             ctx.fillRect(0, -20, CART_L * scale, 16);
             ctx.strokeRect(0, -20, CART_L * scale, 16);
             
+            // Ruedas del carro
             ctx.fillStyle = "#0f172a";
             ctx.beginPath(); 
             ctx.arc(15, -4, 6, 0, 2*Math.PI); 
             ctx.arc((CART_L * scale) - 15, -4, 6, 0, 2*Math.PI); 
             ctx.fill();
 
+            // Peso extra añadido sobre M1
             if (addedM1 > 0) {
                 ctx.fillStyle = "#64748b";
                 ctx.fillRect(18, -32, (CART_L * scale) - 36, 12);
@@ -733,11 +852,25 @@
             }
             ctx.restore();
 
+            // =========================================================================
+            // LÓGICA REVISADA: COORDENADAS DE LA CARGA COLGANTE M2 (CONTRAPESO REAL)
+            // =========================================================================
             let hangX = pcx + pRadius;
-            let hangY = (pcy - pRadius) + 80 + (maxTravel - posX) * scale;
+            
+            // Punto de origen de la cuerda vertical (debajo de la polea)
+            let topCordaY = pcy + pRadius; 
+            
+            // Longitud de carrera máxima libre en vertical
+            let maxHangDistance = 110; 
+            
+            // Si posX == maxTravel (Carro ARRIBA), la pesa está en su punto más alto (cerca de la polea)
+            // Si posX == 0 (Carro ABAJO), la pesa descendió a su punto más bajo
+            let hangY = topCordaY + (maxTravel - posX) * scale;
+            
             targetGanchoZone.x = hangX;
             targetGanchoZone.y = hangY + 15;
 
+            // Dibujar Hilo acoplado armónicamente
             if (hasHilo) {
                 let attachX = cx + (CART_L * scale) * Math.cos(theta);
                 let attachY = cy - (CART_L * scale) * Math.sin(theta);
@@ -750,6 +883,7 @@
                 ctx.stroke();
             }
 
+            // Dibujar Portapesas M2
             if (hasHilo && hasPolea) {
                 ctx.fillStyle = "#334155";
                 ctx.fillRect(hangX - 8, hangY, 16, 26);
@@ -761,12 +895,39 @@
                 }
             }
 
-            // HUD Flotante de Telemetría (Muestra el valor real calculado)
-            ctx.fillStyle = "#0f172a"; ctx.font = "bold 13px monospace";
-            ctx.fillText(`Posición Actual: ${posX.toFixed(3)} m`, ox, oy + 50);
-            ctx.fillText(`Velocidad Activa: ${Math.abs(velV).toFixed(2)} m/s`, ox, oy + 70);
-            ctx.fillText(`Aceleración    : ${acelA.toFixed(2)} m/s²`, ox, oy + 90);
-            ctx.fillText(`Reloj de Laboratorio: ${timeT.toFixed(3)} s`, ox, oy + 110);
+            // HUD Flotante de Telemetría (Valores calculados en tiempo real)
+            ctx.fillStyle = "#0f172a"; 
+            ctx.font = "bold 13px monospace";
+            
+            // Calcular las distancias relativas solicitadas
+            let distanciaAlPuntoCero = posX; 
+            let distanciaAlFinalRampa = maxTravel - posX; 
+            
+            // Convertir a centímetros para legibilidad de laboratorio
+            let distCeroCm = distanciaAlPuntoCero * 100;
+            let distFinalCm = distanciaAlFinalRampa * 100;
+
+            ctx.fillText(`Posición Absoluta : ${posX.toFixed(3)} m`, ox, oy + 50);
+            
+            // Tramos de distancia diferenciados por colores
+            ctx.fillStyle = "#047857"; // Verde
+            ctx.fillText(`Distancia al Punto Cero (Abajo) : ${distanciaAlPuntoCero.toFixed(3)} m (${distCeroCm.toFixed(1)} cm)`, ox, oy + 70);
+            
+            ctx.fillStyle = "#b45309"; // Ámbar/Naranja
+            ctx.fillText(`Distancia al Final (Arriba)     : ${distanciaAlFinalRampa.toFixed(3)} m (${distFinalCm.toFixed(1)} cm)`, ox, oy + 90);
+            
+            ctx.fillStyle = "#0f172a"; // Negro
+            ctx.fillText(`Velocidad Activa : ${velV.toFixed(2)} m/s`, ox, oy + 110);
+            
+            let displayAcel = direction === 0 ? "0.00" : (acelA * direction).toFixed(2);
+            ctx.fillText(`Aceleración      : ${displayAcel} m/s²`, ox, oy + 130);
+            ctx.fillText(`Reloj de Laboratorio           : ${timeT.toFixed(3)} s`, ox, oy + 150);
+            
+            let txtMov = "Estático / Equilibrio";
+            if (direction === 1) txtMov = "Descendiendo (Peso Carro > M2)";
+            if (direction === -1) txtMov = "Ascendiendo (Arrastrado por M2)";
+            ctx.fillStyle = "#0284c7"; // Azul
+            ctx.fillText(`Estado Mecánico  : ${txtMov}`, ox, oy + 170);
         }
 
         window.addEventListener('resize', () => recalculatePhysics());
