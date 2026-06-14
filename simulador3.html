@@ -43,7 +43,7 @@
         .draggable-item {
             background: #1e293b; border: 1px solid #334155; padding: 10px; border-radius: 6px;
             cursor: grab; transition: all 0.2s; display: flex; align-items: center; gap: 10px;
-            position: relative;
+            position: relative; user-select: none;
         }
         .draggable-item:hover { background: #273549; border-color: var(--accent-cyan); transform: translateY(-1px); }
         .draggable-item.disabled { opacity: 0.35; cursor: not-allowed; border-color: #475569; }
@@ -55,7 +55,7 @@
         .badge-count { background: var(--accent-orange); color: white; padding: 2px 6px; border-radius: 10px; font-size: 9px; font-weight: bold; font-family: monospace; }
 
         .workspace { flex: 1; display: flex; flex-direction: column; background: #070a12; position: relative; }
-        canvas { display: block; background: #090d16; box-shadow: inset 0 0 40px rgba(0,0,0,0.8); }
+        canvas { display: block; background: #090d16; box-shadow: inset 0 0 40px rgba(0,0,0,0.8); cursor: default; }
 
         .data-panel { width: 300px; background: var(--panel-bg); border-left: 1px solid var(--panel-border); padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
         .panel-section { background: #070a12; border: 1px solid var(--panel-border); border-radius: 8px; padding: 15px; }
@@ -152,6 +152,55 @@
                         <span class="desc">Exclusiva para la varilla lateral derecha.</span>
                     </div>
                 </div>
+
+                <div class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'dinamometro')">
+                    <span class="icon">⚖️</span>
+                    <div class="details">
+                        <span class="name">Dinamómetro de Resorte</span>
+                        <span class="desc">Mide la fuerza en Newtons mediante el pistón.</span>
+                    </div>
+                </div>
+
+                <div id="item-pesa-5" class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'pesa_5n')">
+                    <span class="icon">🏋️</span>
+                    <div class="details">
+                        <span class="name">Pesa de 5 N</span>
+                        <span class="desc">Masa equivalente: ~0.51 kg.</span>
+                    </div>
+                    <span id="badgePesa5" class="badge-count">2 Disp.</span>
+                </div>
+                <div id="item-pesa-10" class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'pesa_10n')">
+                    <span class="icon">🏋️</span>
+                    <div class="details">
+                        <span class="name">Pesa de 10 N</span>
+                        <span class="desc">Masa equivalente: ~1.02 kg.</span>
+                    </div>
+                    <span id="badgePesa10" class="badge-count">2 Disp.</span>
+                </div>
+                <div id="item-pesa-20" class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'pesa_20n')">
+                    <span class="icon">🏋️</span>
+                    <div class="details">
+                        <span class="name">Pesa de 20 N</span>
+                        <span class="desc">Masa equivalente: ~2.04 kg.</span>
+                    </div>
+                    <span id="badgePesa20" class="badge-count">2 Disp.</span>
+                </div>
+                <div id="item-pesa-50" class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'pesa_50n')">
+                    <span class="icon">🏋️</span>
+                    <div class="details">
+                        <span class="name">Pesa de 50 N</span>
+                        <span class="desc">Masa equivalente: ~5.10 kg.</span>
+                    </div>
+                    <span id="badgePesa50" class="badge-count">2 Disp.</span>
+                </div>
+                <div id="item-pesa-100" class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'pesa_100n')">
+                    <span class="icon">🏋️</span>
+                    <div class="details">
+                        <span class="name">Pesa de 100 N</span>
+                        <span class="desc">Masa equivalente: ~10.19 kg.</span>
+                    </div>
+                    <span id="badgePesa100" class="badge-count">2 Disp.</span>
+                </div>
             </div>
         </div>
 
@@ -187,13 +236,13 @@
         let componenteSeleccionadoParaMover = null;
         let offsetX = 0, offsetY = 0;
         const MAX_SUJETADORES = 9;
+        const MAX_PESAS_POR_TIPO = 2;
 
         const VARILLA_IZQ_X = 75;
         const VARILLA_DER_X = 625;
         const BASE_Y = 486; 
 
-        // Variable global para controlar la altura dinámica del tensor roscado M
-        let tensionOffsetM = 0; // en píxeles de compresión/estiramiento
+        let tensionOffsetM = 0; 
 
         const catálogoFísico = {
             base_madera: { w: 600, h: 24, color: '#5c3a21', border: '#3b2211', esFijo: true },
@@ -208,31 +257,53 @@
             polea_diferencial_izq: { w: 40, h: 32, color: '#ef4444', esFijo: false, tipoPolea: 'diferencial_lateral' },
             polea_diferencial_der: { w: 40, h: 32, color: '#ef4444', esFijo: false, tipoPolea: 'diferencial_lateral' },
             tensor_m: { esFijo: true },
-            armella_k: { esFijo: true }
+            armella_k: { esFijo: true },
+            dinamometro: { w: 24, h: 120, color: '#166534', border: '#14532d', esFijo: false, tipoPolea: null },
+            // Definición física de las Pesas (Fuerza / 9.81 = Masa kg)
+            pesa_5n: { w: 28, h: 22, color: '#0284c7', fuerza: 5, esFijo: false },
+            pesa_10n: { w: 32, h: 26, color: '#0369a1', fuerza: 10, esFijo: false },
+            pesa_20n: { w: 36, h: 32, color: '#0f766e', fuerza: 20, esFijo: false },
+            pesa_50n: { w: 42, h: 38, color: '#b45309', fuerza: 50, esFijo: false },
+            pesa_100n: { w: 48, h: 46, color: '#991b1b', fuerza: 100, esFijo: false }
         };
 
         function contarSujetadoresActivos() {
             return componentesActivos.filter(c => c.tipo === 'sujetador_corredizo').length;
         }
 
-        function actualizarBadgeAlmacen() {
-            const activos = contarSujetadoresActivos();
-            const disponibles = MAX_SUJETADORES - activos;
-            document.getElementById('badgeSujetadores').innerText = `${disponibles} Disp.`;
-            document.getElementById('lblSujetadoresEnRiel').innerText = `${activos} / ${MAX_SUJETADORES}`;
+        function contarPesasActivas(tipo) {
+            return componentesActivos.filter(c => c.tipo === tipo).length;
+        }
 
-            const itemElement = document.getElementById('item-sujetador');
-            if (disponibles <= 0) {
-                itemElement.classList.add('disabled');
-                itemElement.setAttribute('draggable', 'false');
-            } else {
-                itemElement.classList.remove('disabled');
-                itemElement.setAttribute('draggable', 'true');
-            }
+        function actualizarBadgeAlmacen() {
+            // Sujetadores
+            const activosS = contarSujetadoresActivos();
+            const disponiblesS = MAX_SUJETADORES - activosS;
+            document.getElementById('badgeSujetadores').innerText = `${disponiblesS} Disp.`;
+            document.getElementById('lblSujetadoresEnRiel').innerText = `${activosS} / ${MAX_SUJETADORES}`;
+            
+            const itemSujetador = document.getElementById('item-sujetador');
+            if (disponiblesS <= 0) { itemSujetador.classList.add('disabled'); itemSujetador.setAttribute('draggable', 'false'); }
+            else { itemSujetador.classList.remove('disabled'); itemSujetador.setAttribute('draggable', 'true'); }
+
+            // Configuración de Badges para los 5 tipos de Pesas (Máximo 2 de cada una)
+            const tiposPesas = ['5', '10', '20', '50', '100'];
+            tiposPesas.forEach(val => {
+                const tipoStr = `pesa_${val}n`;
+                const disp = MAX_PESAS_POR_TIPO - contarPesasActivas(tipoStr);
+                document.getElementById(`badgePesa${val}`).innerText = `${disp} Disp.`;
+                const elem = document.getElementById(`item-pesa-${val}`);
+                if (disp <= 0) { elem.classList.add('disabled'); elem.setAttribute('draggable', 'false'); }
+                else { elem.classList.remove('disabled'); elem.setAttribute('draggable', 'true'); }
+            });
         }
 
         function handleDragStart(e, tipo) {
             if (tipo === 'sujetador_corredizo' && contarSujetadoresActivos() >= MAX_SUJETADORES) {
+                e.preventDefault();
+                return;
+            }
+            if (tipo.startsWith('pesa_') && contarPesasActivas(tipo) >= MAX_PESAS_POR_TIPO) {
                 e.preventDefault();
                 return;
             }
@@ -242,22 +313,25 @@
         function crearNuevoComponente(tipo, x, y) {
             if (!catálogoFísico[tipo]) return null;
             if (tipo === 'sujetador_corredizo' && contarSujetadoresActivos() >= MAX_SUJETADORES) return null;
+            if (tipo.startsWith('pesa_') && contarPesasActivas(tipo) >= MAX_PESAS_POR_TIPO) return null;
 
             const espec = catálogoFísico[tipo];
             const nuevoComp = {
                 id: tipo + '_' + Date.now() + Math.random().toString(36).substr(2, 5),
                 tipo: tipo,
                 tipoPolea: espec.tipoPolea || null,
+                fuerza: espec.fuerza || 0,
                 x: x,
                 y: y,
-                w: espec.w || (espec.r * 2) || 30,
+                w:  espec.w || (espec.r * 2) || 30,
                 h: espec.h || (espec.r * 2) || 30,
                 r: espec.r || 0,
                 esFijo: espec.esFijo,
                 esSujetador: espec.esSujetador || false,
                 color: espec.color,
                 border: espec.border || '#1e293b',
-                sujetadorPadreId: null
+                sujetadorPadreId: null,
+                padreEnganchadoId: null 
             };
 
             componentesActivos.push(nuevoComp);
@@ -267,7 +341,7 @@
 
         function dibujarMesaDeTrabajoLaboratorio() {
             const mesaY = 510;
-            ctx.fillStyle = '#1e293b';
+            ctx.fillStyle = '#1e293b'; 
             ctx.fillRect(80, mesaY, 20, 90);
             ctx.fillRect(600, mesaY, 20, 90);
 
@@ -321,35 +395,28 @@
                     grad.addColorStop(0, '#334155'); grad.addColorStop(0.5, '#64748b'); grad.addColorStop(1, '#1e293b');
                     ctx.fillStyle = grad; ctx.fillRect(c.x - c.w/2, c.y - c.h/2, c.w, c.h);
                 } 
-                // TENSOR DE CUERDA (M) CON ALTURA DINÁMICA Y BOTONES LATERALES
                 else if (c.tipo === 'tensor_m') {
                     const alturaDinamicaVarilla = 25 + tensionOffsetM;
 
-                    // Varilla roscada central variable
                     ctx.fillStyle = '#94a3b8'; ctx.strokeStyle = '#475569'; ctx.lineWidth = 1;
                     ctx.fillRect(c.x - 3, c.y - alturaDinamicaVarilla, 6, alturaDinamicaVarilla);
                     ctx.strokeRect(c.x - 3, c.y - alturaDinamicaVarilla, 6, alturaDinamicaVarilla);
 
-                    // Tuerca de mariposa superior
                     ctx.fillStyle = '#cbd5e1'; ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1.5;
                     ctx.beginPath();
                     ctx.moveTo(c.x - 10, c.y - alturaDinamicaVarilla + 2); ctx.lineTo(c.x + 10, c.y - alturaDinamicaVarilla + 2);
                     ctx.lineTo(c.x + 4, c.y - alturaDinamicaVarilla + 7); ctx.lineTo(c.x - 4, c.y - alturaDinamicaVarilla + 7);
                     ctx.closePath(); ctx.fill(); ctx.stroke();
 
-                    // Argolla guía superior para el hilo
                     ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
                     ctx.beginPath(); ctx.arc(c.x, c.y - alturaDinamicaVarilla - 3, 3, 0, Math.PI * 2); ctx.stroke();
 
-                    // Identificador "M"
                     ctx.fillStyle = '#f97316'; ctx.font = 'bold 11px sans-serif';
                     ctx.fillText('M', c.x - 5, c.y - alturaDinamicaVarilla - 11);
 
-                    // --- BOTÓN IZQUIERDO: AFLEJAR [-] ---
                     ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(c.x - 24, c.y - 12, 9, 0, Math.PI * 2); ctx.fill();
                     ctx.fillStyle = '#ffffff'; ctx.font = 'bold 12px monospace'; ctx.fillText('-', c.x - 27.5, c.y - 8);
 
-                    // --- BOTÓN DERECHO: TENSAR [+] ---
                     ctx.fillStyle = '#10b981'; ctx.beginPath(); ctx.arc(c.x + 24, c.y - 12, 9, 0, Math.PI * 2); ctx.fill();
                     ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px monospace'; ctx.fillText('+', c.x + 21, c.y - 8);
                 }
@@ -460,6 +527,76 @@
                     ctx.beginPath(); ctx.arc(c.x, c.y + 7, 2.5, 0, Math.PI * 2);
                     ctx.fillStyle = '#ffffff'; ctx.fill();
                 }
+                else if (c.tipo === 'dinamometro') {
+                    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(c.x, c.y - c.h/2);
+                    ctx.arc(c.x - 3, c.y - c.h/2 - 6, 5, 0, Math.PI * 1.5, true);
+                    ctx.stroke();
+
+                    ctx.fillStyle = 'rgba(248, 250, 252, 0.12)';
+                    ctx.strokeStyle = '#475569'; ctx.lineWidth = 1;
+                    ctx.fillRect(c.x - c.w/2, c.y - c.h/2 + 15, c.w, c.h - 30);
+                    ctx.strokeRect(c.x - c.w/2, c.y - c.h/2 + 15, c.w, c.h - 30);
+
+                    ctx.fillStyle = c.color; ctx.strokeStyle = c.border; ctx.lineWidth = 1.5;
+                    ctx.fillRect(c.x - c.w/2 - 2, c.y - c.h/2, c.w + 4, 15);
+                    ctx.strokeRect(c.x - c.w/2 - 2, c.y - c.h/2, c.w + 4, 15);
+                    ctx.fillRect(c.x - c.w/2 - 2, c.y + c.h/2 - 15, c.w + 4, 15);
+                    ctx.strokeRect(c.x - c.w/2 - 2, c.y + c.h/2 - 15, c.w + 4, 15);
+
+                    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    let yResorteInicio = c.y - c.h/2 + 15;
+                    let yResorteFin = c.y - 8;
+                    ctx.moveTo(c.x, yResorteInicio);
+                    for (let rY = yResorteInicio; rY < yResorteFin; rY += 4) {
+                        ctx.lineTo(c.x + (rY % 8 === 0 ? 3 : -3), rY);
+                    }
+                    ctx.lineTo(c.x, yResorteFin);
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fillRect(c.x - c.w/2 + 2, yResorteFin, c.w - 4, 4);
+
+                    ctx.strokeStyle = '#64748b'; ctx.lineWidth = 0.8;
+                    for (let lY = yResorteInicio + 8; lY < c.y + c.h/2 - 18; lY += 6) {
+                        ctx.beginPath(); ctx.moveTo(c.x + 2, lY); ctx.lineTo(c.x + c.w/2 - 3, lY); ctx.stroke();
+                    }
+
+                    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(c.x, yResorteFin + 4);
+                    ctx.lineTo(c.x, c.y + c.h/2 + 4);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.moveTo(c.x, c.y + c.h/2 + 4);
+                    ctx.arc(c.x + 4, c.y + c.h/2 + 10, 6, Math.PI, Math.PI * 0.3, true);
+                    ctx.stroke();
+                }
+                else if (c.tipo.startsWith('pesa_')) {
+                    // Renderizado físico de las pesas de laboratorio con soporte cónico y gancho superior
+                    ctx.fillStyle = c.color; ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1.5;
+                    
+                    // Cuerpo de la pesa
+                    ctx.beginPath();
+                    ctx.moveTo(c.x - c.w/2, c.y + c.h/2);
+                    ctx.lineTo(c.x + c.w/2, c.y + c.h/2);
+                    ctx.lineTo(c.x + c.w/3, c.y - c.h/2 + 4);
+                    ctx.lineTo(c.x - c.w/3, c.y - c.h/2 + 4);
+                    ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                    // Agarre/gancho superior
+                    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y - c.h/2 + 2, 4, 0, Math.PI, true);
+                    ctx.stroke();
+
+                    // Texto identificador de Newtons
+                    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
+                    ctx.fillText(`${c.fuerza}N`, c.x, c.y + 4);
+                }
 
                 ctx.restore();
             });
@@ -476,18 +613,41 @@
                         ctx.stroke();
                     }
                 }
+                if (c.tipo === 'dinamometro' && c.padreEnganchadoId) {
+                    let padre = componentesActivos.find(p => p.id === c.padreEnganchadoId);
+                    if (padre) {
+                        ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        let puntoYPadre = (padre.tipo === 'armella_k') ? padre.y - 15 : padre.y + (padre.h / 2) + 14;
+                        ctx.moveTo(padre.x, puntoYPadre);
+                        ctx.lineTo(c.x, c.y - c.h/2 - 6);
+                        ctx.stroke();
+                    }
+                }
+                // Hilo de unión elástica si una pesa cuelga de una polea o dinamómetro
+                if (c.tipo.startsWith('pesa_') && c.padreEnganchadoId) {
+                    let padre = componentesActivos.find(p => p.id === c.padreEnganchadoId);
+                    if (padre) {
+                        ctx.strokeStyle = '#475569'; ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        let puntoYPadre = padre.y + (padre.h / 2) + 10;
+                        if (padre.tipo === 'polea_fija_individual') puntoYPadre = padre.y + padre.r + 14;
+                        ctx.moveTo(padre.x, puntoYPadre);
+                        ctx.lineTo(c.x, c.y - c.h/2);
+                        ctx.stroke();
+                    }
+                }
             });
         }
 
         function cargarArmazonInicialLaboratorio() {
             componentesActivos = [];
-            tensionOffsetM = 0; // Reiniciar regulador
+            tensionOffsetM = 0; 
             crearNuevoComponente('base_madera', 350, 498);
             crearNuevoComponente('varilla_vertical', VARILLA_IZQ_X, 290);
             crearNuevoComponente('varilla_vertical', VARILLA_DER_X, 290);
             crearNuevoComponente('varilla_horizontal', 350, 80);
 
-            // Posicionar Tensor M y Armella K estáticos
             crearNuevoComponente('tensor_m', 170, BASE_Y);  
             crearNuevoComponente('armella_k', 530, BASE_Y); 
 
@@ -507,12 +667,40 @@
             let cuerdasActivas = 0;
 
             componentesActivos.forEach(c => {
-                if (c.tipoPolea === 'fija') { cuerdasActivas += 1; }
+                // Cascadas dinámicas de posicionamiento
+                if (c.tipo === 'dinamometro' && c.padreEnganchadoId) {
+                    let padre = componentesActivos.find(p => p.id === c.padreEnganchadoId);
+                    if (padre) {
+                        c.x = padre.x;
+                        c.y = (padre.tipo === 'armella_k') ? (padre.y - 15) + (c.h / 2) + 6 : (padre.y + (padre.h / 2) + 14) + (c.h / 2) + 6;
+                    }
+                }
+                if (c.sujetadorPadreId) {
+                    let padre = componentesActivos.find(s => s.id === c.sujetadorPadreId);
+                    if (padre) {
+                        c.x = padre.x;
+                        c.y = padre.y + (c.h / 2) + 14;
+                    }
+                }
+                if (c.tipo.startsWith('pesa_') && c.padreEnganchadoId) {
+                    let padre = componentesActivos.find(p => p.id === c.padreEnganchadoId);
+                    if (padre) {
+                        c.x = padre.x;
+                        let offsetPadre = padre.y + (padre.h / 2) + 24;
+                        if (padre.tipo === 'polea_fija_individual') offsetPadre = padre.y + padre.r + 28;
+                        c.y = offsetPadre + (c.h / 2);
+                    }
+                }
+
+                // Cálculo de masas e hilos activos
+                if (c.tipoPolea === 'fija') { cuerdasActivas += 1; masaTotal += 0.15; }
                 if (c.tipoPolea === 'paralelo_doble') { masaTotal += 0.45; cuerdasActivas += 4; }
                 if (c.tipoPolea === 'paralelo_triple') { masaTotal += 0.60; cuerdasActivas += 6; }
                 if (c.tipoPolea === 'linea_doble') { masaTotal += 0.50; cuerdasActivas += 4; }
                 if (c.tipoPolea === 'linea_triple') { masaTotal += 0.70; cuerdasActivas += 6; }
                 if (c.tipoPolea === 'diferencial_lateral') { cuerdasActivas += 1; masaTotal += 0.22; }
+                if (c.tipo === 'dinamometro') { masaTotal += 0.10; } 
+                if (c.tipo.startsWith('pesa_')) { masaTotal += (c.fuerza / 9.81); } // Conversión exacta N -> kg
             });
 
             const gravedad = 9.81;
@@ -520,9 +708,7 @@
             let ventajaMecanica = cuerdasActivas > 0 ? cuerdasActivas : 0;
             let esfuerzoF = ventajaMecanica > 0 ? (pesoW / ventajaMecanica) : pesoW;
 
-            // Mostrar el nivel de tensión en milímetros simulados según los clics en el panel lateral derecho
             document.getElementById('lblTensionRegulador').innerText = (tensionOffsetM * 0.5).toFixed(1) + " mm";
-
             document.getElementById('lblMasa').innerText = masaTotal.toFixed(2) + " kg";
             document.getElementById('lblPeso').innerText = pesoW.toFixed(2) + " N";
             document.getElementById('lblVentaja').innerText = ventajaMecanica.toFixed(2);
@@ -550,6 +736,26 @@
                 } else if (tipoComponente === 'polea_diferencial_der') {
                     const yLimitado = Math.max(95, Math.min(480, y));
                     crearNuevoComponente('polea_diferencial_der', VARILLA_DER_X, yLimitado);
+                } else if (tipoComponente === 'dinamometro') {
+                    const armellaK = componentesActivos.find(s => s.tipo === 'armella_k' && Math.abs(s.x - x) < 35 && Math.abs((s.y - 15) - y) < 40);
+                    const poleaCercana = componentesActivos.find(s => s.tipoPolea && Math.abs(s.x - x) < 35 && Math.abs((s.y + (s.h / 2) + 14) - y) < 40);
+
+                    if (armellaK) {
+                        const din = crearNuevoComponente('dinamometro', armellaK.x, (armellaK.y - 15) + 66);
+                        din.padreEnganchadoId = armellaK.id;
+                    } else if (poleaCercana) {
+                        const din = crearNuevoComponente('dinamometro', poleaCercana.x, (poleaCercana.y + (poleaCercana.h / 2) + 14) + 66);
+                        din.padreEnganchadoId = poleaCercana.id;
+                    }
+                } else if (tipoComponente.startsWith('pesa_')) {
+                    // Detección de acople inicial al soltar pesas sobre ganchos inferiores de poleas o del dinamómetro
+                    const poleaOdinamometro = componentesActivos.find(s => (s.tipoPolea || s.tipo === 'dinamometro') && Math.abs(s.x - x) < 35 && Math.abs((s.y + s.h/2) - y) < 50);
+                    if (poleaOdinamometro) {
+                        const p = crearNuevoComponente(tipoComponente, poleaOdinamometro.x, poleaOdinamometro.y + 40);
+                        p.padreEnganchadoId = poleaOdinamometro.id;
+                    } else {
+                        crearNuevoComponente(tipoComponente, x, y);
+                    }
                 } else {
                     const nuevo = crearNuevoComponente(tipoComponente, x, y);
                     if (nuevo && (tipoComponente.includes('fija') || tipoComponente.includes('paralelo') || tipoComponente.includes('linea'))) {
@@ -570,35 +776,38 @@
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
 
-            // DETECTOR DE INTERACCIÓN CON LOS BOTONES DE PRESIÓN DEL TENSOR M
-            const tensorObj = componentesActivos.find(c => c.tipo === 'tensor_m');
-            if (tensorObj) {
-                // Colisión con botón aflojar [-] (x: 170-24=146, y: BASE_Y-12=474)
-                const distAflojar = Math.hypot(mouseX - (tensorObj.x - 24), mouseY - (tensorObj.y - 12));
-                if (distAflojar <= 9) {
-                    tensionOffsetM = Math.max(-15, tensionOffsetM - 2); // Baja la varilla (afloja)
+            const tensor = componentesActivos.find(c => c.tipo === 'tensor_m');
+            if (tensor) {
+                let distMenos = Math.hypot(mouseX - (tensor.x - 24), mouseY - (tensor.y - 12));
+                if (distMenos <= 9) {
+                    tensionOffsetM = Math.max(-15, tensionOffsetM - 2);
                     resolverSistemaCientifico();
                     return;
                 }
-
-                // Colisión con botón tensar [+] (x: 170+24=194, y: BASE_Y-12=474)
-                const distTensar = Math.hypot(mouseX - (tensorObj.x + 24), mouseY - (tensorObj.y - 12));
-                if (distTensar <= 9) {
-                    tensionOffsetM = Math.min(30, tensionOffsetM + 2); // Sube la varilla (tensa)
+                let distMas = Math.hypot(mouseX - (tensor.x + 24), mouseY - (tensor.y - 12));
+                if (distMas <= 9) {
+                    tensionOffsetM = Math.min(40, tensionOffsetM + 2);
                     resolverSistemaCientifico();
                     return;
                 }
             }
 
             for (let i = componentesActivos.length - 1; i >= 0; i--) {
-                const c = componentesActivos[i];
-                if (c.esFijo) continue;
+                let comp = componentesActivos[i];
+                if (comp.esFijo) continue;
 
-                if (mouseX >= c.x - c.w/2 && mouseX <= c.x + c.w/2 &&
-                    mouseY >= c.y - c.h/2 && mouseY <= c.y + c.h/2) {
-                    componenteSeleccionadoParaMover = c;
-                    offsetX = mouseX - c.x;
-                    offsetY = mouseY - c.y;
+                let dentrow = false;
+                if (comp.r > 0) {
+                    dentrow = Math.hypot(mouseX - comp.x, mouseY - comp.y) <= comp.r + 5;
+                } else {
+                    dentrow = mouseX >= comp.x - comp.w/2 && mouseX <= comp.x + comp.w/2 &&
+                              mouseY >= comp.y - comp.h/2 && mouseY <= comp.y + comp.h/2;
+                }
+
+                if (dentrow) {
+                    componenteSeleccionadoParaMover = comp;
+                    offsetX = mouseX - comp.x;
+                    offsetY = mouseY - comp.y;
                     canvas.style.cursor = 'grabbing';
                     break;
                 }
@@ -606,53 +815,122 @@
         });
 
         canvas.addEventListener('mousemove', (e) => {
-            if (!componenteSeleccionadoParaMover) return;
             const rect = canvas.getBoundingClientRect();
-            let nuevoX = e.clientX - rect.left - offsetX;
-            let nuevoY = e.clientY - rect.top - offsetY;
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
 
-            if (componenteSeleccionadoParaMover.tipo === 'polea_diferencial_izq') {
-                componenteSeleccionadoParaMover.x = VARILLA_IZQ_X;
-                componenteSeleccionadoParaMover.y = Math.max(95, Math.min(480, nuevoY));
-            } 
-            else if (componenteSeleccionadoParaMover.tipo === 'polea_diferencial_der') {
-                componenteSeleccionadoParaMover.x = VARILLA_DER_X;
-                componenteSeleccionadoParaMover.y = Math.max(95, Math.min(480, nuevoY));
-            } 
-            else if (componenteSeleccionadoParaMover.esSujetador) {
-                const viejoX = componenteSeleccionadoParaMover.x;
-                componenteSeleccionadoParaMover.x = Math.max(85, Math.min(615, nuevoX));
-                componenteSeleccionadoParaMover.y = 80;
+            if (!componenteSeleccionadoParaMover) {
+                let cursorStyle = 'default';
+                const tensor = componentesActivos.find(c => c.tipo === 'tensor_m');
+                if (tensor) {
+                    if (Math.hypot(mouseX - (tensor.x - 24), mouseY - (tensor.y - 12)) <= 9 || 
+                        Math.hypot(mouseX - (tensor.x + 24), mouseY - (tensor.y - 12)) <= 9) {
+                        cursorStyle = 'pointer';
+                    }
+                }
 
-                const deltaX = componenteSeleccionadoParaMover.x - viejoX;
-                componentesActivos.forEach(p => {
-                    if (p.sujetadorPadreId === componenteSeleccionadoParaMover.id) {
-                        p.x += deltaX;
+                componentesActivos.forEach(comp => {
+                    if (!comp.esFijo) {
+                        if (mouseX >= comp.x - comp.w/2 && mouseX <= comp.x + comp.w/2 &&
+                            mouseY >= comp.y - comp.h/2 && mouseY <= comp.y + comp.h/2) {
+                            cursorStyle = 'grab';
+                        }
                     }
                 });
+                canvas.style.cursor = cursorStyle;
+                return;
+            }
+
+            let nx = mouseX - offsetX;
+            let ny = mouseY - offsetY;
+
+            if (componenteSeleccionadoParaMover.tipo === 'sujetador_corredizo') {
+                componenteSeleccionadoParaMover.x = Math.max(85, Math.min(615, nx));
+                componentesActivos.forEach(hijo => {
+                    if (hijo.sujetadorPadreId === componenteSeleccionadoParaMover.id) {
+                        hijo.x = componenteSeleccionadoParaMover.x;
+                    }
+                });
+            } else if (componenteSeleccionadoParaMover.tipo === 'dinamometro') {
+                componenteSeleccionadoParaMover.x = nx;
+                componenteSeleccionadoParaMover.y = ny;
+
+                if (componenteSeleccionadoParaMover.padreEnganchadoId) {
+                    let padre = componentesActivos.find(p => p.id === componenteSeleccionadoParaMover.padreEnganchadoId);
+                    if (padre) {
+                        let puntoYPadre = (padre.tipo === 'armella_k') ? padre.y - 15 : padre.y + (padre.h / 2) + 14;
+                        if (Math.abs(nx - padre.x) > 45 || Math.abs(ny - (puntoYPadre + 66)) > 50) {
+                            componenteSeleccionadoParaMover.padreEnganchadoId = null;
+                        }
+                    }
+                }
+
+                if (!componenteSeleccionadoParaMover.padreEnganchadoId) {
+                    const armellaK = componentesActivos.find(s => s.tipo === 'armella_k' && Math.abs(s.x - nx) < 35 && Math.abs((s.y - 15) - ny) < 40);
+                    const poleaCercana = componentesActivos.find(s => s.tipoPolea && Math.abs(s.x - nx) < 35 && Math.abs((s.y + (s.h / 2) + 14) - ny) < 40);
+
+                    if (armellaK) {
+                        componenteSeleccionadoParaMover.x = armellaK.x;
+                        componenteSeleccionadoParaMover.y = (armellaK.y - 15) + (componenteSeleccionadoParaMover.h / 2) + 6;
+                        componenteSeleccionadoParaMover.padreEnganchadoId = armellaK.id;
+                    } else if (poleaCercana) {
+                        componenteSeleccionadoParaMover.x = poleaCercana.x;
+                        componenteSeleccionadoParaMover.y = (poleaCercana.y + (poleaCercana.h / 2) + 14) + (componenteSeleccionadoParaMover.h / 2) + 6;
+                        componenteSeleccionadoParaMover.padreEnganchadoId = poleaCercana.id;
+                    }
+                }
+            } else if (componenteSeleccionadoParaMover.tipo.startsWith('pesa_')) {
+                // Arrastre libre de las pesas por el Canvas
+                componenteSeleccionadoParaMover.x = nx;
+                componenteSeleccionadoParaMover.y = ny;
+
+                // Si estaba enganchada, verificar si se jaló con fuerza para desengancharla
+                if (componenteSeleccionadoParaMover.padreEnganchadoId) {
+                    let padre = componentesActivos.find(p => p.id === componenteSeleccionadoParaMover.padreEnganchadoId);
+                    if (padre) {
+                        if (Math.abs(nx - padre.x) > 40 || Math.abs(ny - padre.y) > 75) {
+                            componenteSeleccionadoParaMover.padreEnganchadoId = null;
+                        }
+                    }
+                }
+
+                // Detección magnetica en tiempo real hacia poleas o dinamómetros
+                if (!componenteSeleccionadoParaMover.padreEnganchadoId) {
+                    const objetivoCercano = componentesActivos.find(s => (s.tipoPolea || s.tipo === 'dinamometro') && Math.abs(s.x - nx) < 30 && Math.abs((s.y + s.h/2) - ny) < 45);
+                    if (objetivoCercano) {
+                        componenteSeleccionadoParaMover.padreEnganchadoId = objetivoCercano.id;
+                    }
+                }
+            } else if (componenteSeleccionadoParaMover.tipo.includes('diferencial_izq') || componenteSeleccionadoParaMover.tipo.includes('diferencial_der')) {
+                componenteSeleccionadoParaMover.y = Math.max(95, Math.min(480, ny));
             } else {
-                componenteSeleccionadoParaMover.x = Math.max(20, Math.min(canvas.width - 20, nuevoX));
-                componenteSeleccionadoParaMover.y = Math.max(60, Math.min(480, nuevoY));
+                componenteSeleccionadoParaMover.x = nx;
+                componenteSeleccionadoParaMover.y = ny;
 
                 if (componenteSeleccionadoParaMover.sujetadorPadreId) {
-                    const padre = componentesActivos.find(s => s.id === componenteSeleccionadoParaMover.sujetadorPadreId);
-                    if (!padre || Math.abs(componenteSeleccionadoParaMover.x - padre.x) > 40) {
+                    let padre = componentesActivos.find(s => s.id === componenteSeleccionadoParaMover.sujetadorPadreId);
+                    if (padre && (Math.abs(nx - padre.x) > 40 || Math.abs(ny - padre.y) > 80)) {
                         componenteSeleccionadoParaMover.sujetadorPadreId = null;
                     }
                 }
-            }
-            resolverSistemaCientifico();
-        });
 
-        window.addEventListener('mouseup', () => {
-            if (componenteSeleccionadoParaMover) {
-                if (componenteSeleccionadoParaMover.tipoPolea !== 'diferencial_lateral' && !componenteSeleccionadoParaMover.esSujetador) {
-                    const sujetadorCercano = componentesActivos.find(s => s.esSujetador && Math.abs(s.x - componenteSeleccionadoParaMover.x) < 35);
+                if (!componenteSeleccionadoParaMover.sujetadorPadreId) {
+                    const sujetadorCercano = componentesActivos.find(s => s.esSujetador && Math.abs(s.x - nx) < 30 && Math.abs((s.y + (componenteSeleccionadoParaMover.h / 2) + 14) - ny) < 30);
                     if (sujetadorCercano) {
                         componenteSeleccionadoParaMover.x = sujetadorCercano.x;
                         componenteSeleccionadoParaMover.y = sujetadorCercano.y + (componenteSeleccionadoParaMover.h / 2) + 14;
                         componenteSeleccionadoParaMover.sujetadorPadreId = sujetadorCercano.id;
                     }
+                }
+            }
+
+            resolverSistemaCientifico();
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (componenteSeleccionadoParaMover) {
+                if (componenteSeleccionadoParaMover.tipo === 'dinamometro' && !componenteSeleccionadoParaMover.padreEnganchadoId) {
+                    componentesActivos = componentesActivos.filter(c => c.id !== componenteSeleccionadoParaMover.id);
                 }
                 componenteSeleccionadoParaMover = null;
                 canvas.style.cursor = 'default';
