@@ -3,175 +3,246 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistemas de Poleas - Laboratorio Físico Avanzado</title>
+    <title>Sistemas de Poleas - Laboratorio de Física Avanzado</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root {
-            --bg-main: #0b0f17;
-            --panel-bg: #111827;
-            --panel-border: #1e293b;
-            --accent-cyan: #06b6d4;
-            --accent-orange: #f97316;
-            --text-light: #f8fafc;
-            --text-muted: #94a3b8;
-            --green-success: #10b981;
+            --bg-main: #f1f5f9;
+            --panel-bg: #ffffff;
+            --panel-border: #cbd5e1;
+            --accent-blue: #2563eb;
+            --accent-orange: #ea580c;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --green-success: #16a34a;
+            --canvas-bg: #f8fafc;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background-color: var(--bg-main); color: var(--text-light); display: flex; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; font-size: 12px; }
+        body { background-color: var(--bg-main); color: var(--text-dark); display: flex; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; font-size: 13px; }
 
         header {
-            background: #030712; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--panel-border); box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            background: #ffffff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid var(--panel-border); box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         header .title-area { display: flex; align-items: center; gap: 15px; }
-        header h1 { font-size: 15px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px; }
+        header h1 { font-size: 18px; font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
+        
+        .btn-back {
+            text-decoration: none; display: inline-flex; align-items: center; gap: 8px; 
+            background: #e2e8f0; color: var(--text-dark); padding: 8px 16px; border-radius: 6px; 
+            font-weight: 600; font-size: 12px; border: 1px solid #cbd5e1; transition: all 0.2s;
+        }
+        .btn-back:hover { background: #cbd5e1; }
 
         .layout { flex: 1; display: flex; overflow: hidden; }
         
-        .sidebar { width: 320px; background: var(--panel-bg); border-right: 1px solid var(--panel-border); display: flex; flex-direction: column; }
-        .sidebar-header { padding: 15px; border-bottom: 1px solid var(--panel-border); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; color: var(--text-muted); }
+        .sidebar { width: 320px; background: var(--panel-bg); border-right: 2px solid var(--panel-border); display: flex; flex-direction: column; }
+        .sidebar-header { padding: 15px; border-bottom: 1px solid var(--panel-border); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; color: var(--text-muted); background: #f8fafc; }
         .object-list { padding: 15px; display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; }
         
         .draggable-item {
-            background: #1e293b; border: 1px solid #334155; padding: 10px; border-radius: 6px;
-            cursor: grab; transition: all 0.2s; display: flex; align-items: center; gap: 10px;
-            position: relative; user-select: none;
+            background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px;
+            cursor: grab; transition: all 0.2s; display: flex; align-items: center; gap: 12px;
+            position: relative; user-select: none; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
         }
-        .draggable-item:hover { background: #273549; border-color: var(--accent-cyan); transform: translateY(-1px); }
-        .draggable-item .icon { font-size: 18px; width: 24px; text-align: center; }
-        .draggable-item .details { display: flex; flex-direction: column; flex: 1; }
-        .draggable-item .details .name { font-weight: 500; color: var(--text-light); }
-        .draggable-item .details .desc { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
-        .badge-count { background: var(--accent-orange); color: white; padding: 2px 6px; border-radius: 10px; font-size: 9px; font-weight: bold; font-family: monospace; }
-        .draggable-item.disabled { opacity: 0.35; cursor: not-allowed; border-color: #475569; }
-
-        .workspace { flex: 1; display: flex; flex-direction: column; background: #070a12; position: relative; }
-        canvas { display: block; background: #090d16; box-shadow: inset 0 0 40px rgba(0,0,0,0.8); cursor: default; }
-
-        .data-panel { width: 310px; background: var(--panel-bg); border-left: 1px solid var(--panel-border); padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
-        .panel-section { background: #070a12; border: 1px solid var(--panel-border); border-radius: 8px; padding: 15px; }
-        .panel-section h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-cyan); margin-bottom: 12px; border-bottom: 1px solid #1e293b; padding-bottom: 6px; }
+        .draggable-item:hover { background: #ffffff; border-color: var(--accent-blue); transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .draggable-item.disabled { opacity: 0.4; cursor: not-allowed; border-color: #cbd5e1; background: #f1f5f9; }
         
-        .metric { display: flex; justify-content: space-between; margin-bottom: 8px; font-family: monospace; font-size: 12px; }
-        .metric .label { color: var(--text-muted); }
-        .metric .value { color: #fff; font-weight: 600; }
+        .draggable-item .icon { font-size: 20px; width: 28px; text-align: center; }
+        .draggable-item .details { display: flex; flex-direction: column; flex: 1; }
+        .draggable-item .details .name { font-weight: 600; color: var(--text-dark); font-size: 13px; }
+        .draggable-item .details .desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.3; }
+        .badge-count { background: var(--accent-orange); color: white; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; font-family: monospace; }
+
+        .workspace { flex: 1; display: flex; flex-direction: column; background: #e2e8f0; position: relative; padding: 15px; justify-content: center; align-items: center; }
+        canvas { display: block; background: var(--canvas-bg); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid var(--panel-border); cursor: default; }
+
+        .data-panel { width: 310px; background: var(--panel-bg); border-left: 2px solid var(--panel-border); padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+        .panel-section { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.01); }
+        .panel-section h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-blue); margin-bottom: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; }
+        
+        .metric { display: flex; justify-content: space-between; margin-bottom: 10px; font-family: monospace; font-size: 13px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 4px; }
+        .metric:last-child { border-bottom: none; margin-bottom: 0; }
+        .metric .label { color: var(--text-muted); font-family: 'Segoe UI', sans-serif; }
+        .metric .value { color: var(--text-dark); font-weight: 700; }
         .metric .value.highlight { color: var(--accent-orange); }
 
         .btn-action {
-            background: #1e293b; border: 1px solid #334155; color: var(--text-light); padding: 8px 12px;
-            border-radius: 4px; cursor: pointer; font-weight: 500; transition: all 0.2s; text-align: center; width: 100%;
+            background: #2563eb; border: 1px solid #1d4ed8; color: #ffffff; padding: 10px 14px;
+            border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; text-align: center; width: 100%; box-shadow: 0 2px 4px rgba(37,99,235,0.1);
         }
-        .btn-action:hover { background: #273549; border-color: var(--accent-orange); }
-        .btn-clear { background: #7f1d1d; border-color: #991b1b; }
-        .btn-clear:hover { background: #991b1b; }
+        .btn-action:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(37,99,235,0.15); }
+        .btn-secondary { background: #e2e8f0; border-color: #cbd5e1; color: var(--text-dark); box-shadow: none; }
+        .btn-secondary:hover { background: #cbd5e1; }
+        
+        .btn-rope-mode { background: #0d9488; border-color: #0f766e; color: white; }
+        .btn-rope-mode:hover { background: #0f766e; }
+        .btn-rope-mode.active { background: #ea580c; border-color: #c2410c; animation: pulse 1.5s infinite; }
+
+        .btn-clear { background: #dc2626; border-color: #b91c1c; color: white; }
+        .btn-clear:hover { background: #b91c1c; box-shadow: 0 4px 6px rgba(220,38,38,0.15); }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(234, 88, 12, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0); }
+        }
     </style>
 </head>
 <body>
 
     <header>
         <div class="title-area">
-            <h1>🛞 Laboratorio Avanzado Multi-Estudio de Poleas</h1>
+            <a href="maquinas-simples.html" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Volver al Kit de Máquinas Simples
+            </a>
+            <h1>🛞 Laboratorio Avanzado de Sistemas de Poleas</h1>
         </div>
-        <button class="btn-action" style="width: auto; padding: 5px 15px;" onclick="cargarArmazonInicialLaboratorio()">🔄 Reiniciar Escena Completa</button>
+        <button class="btn-action btn-secondary" style="width: auto; padding: 6px 16px; font-size: 12px;" onclick="cargarArmazonInicialLaboratorio()">🔄 Reiniciar Escena</button>
     </header>
 
     <div class="layout">
         <div class="sidebar">
-            <div class="sidebar-header">🛠️ Almacén de Componentes Completo</div>
+            <div class="sidebar-header">🛠️ Almacén de Componentes</div>
             <div class="object-list">
                 <div id="item-sujetador" class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'sujetador_corredizo')">
                     <span class="icon">📎</span>
-                    <div class="details"><span class="name">Sujetador Deslizable</span><span class="desc">Instalar en la varilla horizontal superior.</span></div>
+                    <div class="details">
+                        <span class="name">Sujetador Deslizable</span>
+                        <span class="desc">Instalar en la varilla superior.</span>
+                    </div>
                     <span id="badgeSujetadores" class="badge-count">9 Disp.</span>
                 </div>
+                
                 <div class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'polea_fija_individual')">
-                    <span class="icon">⭕</span>
-                    <div class="details"><span class="name">Polea Fija / Móvil Simple</span><span class="desc">Rueda simple roja con ganchos opuestos.</span></div>
+                    <span class="icon">⚙️</span>
+                    <div class="details">
+                        <span class="name">Polea Fija (Gancho Doble)</span>
+                        <span class="desc">Rueda simple roja con ganchos opuestos.</span>
+                    </div>
                 </div>
+
                 <div class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'poleas_paralelo_doble_gancho')">
                     <span class="icon">🪜</span>
-                    <div class="details"><span class="name">Polipasto Doble Paralelo</span><span class="desc">Dos ruedas lado a lado en un mismo eje.</span></div>
+                    <div class="details">
+                        <span class="name">Polipasto Doble Paralelo</span>
+                        <span class="desc">Ruedas lado a lado en un mismo eje.</span>
+                    </div>
                 </div>
                 <div class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'poleas_paralelo_triple_gancho')">
                     <span class="icon">☰</span>
-                    <div class="details"><span class="name">Polipasto Triple Paralelo</span><span class="desc">Tres ruedas compactas fijadas en paralelo.</span></div>
+                    <div class="details">
+                        <span class="name">Polipasto Triple Paralelo</span>
+                        <span class="desc">3 ruedas compactas lado a lado.</span>
+                    </div>
                 </div>
+
                 <div class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'polipasto_linea_doble')">
                     <span class="icon">🔗</span>
-                    <div class="details"><span class="name">Polipasto Doble en Línea</span><span class="desc">Dos poleas consecutivas verticales (Tándem).</span></div>
+                    <div class="details">
+                        <span class="name">Polipasto Doble en Línea</span>
+                        <span class="desc">2 poleas consecutivas verticales (Tándem).</span>
+                    </div>
                 </div>
                 <div class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'polipasto_linea_triple')">
                     <span class="icon">🪢</span>
-                    <div class="details"><span class="name">Polipasto Triple en Línea</span><span class="desc">Tres poleas consecutivas en escala concéntrica.</span></div>
+                    <div class="details">
+                        <span class="name">Polipasto Triple en Línea</span>
+                        <span class="desc">3 poleas consecutivas en escala vertical.</span>
+                    </div>
                 </div>
+
                 <div class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'polea_diferencial_izq')">
                     <span class="icon">📐</span>
-                    <div class="details"><span class="name">Polea Diferencial Izq.</span><span class="desc">Vínculo directo para la varilla vertical izquierda.</span></div>
+                    <div class="details">
+                        <span class="name">Polea Diferencial Izq.</span>
+                        <span class="desc">Exclusiva para la varilla lateral izquierda.</span>
+                    </div>
                 </div>
                 <div class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'polea_diferencial_der')">
                     <span class="icon">📐</span>
-                    <div class="details"><span class="name">Polea Diferencial Der.</span><span class="desc">Vínculo directo para la varilla vertical derecha.</span></div>
+                    <div class="details">
+                        <span class="name">Polea Diferencial Der.</span>
+                        <span class="desc">Exclusiva para la varilla lateral derecha.</span>
+                    </div>
                 </div>
+
                 <div class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'dinamometro')">
                     <span class="icon">⚖️</span>
-                    <div class="details"><span class="name">Dinamómetro de Resorte</span><span class="desc">Mide fuerzas en Newtons de forma lineal.</span></div>
+                    <div class="details">
+                        <span class="name">Dinamómetro de Resorte</span>
+                        <span class="desc">Mide la fuerza en Newtons mediante el pistón.</span>
+                    </div>
                 </div>
+
                 <div id="item-pesa-5" class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'pesa_5n')">
                     <span class="icon">🏋️</span>
-                    <div class="details"><span class="name">Pesa de 5 N</span><span class="desc">Masa: ~0.51 kg.</span></div>
+                    <div class="details">
+                        <span class="name">Pesa de 5 N</span>
+                        <span class="desc">Masa equivalente: ~0.51 kg.</span>
+                    </div>
                     <span id="badgePesa5" class="badge-count">2 Disp.</span>
                 </div>
                 <div id="item-pesa-10" class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'pesa_10n')">
                     <span class="icon">🏋️</span>
-                    <div class="details"><span class="name">Pesa de 10 N</span><span class="desc">Masa: ~1.02 kg.</span></div>
+                    <div class="details">
+                        <span class="name">Pesa de 10 N</span>
+                        <span class="desc">Masa equivalente: ~1.02 kg.</span>
+                    </div>
                     <span id="badgePesa10" class="badge-count">2 Disp.</span>
                 </div>
                 <div id="item-pesa-20" class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'pesa_20n')">
                     <span class="icon">🏋️</span>
-                    <div class="details"><span class="name">Pesa de 20 N</span><span class="desc">Masa: ~2.04 kg.</span></div>
+                    <div class="details">
+                        <span class="name">Pesa de 20 N</span>
+                        <span class="desc">Masa equivalente: ~2.04 kg.</span>
+                    </div>
                     <span id="badgePesa20" class="badge-count">2 Disp.</span>
                 </div>
                 <div id="item-pesa-50" class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'pesa_50n')">
                     <span class="icon">🏋️</span>
-                    <div class="details"><span class="name">Pesa de 50 N</span><span class="desc">Masa: ~5.10 kg.</span></div>
+                    <div class="details">
+                        <span class="name">Pesa de 50 N</span>
+                        <span class="desc">Masa equivalente: ~5.10 kg.</span>
+                    </div>
                     <span id="badgePesa50" class="badge-count">2 Disp.</span>
                 </div>
                 <div id="item-pesa-100" class="draggable-item" draggable="true" ondragstart="handleDragStart(event, 'pesa_100n')">
                     <span class="icon">🏋️</span>
-                    <div class="details"><span class="name">Pesa de 100 N</span><span class="desc">Masa: ~10.19 kg.</span></div>
+                    <div class="details">
+                        <span class="name">Pesa de 100 N</span>
+                        <span class="desc">Masa equivalente: ~10.19 kg.</span>
+                    </div>
                     <span id="badgePesa100" class="badge-count">2 Disp.</span>
                 </div>
             </div>
         </div>
 
         <div class="workspace">
-            <canvas id="pulleyCanvas" width="750" height="600"></canvas>
+            <canvas id="pulleyCanvas" width="700" height="600"></canvas>
         </div>
 
         <div class="data-panel">
             <div class="panel-section">
-                <h3>💡 Panel de Instrucciones</h3>
-                <p style="color: var(--text-muted); line-height: 1.4;">
-                    • Arrastra elementos al lienzo.<br>
-                    • Suéltalos cerca de un gancho para auto-vincular los hilos.<br>
-                    • <strong style="color: var(--accent-orange)">Doble clic</strong> sobre cualquier objeto en el lienzo para eliminarlo al instante.
-                </p>
+                <h3>🧵 Control de Cuerdas</h3>
+                <button id="btnRopeMode" class="btn-action btn-rope-mode" onclick="toggleModoCuerda()">🧵 Activar Trazado de Cuerda</button>
+                <button class="btn-action btn-secondary" style="margin-top: 8px;" onclick="limpiarTodasLasCuerdas()">❌ Borrar Solo Cuerdas</button>
             </div>
 
             <div class="panel-section">
-                <h3>📊 Indicadores Dinámicos</h3>
-                <div class="metric"><span class="label">Masa Combinada:</span><span id="lblMasa" class="value">0.00 kg</span></div>
-                <div class="metric"><span class="label">Fuerza Peso total (W):</span><span id="lblPeso" class="value">0.00 N</span></div>
-                <div class="metric"><span class="label">Ventaja Mecánica (i):</span><span id="lblVentaja" class="value highlight">0.00 x</span></div>
+                <h3>📊 Indicadores Físicos</h3>
+                <div class="metric"><span class="label">Masa Total:</span><span id="lblMasa" class="value">0.00 kg</span></div>
+                <div class="metric"><span class="label">Fuerza Peso (W):</span><span id="lblPeso" class="value">0.00 N</span></div>
+                <div class="metric"><span class="label">Ventaja Mecánica (i):</span><span id="lblVentaja" class="value highlight">0.00</span></div>
                 <div class="metric"><span class="label">Esfuerzo Requerido:</span><span id="lblEsfuerzo" class="value" style="color: var(--green-success);">0.00 N</span></div>
-                <div class="metric"><span class="label">Regulador de Tensión:</span><span id="lblTensionRegulador" class="value" style="color: var(--accent-cyan);">0 mm</span></div>
+                <div class="metric"><span class="label">Tensión del Regulador:</span><span id="lblTensionRegulador" class="value" style="color: var(--accent-orange);">0 mm</span></div>
             </div>
 
             <div class="panel-section">
-                <h3>🔍 Inventario del Riel</h3>
-                <div class="metric"><span class="label">Sujetadores Activos:</span><span id="lblSujetadoresEnRiel" class="value">0 / 9</span></div>
-                <div class="metric"><span class="label">Líneas de Hilo:</span><span id="lblCuerdas" class="value">0 hilos</span></div>
+                <h3>🔍 Inventario en Riel</h3>
+                <div class="metric"><span class="label">Sujetadores en Varilla:</span><span id="lblSujetadoresEnRiel" class="value">0 / 9</span></div>
+                <div class="metric"><span class="label">Líneas de Tensión:</span><span id="lblCuerdas" class="value">0 hilos</span></div>
             </div>
 
             <button class="btn-action btn-clear" onclick="limpiarTodoElSistema()">🗑️ Desmantelar Todo</button>
@@ -183,33 +254,38 @@
         const ctx = canvas.getContext('2d');
 
         let componentesActivos = [];
+        let cuerdasTrazadas = []; // Almacena objetos { deId: '...', aId: '...' }
         let componenteSeleccionadoParaMover = null;
         let offsetX = 0, offsetY = 0;
-
         const MAX_SUJETADORES = 9;
         const MAX_PESAS_POR_TIPO = 2;
 
         const VARILLA_IZQ_X = 75;
-        const VARILLA_DER_X = 675;
+        const VARILLA_DER_X = 625;
         const BASE_Y = 486; 
 
         let tensionOffsetM = 0; 
 
+        // NUEVAS VARIABLES PARA EL TRAZADO DE CUERDAS
+        let modoTrazarCuerdaActivo = false;
+        let nodoOrigenCuerda = null;
+        let mousePosActual = { x: 0, y: 0 };
+
         const catálogoFísico = {
-            base_madera: { w: 640, h: 24, color: '#5c3a21', border: '#3b2211', esFijo: true },
-            varilla_vertical: { w: 14, h: 440, color: '#94a3b8', border: '#64748b', esFijo: true },
-            varilla_horizontal: { w: 610, h: 18, color: '#475569', border: '#334155', esFijo: true },
-            sujetador_corredizo: { w: 26, h: 20, color: '#cbd5e1', border: '#475569', esFijo: false, esSujetador: true },
-            polea_fija_individual: { r: 18, color: '#ef4444', esFijo: false, tipoPolea: 'fija' },
-            poleas_paralelo_doble_gancho: { w: 38, h: 46, color: '#ef4444', esFijo: false, tipoPolea: 'paralelo_doble' },
-            poleas_paralelo_triple_gancho: { w: 52, h: 46, color: '#ef4444', esFijo: false, tipoPolea: 'paralelo_triple' },
-            polipasto_linea_doble: { w: 38, h: 75, color: '#ef4444', esFijo: false, tipoPolea: 'linea_doble' },
-            polipasto_linea_triple: { w: 38, h: 110, color: '#ef4444', esFijo: false, tipoPolea: 'linea_triple' },
-            polea_diferencial_izq: { w: 40, h: 32, color: '#ef4444', esFijo: false, tipoPolea: 'diferencial_lateral' },
-            polea_diferencial_der: { w: 40, h: 32, color: '#ef4444', esFijo: false, tipoPolea: 'diferencial_lateral' },
+            base_madera: { w: 600, h: 24, color: '#8a5a36', border: '#5c3a21', esFijo: true },
+            varilla_vertical: { w: 14, h: 440, color: '#cbd5e1', border: '#94a3b8', esFijo: true },
+            varilla_horizontal: { w: 560, h: 18, color: '#94a3b8', border: '#64748b', esFijo: true },
+            sujetador_corredizo: { w: 26, h: 20, color: '#64748b', border: '#334155', esFijo: false, esSujetador: true },
+            polea_fija_individual: { r: 18, color: '#dc2626', esFijo: false, tipoPolea: 'fija' },
+            poleas_paralelo_doble_gancho: { w: 38, h: 46, color: '#dc2626', esFijo: false, tipoPolea: 'paralelo_doble' },
+            poleas_paralelo_triple_gancho: { w: 52, h: 46, color: '#dc2626', esFijo: false, tipoPolea: 'paralelo_triple' },
+            polipasto_linea_doble: { w: 38, h: 75, color: '#dc2626', esFijo: false, tipoPolea: 'linea_doble' },
+            polipasto_linea_triple: { w: 38, h: 110, color: '#dc2626', esFijo: false, tipoPolea: 'linea_triple' },
+            polea_diferencial_izq: { w: 40, h: 32, color: '#dc2626', esFijo: false, tipoPolea: 'diferencial_lateral' },
+            polea_diferencial_der: { w: 40, h: 32, color: '#dc2626', esFijo: false, tipoPolea: 'diferencial_lateral' },
             tensor_m: { esFijo: true },
             armella_k: { esFijo: true },
-            dinamometro: { w: 24, h: 120, color: '#166534', border: '#14532d', esFijo: false, tipoPolea: null },
+            dinamometro: { w: 24, h: 120, color: '#16a34a', border: '#15803d', esFijo: false, tipoPolea: null },
             pesa_5n: { w: 28, h: 22, color: '#0284c7', fuerza: 5, esFijo: false },
             pesa_10n: { w: 32, h: 26, color: '#0369a1', fuerza: 10, esFijo: false },
             pesa_20n: { w: 36, h: 32, color: '#0f766e', fuerza: 20, esFijo: false },
@@ -217,8 +293,32 @@
             pesa_100n: { w: 48, h: 46, color: '#991b1b', fuerza: 100, esFijo: false }
         };
 
-        function contarSujetadoresActivos() { return componentesActivos.filter(c => c.tipo === 'sujetador_corredizo').length; }
-        function contarPesasActivas(tipo) { return componentesActivos.filter(c => c.tipo === tipo).length; }
+        function contarSujetadoresActivos() {
+            return componentesActivos.filter(c => c.tipo === 'sujetador_corredizo').length;
+        }
+
+        function contarPesasActivas(tipo) {
+            return componentesActivos.filter(c => c.tipo === tipo).length;
+        }
+
+        function toggleModoCuerda() {
+            modoTrazarCuerdaActivo = !modoTrazarCuerdaActivo;
+            const btn = document.getElementById('btnRopeMode');
+            if(modoTrazarCuerdaActivo) {
+                btn.innerText = "🛑 Detener Trazado";
+                btn.classList.add('active');
+            } else {
+                btn.innerText = "🧵 Activar Trazado de Cuerda";
+                btn.classList.remove('active');
+                nodoOrigenCuerda = null;
+            }
+            resolverSistemaCientifico();
+        }
+
+        function limpiarTodasLasCuerdas() {
+            cuerdasTrazadas = [];
+            resolverSistemaCientifico();
+        }
 
         function actualizarBadgeAlmacen() {
             const activosS = contarSujetadoresActivos();
@@ -258,14 +358,15 @@
                 tipo: tipo,
                 tipoPolea: espec.tipoPolea || null,
                 fuerza: espec.fuerza || 0,
-                x: x, y: y,
-                w: espec.w || (espec.r * 2) || 30,
+                x: x,
+                y: y,
+                w:  espec.w || (espec.r * 2) || 30,
                 h: espec.h || (espec.r * 2) || 30,
                 r: espec.r || 0,
                 esFijo: espec.esFijo,
                 esSujetador: espec.esSujetador || false,
                 color: espec.color,
-                border: espec.border || '#1e293b',
+                border: espec.border || '#cbd5e1',
                 sujetadorPadreId: null,
                 padreEnganchadoId: null 
             };
@@ -275,91 +376,132 @@
             return nuevoComp;
         }
 
+        function obtenerPuntosDeAnclaje(c) {
+            // Devuelve los puntos específicos (arriba y abajo) donde se pueden atar cuerdas
+            if (c.tipo === 'sujetador_corredizo') {
+                return [{ x: c.x, y: c.y + c.h/2 + 10, id: c.id }];
+            }
+            if (c.tipo === 'polea_fija_individual') {
+                return [
+                    { x: c.x, y: c.y - c.r - 16, id: c.id },
+                    { x: c.x, y: c.y + c.r + 16, id: c.id }
+                ];
+            }
+            if (c.tipoPolea && (c.tipoPolea.includes('paralelo') || c.tipoPolea.includes('linea'))) {
+                return [
+                    { x: c.x, y: c.y - c.h/2 - 16, id: c.id },
+                    { x: c.x, y: c.y + c.h/2 + 16, id: c.id }
+                ];
+            }
+            if (c.tipo === 'tensor_m') {
+                const alturaDinamicaVarilla = 25 + tensionOffsetM;
+                return [{ x: c.x, y: c.y - alturaDinamicaVarilla - 3, id: c.id }];
+            }
+            if (c.tipo === 'armella_k') {
+                return [{ x: c.x, y: c.y - 15, id: c.id }];
+            }
+            if (c.tipo === 'dinamometro') {
+                return [
+                    { x: c.x, y: c.y - c.h/2 - 6, id: c.id },
+                    { x: c.x, y: c.y + c.h/2 + 10, id: c.id }
+                ];
+            }
+            return [{ x: c.x, y: c.y, id: c.id }];
+        }
+
         function dibujarMesaDeTrabajoLaboratorio() {
             const mesaY = 510;
-            ctx.fillStyle = '#1e293b'; 
+            ctx.fillStyle = '#cbd5e1'; 
             ctx.fillRect(80, mesaY, 20, 90);
-            ctx.fillRect(650, mesaY, 20, 90);
+            ctx.fillRect(600, mesaY, 20, 90);
 
             let gradPata = ctx.createLinearGradient(40, mesaY, 75, mesaY);
-            gradPata.addColorStop(0, '#334155'); gradPata.addColorStop(0.5, '#475569'); gradPata.addColorStop(1, '#1e293b');
+            gradPata.addColorStop(0, '#e2e8f0'); gradPata.addColorStop(0.5, '#cbd5e1'); gradPata.addColorStop(1, '#94a3b8');
             ctx.fillStyle = gradPata; ctx.fillRect(40, mesaY, 30, 90);
             
-            let gradPataD = ctx.createLinearGradient(680, mesaY, 710, mesaY);
-            gradPataD.addColorStop(0, '#334155'); gradPataD.addColorStop(0.5, '#475569'); gradPataD.addColorStop(1, '#1e293b');
-            ctx.fillStyle = gradPataD; ctx.fillRect(680, mesaY, 30, 90);
+            let gradPataD = ctx.createLinearGradient(630, mesaY, 660, mesaY);
+            gradPataD.addColorStop(0, '#e2e8f0'); gradPataD.addColorStop(0.5, '#cbd5e1'); gradPataD.addColorStop(1, '#94a3b8');
+            ctx.fillStyle = gradPataD; ctx.fillRect(630, mesaY, 30, 90);
 
-            ctx.fillStyle = '#0f172a'; ctx.fillRect(35, 590, 40, 10); ctx.fillRect(675, 590, 40, 10);
-            ctx.fillStyle = '#111827'; ctx.fillRect(70, 560, 610, 15);
-            ctx.fillStyle = '#1e293b'; ctx.fillRect(20, mesaY + 20, 710, 12);
+            ctx.fillStyle = '#f1f5f9'; ctx.fillRect(35, 590, 40, 10); ctx.fillRect(625, 590, 40, 10);
+            ctx.fillStyle = '#e2e8f0'; ctx.fillRect(70, 560, 560, 15);
+            ctx.fillStyle = '#cbd5e1'; ctx.fillRect(20, mesaY + 20, 660, 12);
             
             let gradMesa = ctx.createLinearGradient(0, mesaY, 0, mesaY + 20);
-            gradMesa.addColorStop(0, '#2e3e56'); gradMesa.addColorStop(1, '#1c283a');
-            ctx.fillStyle = gradMesa; ctx.fillRect(20, mesaY, 710, 20);
+            gradMesa.addColorStop(0, '#f8fafc'); gradMesa.addColorStop(1, '#e2e8f0');
+            ctx.fillStyle = gradMesa; ctx.fillRect(20, mesaY, 660, 20);
 
-            ctx.strokeStyle = '#475569'; ctx.lineWidth = 1.5;
-            ctx.beginPath(); ctx.moveTo(20, mesaY); ctx.lineTo(730, mesaY); ctx.stroke();
+            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(20, mesaY); ctx.lineTo(680, mesaY); ctx.stroke();
         }
 
         function redibujarLaboratorio() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            ctx.strokeStyle = '#111827'; ctx.lineWidth = 1;
+            ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
             for (let i = 0; i < canvas.width; i += 25) {
                 ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
             }
 
             dibujarMesaDeTrabajoLaboratorio();
-            dibujarHilosDinamicosYAnclajes();
+            dibujarLineasEstaticasYAnclajes();
+            dibujarCuerdasDinamicasTrazadas();
 
+            // Renderizar componentes activos
             componentesActivos.forEach(c => {
                 ctx.save();
                 
                 if (c.tipo === 'base_madera') {
-                    ctx.fillStyle = c.color; ctx.strokeStyle = c.border; ctx.lineWidth = 3;
+                    ctx.fillStyle = c.color; ctx.strokeStyle = c.border; ctx.lineWidth = 2;
                     ctx.fillRect(c.x - c.w/2, c.y - c.h/2, c.w, c.h);
                     ctx.strokeRect(c.x - c.w/2, c.y - c.h/2, c.w, c.h);
                 } 
                 else if (c.tipo === 'varilla_vertical') {
                     let grad = ctx.createLinearGradient(c.x - c.w/2, c.y, c.x + c.w/2, c.y);
-                    grad.addColorStop(0, '#475569'); grad.addColorStop(0.5, '#94a3b8'); grad.addColorStop(1, '#334155');
+                    grad.addColorStop(0, '#94a3b8'); grad.addColorStop(0.5, '#f1f5f9'); grad.addColorStop(1, '#cbd5e1');
                     ctx.fillStyle = grad; ctx.fillRect(c.x - c.w/2, c.y - c.h/2, c.w, c.h);
+                    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1; ctx.strokeRect(c.x - c.w/2, c.y - c.h/2, c.w, c.h);
                 } 
                 else if (c.tipo === 'varilla_horizontal') {
                     let grad = ctx.createLinearGradient(c.x, c.y - c.h/2, c.x, c.y + c.h/2);
-                    grad.addColorStop(0, '#334155'); grad.addColorStop(0.5, '#64748b'); grad.addColorStop(1, '#1e293b');
+                    grad.addColorStop(0, '#94a3b8'); grad.addColorStop(0.5, '#f1f5f9'); grad.addColorStop(1, '#cbd5e1');
                     ctx.fillStyle = grad; ctx.fillRect(c.x - c.w/2, c.y - c.h/2, c.w, c.h);
+                    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1; ctx.strokeRect(c.x - c.w/2, c.y - c.h/2, c.w, c.h);
                 } 
                 else if (c.tipo === 'tensor_m') {
                     const alturaDinamicaVarilla = 25 + tensionOffsetM;
-                    ctx.fillStyle = '#94a3b8'; ctx.strokeStyle = '#475569'; ctx.lineWidth = 1;
+
+                    ctx.fillStyle = '#64748b'; ctx.strokeStyle = '#475569'; ctx.lineWidth = 1;
                     ctx.fillRect(c.x - 3, c.y - alturaDinamicaVarilla, 6, alturaDinamicaVarilla);
                     ctx.strokeRect(c.x - 3, c.y - alturaDinamicaVarilla, 6, alturaDinamicaVarilla);
 
-                    ctx.fillStyle = '#cbd5e1'; ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1.5;
+                    ctx.fillStyle = '#cbd5e1'; ctx.strokeStyle = '#475569'; ctx.lineWidth = 1.5;
                     ctx.beginPath();
                     ctx.moveTo(c.x - 10, c.y - alturaDinamicaVarilla + 2); ctx.lineTo(c.x + 10, c.y - alturaDinamicaVarilla + 2);
                     ctx.lineTo(c.x + 4, c.y - alturaDinamicaVarilla + 7); ctx.lineTo(c.x - 4, c.y - alturaDinamicaVarilla + 7);
                     ctx.closePath(); ctx.fill(); ctx.stroke();
 
-                    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
-                    ctx.beginPath(); ctx.arc(c.x, c.y - alturaDinamicaVarilla - 3, 3, 0, Math.PI * 2); ctx.stroke();
+                    ctx.strokeStyle = '#475569'; ctx.lineWidth = 2;
+                    ctx.beginPath(); arc = ctx.arc(c.x, c.y - alturaDinamicaVarilla - 3, 3, 0, Math.PI * 2); ctx.stroke();
 
-                    ctx.fillStyle = '#f97316'; ctx.font = 'bold 11px sans-serif';
+                    ctx.fillStyle = '#ea580c'; ctx.font = 'bold 11px sans-serif';
                     ctx.fillText('M', c.x - 5, c.y - alturaDinamicaVarilla - 11);
 
-                    ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(c.x - 24, c.y - 12, 9, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#dc2626'; ctx.beginPath(); ctx.arc(c.x - 24, c.y - 12, 9, 0, Math.PI * 2); ctx.fill();
                     ctx.fillStyle = '#ffffff'; ctx.font = 'bold 12px monospace'; ctx.fillText('-', c.x - 27.5, c.y - 8);
 
-                    ctx.fillStyle = '#10b981'; ctx.beginPath(); ctx.arc(c.x + 24, c.y - 12, 9, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#16a34a'; ctx.beginPath(); ctx.arc(c.x + 24, c.y - 12, 9, 0, Math.PI * 2); ctx.fill();
                     ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px monospace'; ctx.fillText('+', c.x + 21, c.y - 8);
                 }
                 else if (c.tipo === 'armella_k') {
-                    ctx.fillStyle = '#94a3b8'; ctx.fillRect(c.x - 2.5, c.y - 8, 5, 8);
-                    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 3;
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillRect(c.x - 2.5, c.y - 8, 5, 8);
+
+                    ctx.strokeStyle = '#475569'; ctx.lineWidth = 3;
                     ctx.beginPath(); ctx.arc(c.x, c.y - 15, 7, 0, Math.PI * 2); ctx.stroke();
-                    ctx.fillStyle = '#06b6d4'; ctx.font = 'bold 11px sans-serif';
+
+                    ctx.fillStyle = '#2563eb'; ctx.font = 'bold 11px sans-serif';
                     ctx.fillText('K', c.x - 4, c.y - 26);
                 }
                 else if (c.tipo === 'sujetador_corredizo') {
@@ -367,32 +509,38 @@
                     ctx.fillRect(c.x - c.w/2, c.y - c.h/2, c.w, c.h);
                     ctx.strokeRect(c.x - c.w/2, c.y - c.h/2, c.w, c.h);
 
-                    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2.5;
+                    ctx.strokeStyle = '#334155'; ctx.lineWidth = 2.5;
                     ctx.beginPath(); ctx.moveTo(c.x, c.y + c.h/2); ctx.lineTo(c.x, c.y + c.h/2 + 10);
                     ctx.arc(c.x - 3, c.y + c.h/2 + 12, 3, 0, Math.PI, false); ctx.stroke();
                 }
                 else if (c.tipo === 'polea_fija_individual') {
-                    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 3;
-                    ctx.fillStyle = '#1e293b'; ctx.fillRect(c.x - 4, c.y - c.r - 6, 8, (c.r * 2) + 12);
+                    ctx.strokeStyle = '#475569'; ctx.lineWidth = 3;
+                    ctx.fillStyle = '#e2e8f0'; ctx.fillRect(c.x - 4, c.y - c.r - 6, 8, (c.r * 2) + 12);
+
                     ctx.beginPath(); ctx.moveTo(c.x, c.y - c.r - 6); ctx.lineTo(c.x, c.y - c.r - 14); ctx.stroke();
                     ctx.beginPath(); ctx.arc(c.x - 3, c.y - c.r - 16, 4, 0, Math.PI * 1.5, true); ctx.stroke();
+
                     ctx.beginPath(); ctx.moveTo(c.x, c.y + c.r + 6); ctx.lineTo(c.x, c.y + c.r + 14); ctx.stroke();
                     ctx.beginPath(); ctx.arc(c.x + 3, c.y + c.r + 16, 4, 0, Math.PI * 1.5, false); ctx.stroke();
 
                     ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
                     ctx.fillStyle = c.color; ctx.fill();
-                    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
-                    ctx.beginPath(); ctx.arc(c.x, c.y, 4, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill();
+                    ctx.strokeStyle = '#991b1b'; ctx.lineWidth = 1.5; ctx.stroke();
+
+                    ctx.beginPath(); ctx.arc(c.x, c.y, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff'; ctx.fill();
                 } 
-                else if (c.tipo === 'poleas_paralelo_doble_gancho' || c.tipo === 'poleas_paralelo_triple_gancho') {
-                    const numPoleas = c.tipo === 'poleas_paralelo_doble_gancho' ? 2 : 3;
-                    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 3;
+                else if (c.tipoPolea === 'paralelo_doble' || c.tipoPolea === 'paralelo_triple') {
+                    const numPoleas = c.tipoPolea === 'paralelo_doble' ? 2 : 3;
+                    
+                    ctx.strokeStyle = '#475569'; ctx.lineWidth = 3;
                     ctx.beginPath(); ctx.moveTo(c.x, c.y - c.h/2); ctx.lineTo(c.x, c.y - c.h/2 - 14); ctx.stroke();
                     ctx.beginPath(); ctx.arc(c.x - 3, c.y - c.h/2 - 16, 4, 0, Math.PI * 1.5, true); ctx.stroke();
+
                     ctx.beginPath(); ctx.moveTo(c.x, c.y + c.h/2); ctx.lineTo(c.x, c.y + c.h/2 + 14); ctx.stroke();
                     ctx.beginPath(); ctx.arc(c.x + 3, c.y + c.h/2 + 16, 4, 0, Math.PI * 1.5, false); ctx.stroke();
 
-                    ctx.fillStyle = '#111827'; ctx.strokeStyle = '#374151'; ctx.lineWidth = 2;
+                    ctx.fillStyle = '#f1f5f9'; ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2;
                     ctx.fillRect(c.x - c.w/2, c.y - c.h/2, c.w, c.h);
                     ctx.strokeRect(c.x - c.w/2, c.y - c.h/2, c.w, c.h);
 
@@ -401,18 +549,21 @@
                         let px = (c.x - c.w/2) + (espacioIndividual * i) + (espacioIndividual / 2);
                         ctx.fillStyle = c.color;
                         ctx.fillRect(px - (espacioIndividual/2 - 2), c.y - c.h/2 + 4, espacioIndividual - 4, c.h - 8);
-                        ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(px, c.y, 3, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = '#ffffff';
+                        ctx.beginPath(); ctx.arc(px, c.y, 3, 0, Math.PI * 2); ctx.fill();
                     }
                 }
-                else if (c.tipo === 'polipasto_linea_doble' || c.tipo === 'polipasto_linea_triple') {
-                    const esTriple = c.tipo === 'polipasto_linea_triple';
-                    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 3;
+                else if (c.tipoPolea === 'linea_doble' || c.tipoPolea === 'linea_triple') {
+                    const esTriple = c.tipoPolea === 'linea_triple';
+                    
+                    ctx.strokeStyle = '#475569'; ctx.lineWidth = 3;
                     ctx.beginPath(); ctx.moveTo(c.x, c.y - c.h/2); ctx.lineTo(c.x, c.y - c.h/2 - 14); ctx.stroke();
                     ctx.beginPath(); ctx.arc(c.x - 3, c.y - c.h/2 - 16, 4, 0, Math.PI * 1.5, true); ctx.stroke();
+
                     ctx.beginPath(); ctx.moveTo(c.x, c.y + c.h/2); ctx.lineTo(c.x, c.y + c.h/2 + 14); ctx.stroke();
                     ctx.beginPath(); ctx.arc(c.x + 3, c.y + c.h/2 + 16, 4, 0, Math.PI * 1.5, false); ctx.stroke();
 
-                    ctx.fillStyle = '#1e293b'; ctx.strokeStyle = '#334155'; ctx.lineWidth = 1.5;
+                    ctx.fillStyle = '#f1f5f9'; ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1.5;
                     ctx.fillRect(c.x - 5, c.y - c.h/2 + 2, 10, c.h - 4);
                     ctx.strokeRect(c.x - 5, c.y - c.h/2 + 2, 10, c.h - 4);
 
@@ -423,122 +574,201 @@
                         let py = posicionesY[index];
                         ctx.beginPath(); ctx.arc(c.x, py, radioOffset, 0, Math.PI * 2);
                         ctx.fillStyle = c.color; ctx.fill();
-                        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
-                        ctx.beginPath(); ctx.arc(c.x, py, 3, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill();
+                        ctx.strokeStyle = '#991b1b'; ctx.lineWidth = 1.5; ctx.stroke();
+
+                        ctx.beginPath(); ctx.arc(c.x, py, 3, 0, Math.PI * 2);
+                        ctx.fillStyle = '#ffffff'; ctx.fill();
                     });
                 }
-                else if (c.tipo === 'polea_diferencial_izq' || c.tipo === 'polea_diferencial_der') {
+                else if (c.tipo.startsWith('polea_diferencial')) {
                     const esIzq = c.tipo === 'polea_diferencial_izq';
-                    ctx.fillStyle = '#334155'; ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2;
+                    
+                    ctx.fillStyle = '#e2e8f0'; ctx.strokeStyle = '#475569'; ctx.lineWidth = 2;
                     ctx.fillRect(c.x - (esIzq ? 6 : 14), c.y - 15, 20, 10);
                     ctx.strokeRect(c.x - (esIzq ? 6 : 14), c.y - 15, 20, 10);
 
-                    ctx.fillStyle = '#1e293b'; ctx.strokeStyle = '#475569'; ctx.lineWidth = 1.5;
-                    ctx.fillRect(c.x - 12, c.y - 5, 24, 24); ctx.strokeRect(c.x - 12, c.y - 5, 24, 24);
+                    ctx.fillStyle = '#475569';
+                    ctx.fillRect(c.x + (esIzq ? 14 : -20), c.y - 13, 6, 6);
+
+                    ctx.fillStyle = '#f8fafc'; ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1.5;
+                    ctx.fillRect(c.x - 12, c.y - 5, 24, 24);
+                    ctx.strokeRect(c.x - 12, c.y - 5, 24, 24);
 
                     ctx.beginPath(); ctx.arc(c.x, c.y + 7, 11, 0, Math.PI * 2);
                     ctx.fillStyle = c.color; ctx.fill();
-                    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.2; ctx.stroke();
+                    ctx.strokeStyle = '#991b1b'; ctx.lineWidth = 1.2; ctx.stroke();
+
+                    ctx.beginPath(); ctx.arc(c.x, c.y + 7, 2.5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff'; ctx.fill();
                 }
                 else if (c.tipo === 'dinamometro') {
-                    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2;
-                    ctx.beginPath(); ctx.moveTo(c.x, c.y - c.h/2); ctx.arc(c.x - 3, c.y - c.h/2 - 6, 5, 0, Math.PI * 1.5, true); ctx.stroke();
+                    ctx.strokeStyle = '#475569'; ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(c.x, c.y - c.h/2);
+                    ctx.arc(c.x - 3, c.y - c.h/2 - 6, 5, 0, Math.PI * 1.5, true);
+                    ctx.stroke();
 
-                    ctx.fillStyle = 'rgba(248, 250, 252, 0.12)'; ctx.strokeStyle = '#475569'; ctx.lineWidth = 1;
-                    ctx.fillRect(c.x - c.w/2, c.y - c.h/2 + 15, c.w, c.h - 30); ctx.strokeRect(c.x - c.w/2, c.y - c.h/2 + 15, c.w, c.h - 30);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1;
+                    ctx.fillRect(c.x - c.w/2, c.y - c.h/2 + 15, c.w, c.h - 30);
+                    ctx.strokeRect(c.x - c.w/2, c.y - c.h/2 + 15, c.w, c.h - 30);
 
                     ctx.fillStyle = c.color; ctx.strokeStyle = c.border; ctx.lineWidth = 1.5;
-                    ctx.fillRect(c.x - c.w/2 - 2, c.y - c.h/2, c.w + 4, 15); ctx.strokeRect(c.x - c.w/2 - 2, c.y - c.h/2, c.w + 4, 15);
-                    ctx.fillRect(c.x - c.w/2 - 2, c.y + c.h/2 - 15, c.w + 4, 15); ctx.strokeRect(c.x - c.w/2 - 2, c.y + c.h/2 - 15, c.w + 4, 15);
+                    ctx.fillRect(c.x - c.w/2 - 2, c.y - c.h/2, c.w + 4, 15);
+                    ctx.strokeRect(c.x - c.w/2 - 2, c.y - c.h/2, c.w + 4, 15);
+                    ctx.fillRect(c.x - c.w/2 - 2, c.y + c.h/2 - 15, c.w + 4, 15);
+                    ctx.strokeRect(c.x - c.w/2 - 2, c.y + c.h/2 - 15, c.w + 4, 15);
 
-                    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.2; ctx.beginPath();
-                    let yResorteInicio = c.y - c.h/2 + 15; let yResorteFin = c.y - 8;
+                    ctx.strokeStyle = '#475569'; ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    let yResorteInicio = c.y - c.h/2 + 15;
+                    let yResorteFin = c.y - 8;
                     ctx.moveTo(c.x, yResorteInicio);
-                    for (let rY = yResorteInicio; rY < yResorteFin; rY += 4) { ctx.lineTo(c.x + (rY % 8 === 0 ? 3 : -3), rY); }
-                    ctx.lineTo(c.x, yResorteFin); ctx.stroke();
+                    for (let rY = yResorteInicio; rY < yResorteFin; rY += 4) {
+                        ctx.lineTo(c.x + (rY % 8 === 0 ? 3 : -3), rY);
+                    }
+                    ctx.lineTo(c.x, yResorteFin);
+                    ctx.stroke();
 
-                    ctx.fillStyle = '#ef4444'; ctx.fillRect(c.x - c.w/2 + 2, yResorteFin, c.w - 4, 4);
+                    ctx.fillStyle = '#dc2626';
+                    ctx.fillRect(c.x - c.w/2 + 2, yResorteFin, c.w - 4, 4);
 
-                    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2;
-                    ctx.beginPath(); ctx.moveTo(c.x, yResorteFin + 4); ctx.lineTo(c.x, c.y + c.h/2 + 4); ctx.stroke();
-                    ctx.beginPath(); ctx.moveTo(c.x, c.y + c.h/2 + 4); ctx.arc(c.x + 4, c.y + c.h/2 + 10, 6, Math.PI, Math.PI * 0.3, true); ctx.stroke();
+                    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 0.8;
+                    for (let lY = yResorteInicio + 8; lY < c.y + c.h/2 - 18; lY += 6) {
+                        ctx.beginPath(); ctx.moveTo(c.x + 2, lY); ctx.lineTo(c.x + c.w/2 - 3, lY); ctx.stroke();
+                    }
+
+                    ctx.strokeStyle = '#475569'; ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(c.x, yResorteFin + 4);
+                    ctx.lineTo(c.x, c.y + c.h/2 + 4);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.moveTo(c.x, c.y + c.h/2 + 4);
+                    ctx.arc(c.x + 4, c.y + c.h/2 + 10, 6, Math.PI, Math.PI * 0.3, true);
+                    ctx.stroke();
                 }
                 else if (c.tipo.startsWith('pesa_')) {
-                    ctx.fillStyle = c.color; ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1.5;
-                    ctx.beginPath(); ctx.moveTo(c.x - c.w/2, c.y + c.h/2); ctx.lineTo(c.x + c.w/2, c.y + c.h/2);
-                    ctx.lineTo(c.x + c.w/3, c.y - c.h/2 + 4); ctx.lineTo(c.x - c.w/3, c.y - c.h/2 + 4);
+                    ctx.fillStyle = c.color; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 1.5;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(c.x - c.w/2, c.y + c.h/2);
+                    ctx.lineTo(c.x + c.w/2, c.y + c.h/2);
+                    ctx.lineTo(c.x + c.w/3, c.y - c.h/2 + 4);
+                    ctx.lineTo(c.x - c.w/3, c.y - c.h/2 + 4);
                     ctx.closePath(); ctx.fill(); ctx.stroke();
 
-                    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
-                    ctx.beginPath(); ctx.arc(c.x, c.y - c.h/2 + 2, 4, 0, Math.PI, true); ctx.stroke();
+                    ctx.strokeStyle = '#475569'; ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y - c.h/2 + 2, 4, 0, Math.PI, true);
+                    ctx.stroke();
 
-                    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
+                    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
                     ctx.fillText(`${c.fuerza}N`, c.x, c.y + 4);
+                }
+
+                // SI ESTÁ EN MODO CUERDA: Resaltar los ganchos o nodos disponibles para anclaje
+                if (modoTrazarCuerdaActivo) {
+                    let ganchos = obtenerPuntosDeAnclaje(c);
+                    ganchos.forEach(g => {
+                        ctx.fillStyle = '#0d9488';
+                        ctx.beginPath(); ctx.arc(g.x, g.y, 5, 0, Math.PI*2); ctx.fill();
+                        ctx.strokeStyle = 'white'; ctx.lineWidth = 1; ctx.stroke();
+                    });
                 }
 
                 ctx.restore();
             });
+
+            // Dibujar la cuerda elástica temporal mientras arrastras
+            if (modoTrazarCuerdaActivo && nodoOrigenCuerda) {
+                ctx.strokeStyle = '#ea580c'; ctx.lineWidth = 2.5; ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(nodoOrigenCuerda.x, nodoOrigenCuerda.y);
+                ctx.lineTo(mousePosActual.x, mousePosActual.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
         }
 
-        function dibujarHilosDinamicosYAnclajes() {
+        function dibujarLineasEstaticasYAnclajes() {
+            // Maneja exclusivamente las uniones estructurales automáticas (Pesas colgando directamente de poleas)
             componentesActivos.forEach(c => {
-                // Hilo automático del sujetador a la polea/componente hijo
                 if (c.sujetadorPadreId) {
                     let padre = componentesActivos.find(s => s.id === c.sujetadorPadreId);
                     if (padre) {
-                        ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 2; // Cuerda blanca
+                        ctx.strokeStyle = '#475569'; ctx.lineWidth = 2;
                         ctx.beginPath(); ctx.moveTo(padre.x, padre.y + 12);
-                        ctx.lineTo(c.x, c.y - c.h/2 - 14); ctx.stroke();
+                        ctx.lineTo(c.x, c.y - c.h/2 - 14);
+                        ctx.stroke();
                     }
                 }
-                // Hilo del dinamómetro enganchado
                 if (c.tipo === 'dinamometro' && c.padreEnganchadoId) {
                     let padre = componentesActivos.find(p => p.id === c.padreEnganchadoId);
                     if (padre) {
-                        ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1.8;
+                        ctx.strokeStyle = '#475569'; ctx.lineWidth = 2;
                         ctx.beginPath();
                         let puntoYPadre = (padre.tipo === 'armella_k') ? padre.y - 15 : padre.y + (padre.h / 2) + 14;
-                        ctx.moveTo(padre.x, puntoYPadre); ctx.lineTo(c.x, c.y - c.h/2 - 6); ctx.stroke();
+                        ctx.moveTo(padre.x, puntoYPadre);
+                        ctx.lineTo(c.x, c.y - c.h/2 - 6);
+                        ctx.stroke();
                     }
                 }
-                // Hilo/Gancho de pesas colgantes
                 if (c.tipo.startsWith('pesa_') && c.padreEnganchadoId) {
                     let padre = componentesActivos.find(p => p.id === c.padreEnganchadoId);
                     if (padre) {
-                        ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
+                        ctx.strokeStyle = '#334155'; ctx.lineWidth = 2;
                         ctx.beginPath();
                         let puntoYPadre = padre.y + (padre.h / 2) + 10;
                         if (padre.tipo === 'polea_fija_individual') puntoYPadre = padre.y + padre.r + 14;
-                        ctx.moveTo(padre.x, puntoYPadre); ctx.lineTo(c.x, c.y - c.h/2); ctx.stroke();
+                        ctx.moveTo(padre.x, puntoYPadre);
+                        ctx.lineTo(c.x, c.y - c.h/2);
+                        ctx.stroke();
                     }
                 }
+            });
+        }
 
-                // Hilos multiplicadores internos automáticos para simular polipastos combinados de la foto
-                if (c.tipoPolea && c.sujetadorPadreId) {
-                    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1.2;
-                    if (c.tipo.includes('triple')) {
-                        ctx.beginPath(); ctx.moveTo(c.x - 10, c.y); ctx.lineTo(c.x - 10, c.y + 100); ctx.stroke();
-                        ctx.beginPath(); ctx.moveTo(c.x + 10, c.y); ctx.lineTo(c.x + 10, c.y + 100); ctx.stroke();
-                    } else if (c.tipo.includes('doble')) {
-                        ctx.beginPath(); ctx.moveTo(c.x - 6, c.y); ctx.lineTo(c.x - 6, c.y + 80); ctx.stroke();
-                        ctx.beginPath(); ctx.moveTo(c.x + 6, c.y); ctx.lineTo(c.x + 6, c.y + 80); ctx.stroke();
-                    }
+        function dibujarCuerdasDinamicasTrazadas() {
+            // Renderiza todas las cuerdas guardadas en la matriz trazada por el usuario
+            cuerdasTrazadas.forEach(cuerda => {
+                let compDe = componentesActivos.find(c => c.id === cuerda.deId);
+                let compA = componentesActivos.find(c => c.id === cuerda.aId);
+
+                if (compDe && compA) {
+                    let ptDe = obtenerPuntosDeAnclaje(compDe).find(p => Math.abs(p.x - compDe.x) < 5) || obtenerPuntosDeAnclaje(compDe)[0];
+                    let ptA = obtenerPuntosDeAnclaje(compA).find(p => Math.abs(p.x - compA.x) < 5) || obtenerPuntosDeAnclaje(compA)[0];
+
+                    // Si es una polea, hacemos que la cuerda "envuelva" la silueta en lugar de cruzar rígidamente el eje
+                    ctx.strokeStyle = '#0f766e'; 
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.moveTo(ptDe.x, ptDe.y);
+                    ctx.lineTo(ptA.x, ptA.y);
+                    ctx.stroke();
                 }
             });
         }
 
         function cargarArmazonInicialLaboratorio() {
             componentesActivos = [];
+            cuerdasTrazadas = [];
             tensionOffsetM = 0; 
+            modoTrazarCuerdaActivo = false;
+            nodoOrigenCuerda = null;
+            
+            const btn = document.getElementById('btnRopeMode');
+            btn.innerText = "🧵 Activar Trazado de Cuerda";
+            btn.classList.remove('active');
 
-            // Estructuras fijas base del laboratorio de física
-            crearNuevoComponente('base_madera', 375, 498);
+            crearNuevoComponente('base_madera', 350, 498);
             crearNuevoComponente('varilla_vertical', VARILLA_IZQ_X, 290);
             crearNuevoComponente('varilla_vertical', VARILLA_DER_X, 290);
-            crearNuevoComponente('varilla_horizontal', 375, 80);
+            crearNuevoComponente('varilla_horizontal', 350, 80);
 
-            crearNuevoComponente('tensor_m', 160, BASE_Y);  
-            crearNuevoComponente('armella_k', 580, BASE_Y); 
+            crearNuevoComponente('tensor_m', 170, BASE_Y);  
+            crearNuevoComponente('armella_k', 530, BASE_Y); 
 
             actualizarBadgeAlmacen();
             resolverSistemaCientifico();
@@ -546,16 +776,34 @@
 
         function limpiarTodoElSistema() {
             componentesActivos = componentesActivos.filter(c => c.esFijo === true);
+            cuerdasTrazadas = [];
             tensionOffsetM = 0;
             actualizarBadgeAlmacen();
             resolverSistemaCientifico();
         }
 
+        function calcularVentajaMecanicaDinamica() {
+            // Analiza cuántas cuerdas dinámicas están cargando componentes móviles
+            if (cuerdasTrazadas.length === 0) return 0;
+            let hilosDeSoporte = 0;
+
+            componentesActivos.forEach(comp => {
+                // Si el componente no está anclado fijamente arriba y posee peso o carga, es un componente móvil
+                if (!comp.esFijo && !comp.sujetadorPadreId && comp.tipo !== 'sujetador_corredizo') {
+                    // Contamos cuántas cuerdas del usuario cruzan o se amarran a este bloque móvil
+                    let conexiones = cuerdasTrazadas.filter(c => c.deId === comp.id || c.aId === comp.id).length;
+                    hilosDeSoporte += conexiones;
+                }
+            });
+
+            return hilosDeSoporte > 0 ? hilosDeSoporte : cuerdasTrazadas.length;
+        }
+
         function resolverSistemaCientifico() {
             let masaTotal = 0;
-            let cuerdasActivas = 0;
 
             componentesActivos.forEach(c => {
+                // Reposicionamiento en cascada estructural
                 if (c.tipo === 'dinamometro' && c.padreEnganchadoId) {
                     let padre = componentesActivos.find(p => p.id === c.padreEnganchadoId);
                     if (padre) {
@@ -580,82 +828,55 @@
                     }
                 }
 
-                if (c.tipoPolea === 'fija') { cuerdasActivas += 1; masaTotal += 0.15; }
-                if (c.tipoPolea === 'paralelo_doble') { masaTotal += 0.45; cuerdasActivas += 4; }
-                if (c.tipoPolea === 'paralelo_triple') { masaTotal += 0.60; cuerdasActivas += 6; }
-                if (c.tipoPolea === 'linea_doble') { masaTotal += 0.50; cuerdasActivas += 4; }
-                if (c.tipoPolea === 'linea_triple') { masaTotal += 0.70; cuerdasActivas += 6; }
-                if (c.tipoPolea === 'diferencial_lateral') { cuerdasActivas += 1; masaTotal += 0.22; }
-                if (c.tipo === 'dinamometro') { masaTotal += 0.10; } 
-                if (c.tipo.startsWith('pesa_')) { masaTotal += (c.fuerza / 9.81); } 
+                // Cálculo de masas fijas de catálogo
+                if (c.tipoPolea === 'fija') masaTotal += 0.15;
+                if (c.tipoPolea === 'paralelo_doble') masaTotal += 0.45;
+                if (c.tipoPolea === 'paralelo_triple') masaTotal += 0.60;
+                if (c.tipoPolea === 'linea_doble') masaTotal += 0.50;
+                if (c.tipoPolea === 'linea_triple') masaTotal += 0.70;
+                if (c.tipo.startsWith('polea_diferencial')) masaTotal += 0.22;
+                if (c.tipo === 'dinamometro') masaTotal += 0.10; 
+                if (c.tipo.startsWith('pesa_')) masaTotal += (c.fuerza / 9.81); 
             });
 
             const gravedad = 9.81;
             const pesoW = masaTotal * gravedad;
-            let ventajaMecanica = cuerdasActivas > 0 ? cuerdasActivas : 1;
-            let esfuerzoF = pesoW / ventajaMecanica;
+            
+            // USAR EL NUEVO SISTEMA DINÁMICO DE ENLACE DE CUERDAS
+            let ventajaMecanica = calcularVentajaMecanicaDinamica();
+            let esfuerzoF = ventajaMecanica > 0 ? (pesoW / ventajaMecanica) : pesoW;
 
             document.getElementById('lblTensionRegulador').innerText = (tensionOffsetM * 0.5).toFixed(1) + " mm";
             document.getElementById('lblMasa').innerText = masaTotal.toFixed(2) + " kg";
             document.getElementById('lblPeso').innerText = pesoW.toFixed(2) + " N";
-            document.getElementById('lblVentaja').innerText = ventajaMecanica.toFixed(1) + " x";
+            document.getElementById('lblVentaja').innerText = ventajaMecanica > 0 ? ventajaMecanica.toFixed(1) : "0.00";
             document.getElementById('lblEsfuerzo').innerText = esfuerzoF.toFixed(2) + " N";
-            document.getElementById('lblCuerdas').innerText = cuerdasActivas.toString();
+            document.getElementById('lblCuerdas').innerText = cuerdasTrazadas.length + " hilos";
 
             redibujarLaboratorio();
         }
 
-        // --- MANEJO DE DOBLE CLIC PARA ELIMINAR ELEMENTOS ---
-        canvas.addEventListener('dblclick', (e) => {
-            const mouseX = e.offsetX;
-            const mouseY = e.offsetY;
-
-            // Buscar de adelante hacia atrás qué objeto fue clicleado para borrarlo
-            for (let i = componentesActivos.length - 1; i >= 0; i--) {
-                let comp = componentesActivos[i];
-                if (comp.esFijo) continue; // Proteger varillas y base
-
-                let golpeado = false;
-                if (comp.r > 0) {
-                    golpeado = Math.hypot(mouseX - comp.x, mouseY - comp.y) <= comp.r + 6;
-                } else {
-                    golpeado = mouseX >= comp.x - comp.w/2 - 4 && mouseX <= comp.x + comp.w/2 + 4 &&
-                               mouseY >= comp.y - comp.h/2 - 4 && mouseY <= comp.y + comp.h/2 + 4;
-                }
-
-                if (golpeado) {
-                    // Romper cadenas de hijos huérfanos que dependían de este objeto
-                    componentesActivos.forEach(hijo => {
-                        if (hijo.sujetadorPadreId === comp.id) hijo.sujetadorPadreId = null;
-                        if (hijo.padreEnganchadoId === comp.id) hijo.padreEnganchadoId = null;
-                    });
-
-                    componentesActivos.splice(i, 1);
-                    break;
-                }
-            }
-            actualizarBadgeAlmacen();
-            resolverSistemaCientifico();
-        });
-
         canvas.addEventListener('dragover', (e) => { e.preventDefault(); });
         canvas.addEventListener('drop', (e) => {
             e.preventDefault();
-            const mouseX = e.offsetX;
-            const mouseY = e.offsetY;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
             const tipoComponente = e.dataTransfer.getData('text/plain');
 
             if (tipoComponente) {
                 if (tipoComponente === 'sujetador_corredizo') {
-                    const xLimitado = Math.max(90, Math.min(660, mouseX));
+                    const xLimitado = Math.max(85, Math.min(615, x));
                     crearNuevoComponente('sujetador_corredizo', xLimitado, 80);
                 } else if (tipoComponente === 'polea_diferencial_izq') {
-                    crearNuevoComponente('polea_diferencial_izq', VARILLA_IZQ_X, Math.max(95, Math.min(480, mouseY)));
+                    const yLimitado = Math.max(95, Math.min(480, y));
+                    crearNuevoComponente('polea_diferencial_izq', VARILLA_IZQ_X, yLimitado);
                 } else if (tipoComponente === 'polea_diferencial_der') {
-                    crearNuevoComponente('polea_diferencial_der', VARILLA_DER_X, Math.max(95, Math.min(480, mouseY)));
+                    const yLimitado = Math.max(95, Math.min(480, y));
+                    crearNuevoComponente('polea_diferencial_der', VARILLA_DER_X, yLimitado);
                 } else if (tipoComponente === 'dinamometro') {
-                    const armellaK = componentesActivos.find(s => s.tipo === 'armella_k' && Math.abs(s.x - mouseX) < 35 && Math.abs((s.y - 15) - mouseY) < 40);
-                    const poleaCercana = componentesActivos.find(s => s.tipoPolea && Math.abs(s.x - mouseX) < 35 && Math.abs((s.y + (s.h / 2) + 14) - mouseY) < 40);
+                    const armellaK = componentesActivos.find(s => s.tipo === 'armella_k' && Math.abs(s.x - x) < 35 && Math.abs((s.y - 15) - y) < 40);
+                    const poleaCercana = componentesActivos.find(s => s.tipoPolea && Math.abs(s.x - x) < 35 && Math.abs((s.y + (s.h / 2) + 14) - y) < 40);
 
                     if (armellaK) {
                         const din = crearNuevoComponente('dinamometro', armellaK.x, (armellaK.y - 15) + 66);
@@ -665,17 +886,17 @@
                         din.padreEnganchadoId = poleaCercana.id;
                     }
                 } else if (tipoComponente.startsWith('pesa_')) {
-                    const poleaOdinamometro = componentesActivos.find(s => (s.tipoPolea || s.tipo === 'dinamometro') && Math.abs(s.x - mouseX) < 35 && Math.abs((s.y + s.h/2) - mouseY) < 50);
+                    const poleaOdinamometro = componentesActivos.find(s => (s.tipoPolea || s.tipo === 'dinamometro') && Math.abs(s.x - x) < 35 && Math.abs((s.y + s.h/2) - y) < 50);
                     if (poleaOdinamometro) {
                         const p = crearNuevoComponente(tipoComponente, poleaOdinamometro.x, poleaOdinamometro.y + 40);
                         p.padreEnganchadoId = poleaOdinamometro.id;
                     } else {
-                        crearNuevoComponente(tipoComponente, mouseX, mouseY);
+                        crearNuevoComponente(tipoComponente, x, y);
                     }
                 } else {
-                    const nuevo = crearNuevoComponente(tipoComponente, mouseX, mouseY);
+                    const nuevo = crearNuevoComponente(tipoComponente, x, y);
                     if (nuevo && (tipoComponente.includes('fija') || tipoComponente.includes('paralelo') || tipoComponente.includes('linea'))) {
-                        const sujetadorCercano = componentesActivos.find(s => s.esSujetador && Math.abs(s.x - nuevo.x) < 45);
+                        const sujetadorCercano = componentesActivos.find(s => s.esSujetador && Math.abs(s.x - nuevo.x) < 35);
                         if (sujetadorCercano) {
                             nuevo.x = sujetadorCercano.x;
                             nuevo.y = sujetadorCercano.y + (nuevo.h / 2) + 14; 
@@ -688,67 +909,106 @@
         });
 
         canvas.addEventListener('mousedown', (e) => {
-            const mouseX = e.offsetX;
-            const mouseY = e.offsetY;
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
 
-            // Verificar clics en el regulador de tensión +/- de la varilla M
+            // Manejo de clicks en el tensor M para ajustar altura
             const tensor = componentesActivos.find(c => c.tipo === 'tensor_m');
             if (tensor) {
-                if (Math.hypot(mouseX - (tensor.x - 24), mouseY - (tensor.y - 12)) <= 12) {
-                    tensionOffsetM = Math.max(-15, tensionOffsetM - 2);
-                    resolverSistemaCientifico(); return;
-                }
-                if (Math.hypot(mouseX - (tensor.x + 24), mouseY - (tensor.y - 12)) <= 12) {
-                    tensionOffsetM = Math.min(40, tensionOffsetM + 2);
-                    resolverSistemaCientifico(); return;
-                }
+                let distMenos = Math.hypot(mouseX - (tensor.x - 24), mouseY - (tensor.y - 12));
+                if (distMenos <= 9) { tensionOffsetM = Math.max(-15, tensionOffsetM - 2); resolverSistemaCientifico(); return; }
+                let distMas = Math.hypot(mouseX - (tensor.x + 24), mouseY - (tensor.y - 12));
+                if (distMas <= 9) { tensionOffsetM = Math.min(40, tensionOffsetM + 2); resolverSistemaCientifico(); return; }
             }
 
-            let compEncontrado = null;
+            // NUEVA LÓGICA: Captura de nodo si el modo cuerda está encendido
+            if (modoTrazarCuerdaActivo) {
+                let nodoEncontrado = null;
+                componentesActivos.forEach(c => {
+                    let ganchos = obtenerPuntosDeAnclaje(c);
+                    ganchos.forEach(g => {
+                        if (Math.hypot(mouseX - g.x, mouseY - g.y) < 15) {
+                            nodoEncontrado = g;
+                        }
+                    });
+                });
+
+                if (nodoEncontrado) {
+                    nodoOrigenCuerda = nodoEncontrado;
+                    mousePosActual = { x: mouseX, y: mouseY };
+                }
+                return;
+            }
+
+            // Drag and drop clásico si el modo cuerda está apagado
             for (let i = componentesActivos.length - 1; i >= 0; i--) {
                 let comp = componentesActivos[i];
                 if (comp.esFijo) continue;
 
                 let dentro = false;
-                if (comp.r > 0) {
-                    dentro = Math.hypot(mouseX - comp.x, mouseY - comp.y) <= comp.r + 8;
-                } else {
-                    dentro = mouseX >= comp.x - comp.w/2 - 5 && mouseX <= comp.x + comp.w/2 + 5 &&
-                             mouseY >= comp.y - comp.h/2 - 5 && mouseY <= comp.y + comp.h/2 + 5;
+                if (comp.r > 0) { dentro = Math.hypot(mouseX - comp.x, mouseY - comp.y) <= comp.r + 5; } 
+                else { dentro = mouseX >= comp.x - comp.w/2 && mouseX <= comp.x + comp.w/2 && mouseY >= comp.y - comp.h/2 && mouseY <= comp.y + comp.h/2; }
+
+                if (dentro) {
+                    componenteSeleccionadoParaMover = comp;
+                    offsetX = mouseX - comp.x;
+                    offsetY = mouseY - comp.y;
+                    canvas.style.cursor = 'grabbing';
+                    break;
                 }
-
-                if (dentro) { compEncontrado = comp; break; }
-            }
-
-            if (compEncontrado) {
-                componenteSeleccionadoParaMover = compEncontrado;
-                offsetX = mouseX - compEncontrado.x;
-                offsetY = mouseY - compEncontrado.y;
-                canvas.style.cursor = 'grabbing';
             }
         });
 
         canvas.addEventListener('mousemove', (e) => {
-            const mouseX = e.offsetX;
-            const mouseY = e.offsetY;
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            // Actualizar la línea elástica de la cuerda
+            if (modoTrazarCuerdaActivo && nodoOrigenCuerda) {
+                mousePosActual = { x: mouseX, y: mouseY };
+                redibujarLaboratorio();
+                return;
+            }
 
             if (!componenteSeleccionadoParaMover) {
                 let cursorStyle = 'default';
-                for (let comp of componentesActivos) {
-                    if (!comp.esFijo && mouseX >= comp.x - comp.w/2 && mouseX <= comp.x + comp.w/2 &&
-                        mouseY >= comp.y - comp.h/2 && mouseY <= comp.y + comp.h/2) {
-                        cursorStyle = 'grab'; break;
+                
+                if (modoTrazarCuerdaActivo) {
+                    componentesActivos.forEach(c => {
+                        obtenerPuntosDeAnclaje(c).forEach(g => {
+                            if (Math.hypot(mouseX - g.x, mouseY - g.y) < 12) cursorStyle = 'crosshair';
+                        });
+                    });
+                    canvas.style.cursor = cursorStyle;
+                    return;
+                }
+
+                const tensor = componentesActivos.find(c => c.tipo === 'tensor_m');
+                if (tensor) {
+                    if (Math.hypot(mouseX - (tensor.x - 24), mouseY - (tensor.y - 12)) <= 9 || Math.hypot(mouseX - (tensor.x + 24), mouseY - (tensor.y - 12)) <= 9) {
+                        cursorStyle = 'pointer';
                     }
                 }
+
+                componentesActivos.forEach(comp => {
+                    if (!comp.esFijo) {
+                        if (mouseX >= comp.x - comp.w/2 && mouseX <= comp.x + comp.w/2 && mouseY >= comp.y - comp.h/2 && mouseY <= comp.y + comp.h/2) {
+                            cursorStyle = 'grab';
+                        }
+                    }
+                });
                 canvas.style.cursor = cursorStyle;
                 return;
             }
 
+            // Movimiento físico de componentes tradicionales
             let nx = mouseX - offsetX;
             let ny = mouseY - offsetY;
 
             if (componenteSeleccionadoParaMover.tipo === 'sujetador_corredizo') {
-                componenteSeleccionadoParaMover.x = Math.max(90, Math.min(660, nx));
+                componenteSeleccionadoParaMover.x = Math.max(85, Math.min(615, nx));
                 componentesActivos.forEach(hijo => {
                     if (hijo.sujetadorPadreId === componenteSeleccionadoParaMover.id) hijo.x = componenteSeleccionadoParaMover.x;
                 });
@@ -758,17 +1018,19 @@
                     let padre = componentesActivos.find(p => p.id === componenteSeleccionadoParaMover.padreEnganchadoId);
                     if (padre) {
                         let puntoYPadre = (padre.tipo === 'armella_k') ? padre.y - 15 : padre.y + (padre.h / 2) + 14;
-                        if (Math.abs(nx - padre.x) > 55 || Math.abs(ny - (puntoYPadre + 66)) > 60) componenteSeleccionadoParaMover.padreEnganchadoId = null;
+                        if (Math.abs(nx - padre.x) > 45 || Math.abs(ny - (puntoYPadre + 66)) > 50) componenteSeleccionadoParaMover.padreEnganchadoId = null;
                     }
                 }
                 if (!componenteSeleccionadoParaMover.padreEnganchadoId) {
-                    const armellaK = componentesActivos.find(s => s.tipo === 'armella_k' && Math.abs(s.x - nx) < 40 && Math.abs((s.y - 15) - ny) < 50);
-                    const poleaCercana = componentesActivos.find(s => s.tipoPolea && Math.abs(s.x - nx) < 40 && Math.abs((s.y + (s.h / 2) + 14) - ny) < 50);
+                    const armellaK = componentesActivos.find(s => s.tipo === 'armella_k' && Math.abs(s.x - nx) < 35 && Math.abs((s.y - 15) - ny) < 40);
+                    const poleaCercana = componentesActivos.find(s => s.tipoPolea && Math.abs(s.x - nx) < 35 && Math.abs((s.y + (s.h / 2) + 14) - ny) < 40);
                     if (armellaK) {
-                        componenteSeleccionadoParaMover.x = armellaK.x; componenteSeleccionadoParaMover.y = (armellaK.y - 15) + (componenteSeleccionadoParaMover.h / 2) + 6;
+                        componenteSeleccionadoParaMover.x = armellaK.x;
+                        componenteSeleccionadoParaMover.y = (armellaK.y - 15) + (componenteSeleccionadoParaMover.h / 2) + 6;
                         componenteSeleccionadoParaMover.padreEnganchadoId = armellaK.id;
                     } else if (poleaCercana) {
-                        componenteSeleccionadoParaMover.x = poleaCercana.x; componenteSeleccionadoParaMover.y = (poleaCercana.y + (poleaCercana.h / 2) + 14) + (componenteSeleccionadoParaMover.h / 2) + 6;
+                        componenteSeleccionadoParaMover.x = poleaCercana.x;
+                        componenteSeleccionadoParaMover.y = (poleaCercana.y + (poleaCercana.h / 2) + 14) + (componenteSeleccionadoParaMover.h / 2) + 6;
                         componenteSeleccionadoParaMover.padreEnganchadoId = poleaCercana.id;
                     }
                 }
@@ -776,37 +1038,70 @@
                 componenteSeleccionadoParaMover.x = nx; componenteSeleccionadoParaMover.y = ny;
                 if (componenteSeleccionadoParaMover.padreEnganchadoId) {
                     let padre = componentesActivos.find(p => p.id === componenteSeleccionadoParaMover.padreEnganchadoId);
-                    if (padre && (Math.abs(nx - padre.x) > 50 || Math.abs(ny - padre.y) > 85)) componenteSeleccionadoParaMover.padreEnganchadoId = null;
+                    if (padre && (Math.abs(nx - padre.x) > 40 || Math.abs(ny - padre.y) > 75)) componenteSeleccionadoParaMover.padreEnganchadoId = null;
                 }
                 if (!componenteSeleccionadoParaMover.padreEnganchadoId) {
-                    const objetivoCercano = componentesActivos.find(s => (s.tipoPolea || s.tipo === 'dinamometro') && Math.abs(s.x - nx) < 35 && Math.abs((s.y + s.h/2) - ny) < 55);
+                    const objetivoCercano = componentesActivos.find(s => (s.tipoPolea || s.tipo === 'dinamometro') && Math.abs(s.x - nx) < 30 && Math.abs((s.y + s.h/2) - ny) < 45);
                     if (objetivoCercano) componenteSeleccionadoParaMover.padreEnganchadoId = objetivoCercano.id;
                 }
-            } else if (componenteSeleccionadoParaMover.tipo.includes('diferencial_izq') || componenteSeleccionadoParaMover.tipo.includes('diferencial_der')) {
+            } else if (componenteSeleccionadoParaMover.tipo.startsWith('polea_diferencial')) {
                 componenteSeleccionadoParaMover.y = Math.max(95, Math.min(480, ny));
             } else {
                 componenteSeleccionadoParaMover.x = nx; componenteSeleccionadoParaMover.y = ny;
                 if (componenteSeleccionadoParaMover.sujetadorPadreId) {
                     let padre = componentesActivos.find(s => s.id === componenteSeleccionadoParaMover.sujetadorPadreId);
-                    if (padre && (Math.abs(nx - padre.x) > 50 || Math.abs(ny - padre.y) > 90)) componenteSeleccionadoParaMover.sujetadorPadreId = null;
+                    if (padre && (Math.abs(nx - padre.x) > 40 || Math.abs(ny - padre.y) > 80)) componenteSeleccionadoParaMover.sujetadorPadreId = null;
                 }
                 if (!componenteSeleccionadoParaMover.sujetadorPadreId) {
-                    const sujetadorCercano = componentesActivos.find(s => s.esSujetador && Math.abs(s.x - nx) < 40 && Math.abs((s.y + (componenteSeleccionadoParaMover.h / 2) + 14) - ny) < 40);
+                    const sujetadorCercano = componentesActivos.find(s => s.esSujetador && Math.abs(s.x - nx) < 30 && Math.abs((s.y + (componenteSeleccionadoParaMover.h / 2) + 14) - ny) < 30);
                     if (sujetadorCercano) {
-                        componenteSeleccionadoParaMover.x = sujetadorCercano.x; componenteSeleccionadoParaMover.y = sujetadorCercano.y + (componenteSeleccionadoParaMover.h / 2) + 14;
+                        componenteSeleccionadoParaMover.x = sujetadorCercano.x;
+                        componenteSeleccionadoParaMover.y = sujetadorCercano.y + (componenteSeleccionadoParaMover.h / 2) + 14;
                         componenteSeleccionadoParaMover.sujetadorPadreId = sujetadorCercano.id;
                     }
                 }
             }
+
             resolverSistemaCientifico();
         });
 
-        window.addEventListener('mouseup', () => {
+        window.addEventListener('mouseup', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            // NUEVA LÓGICA: Consolidar el enlace de la cuerda dinámica al soltar el ratón
+            if (modoTrazarCuerdaActivo && nodoOrigenCuerda) {
+                let nodoDestino = null;
+                componentesActivos.forEach(c => {
+                    let ganchos = obtenerPuntosDeAnclaje(c);
+                    ganchos.forEach(g => {
+                        if (Math.hypot(mouseX - g.x, mouseY - g.y) < 20 && g.id !== nodoOrigenCuerda.id) {
+                            nodoDestino = g;
+                        }
+                    });
+                });
+
+                if (nodoDestino) {
+                    // Evitar duplicados idénticos en la misma dirección
+                    let yaExiste = cuerdasTrazadas.some(r => (r.deId === nodoOrigenCuerda.id && r.aId === nodoDestino.id) || (r.deId === nodoDestino.id && r.aId === nodoOrigenCuerda.id));
+                    if (!yaExiste) {
+                        cuerdasTrazadas.push({ deId: nodoOrigenCuerda.id, aId: nodoDestino.id });
+                    }
+                }
+                nodoOrigenCuerda = null;
+                resolverSistemaCientifico();
+                return;
+            }
+
             if (componenteSeleccionadoParaMover) {
                 if (componenteSeleccionadoParaMover.tipo === 'dinamometro' && !componenteSeleccionadoParaMover.padreEnganchadoId) {
+                    // Limpiar cuerdas huérfanas vinculadas a este dinamómetro destruido
+                    cuerdasTrazadas = cuerdasTrazadas.filter(r => r.deId !== componenteSeleccionadoParaMover.id && r.aId !== componenteSeleccionadoParaMover.id);
                     componentesActivos = componentesActivos.filter(c => c.id !== componenteSeleccionadoParaMover.id);
                 }
-                componenteSeleccionadoParaMover = null; canvas.style.cursor = 'default';
+                componenteSeleccionadoParaMover = null;
+                canvas.style.cursor = 'default';
                 resolverSistemaCientifico();
             }
         });
