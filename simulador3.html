@@ -73,6 +73,10 @@
         .btn-action:hover { background: #273549; border-color: var(--accent-orange); }
         .btn-clear { background: #7f1d1d; border-color: #991b1b; }
         .btn-clear:hover { background: #991b1b; }
+
+        .btn-tool { background: #0e7490; border-color: #06b6d4; margin-bottom: 5px; }
+        .btn-tool:hover { background: #06b6d4; }
+        .btn-tool.active { background: var(--accent-orange); border-color: #fff; }
     </style>
 </head>
 <body>
@@ -210,6 +214,12 @@
 
         <div class="data-panel">
             <div class="panel-section">
+                <h3>🧵 Sistema de Enlaces</h3>
+                <button id="btnModoCuerda" class="btn-action btn-tool" onclick="activarModoCuerda()">🧵 Trazar Cuerda Dinámica</button>
+                <small style="color: var(--text-muted); display:block; margin-top:3px; line-height: 1.2;">Activa el botón y haz clic consecutivamente en los puntos de anclaje de tus componentes para enlazarlos.</small>
+            </div>
+
+            <div class="panel-section">
                 <h3>📊 Indicadores Físicos</h3>
                 <div class="metric"><span class="label">Masa Total:</span><span id="lblMasa" class="value">0.00 kg</span></div>
                 <div class="metric"><span class="label">Fuerza Peso (W):</span><span id="lblPeso" class="value">0.00 N</span></div>
@@ -222,6 +232,7 @@
                 <h3>🔍 Inventario en Riel</h3>
                 <div class="metric"><span class="label">Sujetadores en Varilla:</span><span id="lblSujetadoresEnRiel" class="value">0 / 9</span></div>
                 <div class="metric"><span class="label">Líneas de Tensión:</span><span id="lblCuerdas" class="value">0 hilos</span></div>
+                <div class="metric"><span class="label">Cuerdas Manuales:</span><span id="lblCuerdasManuales" class="value">0</span></div>
             </div>
 
             <button class="btn-action btn-clear" onclick="limpiarTodoElSistema()">🗑️ Desmantelar Todo</button>
@@ -233,6 +244,7 @@
         const ctx = canvas.getContext('2d');
 
         let componentesActivos = [];
+        let cuerdasManuales = []; // Array de objetos cuerda [{ puntos: [id_nodo1, id_nodo2... ] }]
         let componenteSeleccionadoParaMover = null;
         let offsetX = 0, offsetY = 0;
         const MAX_SUJETADORES = 9;
@@ -243,6 +255,10 @@
         const BASE_Y = 486; 
 
         let tensionOffsetM = 0; 
+
+        // Modos y lógica para trazado de cuerda
+        let modoCuerdaActivo = false;
+        let secuenciaCuerdaActual = [];
 
         const catálogoFísico = {
             base_madera: { w: 600, h: 24, color: '#5c3a21', border: '#3b2211', esFijo: true },
@@ -259,7 +275,6 @@
             tensor_m: { esFijo: true },
             armella_k: { esFijo: true },
             dinamometro: { w: 24, h: 120, color: '#166534', border: '#14532d', esFijo: false, tipoPolea: null },
-            // Definición física de las Pesas (Fuerza / 9.81 = Masa kg)
             pesa_5n: { w: 28, h: 22, color: '#0284c7', fuerza: 5, esFijo: false },
             pesa_10n: { w: 32, h: 26, color: '#0369a1', fuerza: 10, esFijo: false },
             pesa_20n: { w: 36, h: 32, color: '#0f766e', fuerza: 20, esFijo: false },
@@ -276,7 +291,6 @@
         }
 
         function actualizarBadgeAlmacen() {
-            // Sujetadores
             const activosS = contarSujetadoresActivos();
             const disponiblesS = MAX_SUJETADORES - activosS;
             document.getElementById('badgeSujetadores').innerText = `${disponiblesS} Disp.`;
@@ -286,9 +300,8 @@
             if (disponiblesS <= 0) { itemSujetador.classList.add('disabled'); itemSujetador.setAttribute('draggable', 'false'); }
             else { itemSujetador.classList.remove('disabled'); itemSujetador.setAttribute('draggable', 'true'); }
 
-            // Configuración de Badges para los 5 tipos de Pesas (Máximo 2 de cada una)
             const tiposPesas = ['5', '10', '20', '50', '100'];
-            tiposPesas.forEach(val => {
+            tipasPesas = tiposPesas.forEach(val => {
                 const tipoStr = `pesa_${val}n`;
                 const disp = MAX_PESAS_POR_TIPO - contarPesasActivas(tipoStr);
                 document.getElementById(`badgePesa${val}`).innerText = `${disp} Disp.`;
@@ -299,14 +312,8 @@
         }
 
         function handleDragStart(e, tipo) {
-            if (tipo === 'sujetador_corredizo' && contarSujetadoresActivos() >= MAX_SUJETADORES) {
-                e.preventDefault();
-                return;
-            }
-            if (tipo.startsWith('pesa_') && contarPesasActivas(tipo) >= MAX_PESAS_POR_TIPO) {
-                e.preventDefault();
-                return;
-            }
+            if (tipo === 'sujetador_corredizo' && contarSujetadoresActivos() >= MAX_SUJETADORES) { e.preventDefault(); return; }
+            if (tipo.startsWith('pesa_') && contarPesasActivas(tipo) >= MAX_PESAS_POR_TIPO) { e.preventDefault(); return; }
             e.dataTransfer.setData('text/plain', tipo);
         }
 
@@ -337,6 +344,75 @@
             componentesActivos.push(nuevoComp);
             actualizarBadgeAlmacen();
             return nuevoComp;
+        }
+
+        function activarModoCuerda() {
+            modoCuerdaActivo = !modoCuerdaActivo;
+            secuenciaCuerdaActual = [];
+            const btn = document.getElementById('btnModoCuerda');
+            if (modoCuerdaActivo) {
+                btn.classList.add('active');
+                btn.innerText = "🛑 Cancelar Trazo";
+            } else {
+                btn.classList.remove('active');
+                btn.innerText = "🧵 Trazar Cuerda Dinámica";
+            }
+            redibujarLaboratorio();
+        }
+
+        // FUNCIÓN CLAVE: Extrae las coordenadas exactas de todos los ganchos y puntos de amarre del sistema
+        function obtenerNodosDeConexion(c) {
+            let nodos = [];
+            if (c.esSujetador) {
+                nodos.push({ id: c.id + '_gancho', x: c.x, y: c.y + 12 });
+            } 
+            else if (c.tipo === 'tensor_m') {
+                const alturaDinamicaVarilla = 25 + tensionOffsetM;
+                nodos.push({ id: c.id + '_gancho', x: c.x, y: c.y - alturaDinamicaVarilla - 3 });
+            }
+            else if (c.tipo === 'armella_k') {
+                nodos.push({ id: c.id + '_gancho', x: c.x, y: c.y - 15 });
+            }
+            else if (c.tipo === 'polea_fija_individual') {
+                nodos.push({ id: c.id + '_sup', x: c.x, y: c.y - c.r - 16 });
+                nodos.push({ id: c.id + '_inf', x: c.x, y: c.y + c.r + 16 });
+                nodos.push({ id: c.id + '_izq', x: c.x - c.r, y: c.y });
+                nodos.push({ id: c.id + '_der', x: c.x + c.r, y: c.y });
+            } 
+            else if (c.tipo === 'poleas_paralelo_doble_gancho' || c.tipo === 'poleas_paralelo_triple_gancho') {
+                nodos.push({ id: c.id + '_sup', x: c.x, y: c.y - c.h/2 - 16 });
+                nodos.push({ id: c.id + '_inf', x: c.x, y: c.y + c.h/2 + 16 });
+                const numPoleas = c.tipo === 'poleas_paralelo_doble_gancho' ? 2 : 3;
+                const espacioIndividual = c.w / numPoleas;
+                for (let i = 0; i < numPoleas; i++) {
+                    let px = (c.x - c.w/2) + (espacioIndividual * i) + (espacioIndividual / 2);
+                    nodos.push({ id: c.id + '_canal_' + i, x: px, y: c.y });
+                }
+            }
+            else if (c.tipo === 'polipasto_linea_doble' || c.tipo === 'polipasto_linea_triple') {
+                nodos.push({ id: c.id + '_sup', x: c.x, y: c.y - c.h/2 - 16 });
+                nodos.push({ id: c.id + '_inf', x: c.x, y: c.y + c.h/2 + 16 });
+                const esTriple = c.tipo === 'polipasto_linea_triple';
+                const radios = esTriple ? [18, 14, 10] : [18, 12];
+                const posicionesY = esTriple ? [c.y - c.h/3, c.y, c.y + c.h/3] : [c.y - c.h/4, c.y + c.h/4];
+                radios.forEach((rOffset, idx) => {
+                    nodos.push({ id: c.id + '_izq_' + idx, x: c.x - rOffset, y: posicionesY[idx] });
+                    nodos.push({ id: c.id + '_der_' + idx, x: c.x + rOffset, y: posicionesY[idx] });
+                });
+            }
+            else if (c.tipo === 'polea_diferencial_izq' || c.tipo === 'polea_diferencial_der') {
+                nodos.push({ id: c.id + '_centro', x: c.x, y: c.y + 7 });
+                nodos.push({ id: c.id + '_izq', x: c.x - 11, y: c.y + 7 });
+                nodos.push({ id: c.id + '_der', x: c.x + 11, y: c.y + 7 });
+            }
+            else if (c.tipo === 'dinamometro') {
+                nodos.push({ id: c.id + '_sup', x: c.x, y: c.y - c.h/2 - 6 });
+                nodos.push({ id: c.id + '_inf', x: c.x, y: c.y + c.h/2 + 10 });
+            }
+            else if (c.tipo.startsWith('pesa_')) {
+                nodos.push({ id: c.id + '_gancho', x: c.x, y: c.y - c.h/2 + 2 });
+            }
+            return nodos;
         }
 
         function dibujarMesaDeTrabajoLaboratorio() {
@@ -376,6 +452,7 @@
 
             dibujarMesaDeTrabajoLaboratorio();
             dibujarLineasDeTensionYCurvatura();
+            dibujarCuerdasManuales();
 
             componentesActivos.forEach(c => {
                 ctx.save();
@@ -576,10 +653,8 @@
                     ctx.stroke();
                 }
                 else if (c.tipo.startsWith('pesa_')) {
-                    // Renderizado físico de las pesas de laboratorio con soporte cónico y gancho superior
                     ctx.fillStyle = c.color; ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1.5;
                     
-                    // Cuerpo de la pesa
                     ctx.beginPath();
                     ctx.moveTo(c.x - c.w/2, c.y + c.h/2);
                     ctx.lineTo(c.x + c.w/2, c.y + c.h/2);
@@ -587,15 +662,23 @@
                     ctx.lineTo(c.x - c.w/3, c.y - c.h/2 + 4);
                     ctx.closePath(); ctx.fill(); ctx.stroke();
 
-                    // Agarre/gancho superior
                     ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
                     ctx.beginPath();
                     ctx.arc(c.x, c.y - c.h/2 + 2, 4, 0, Math.PI, true);
                     ctx.stroke();
 
-                    // Texto identificador de Newtons
                     ctx.fillStyle = '#ffffff'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
                     ctx.fillText(`${c.fuerza}N`, c.x, c.y + 4);
+                }
+
+                // SI EL MODO CUERDA ESTÁ ACTIVO, RENDERIZAR LOS NODOS INTERACTIVOS EN TIEMPO REAL
+                if (modoCuerdaActivo) {
+                    let nodos = obtenerNodosDeConexion(c);
+                    nodos.forEach(n => {
+                        ctx.fillStyle = secuenciaCuerdaActual.includes(n.id) ? '#f97316' : '#06b6d4';
+                        ctx.beginPath(); ctx.arc(n.x, n.y, 5, 0, Math.PI * 2); ctx.fill();
+                        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke();
+                    });
                 }
 
                 ctx.restore();
@@ -624,7 +707,6 @@
                         ctx.stroke();
                     }
                 }
-                // Hilo de unión elástica si una pesa cuelga de una polea o dinamómetro
                 if (c.tipo.startsWith('pesa_') && c.padreEnganchadoId) {
                     let padre = componentesActivos.find(p => p.id === c.padreEnganchadoId);
                     if (padre) {
@@ -640,9 +722,38 @@
             });
         }
 
+        // Dibuja las cuerdas dinámicas creadas libremente por el usuario
+        function dibujarCuerdasManuales() {
+            cuerdasManuales.forEach(cuerda => {
+                ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2.2;
+                ctx.beginPath();
+                
+                cuerda.puntos.forEach((nodoId, index) => {
+                    let compId = nodoId.split('_')[0];
+                    let comp = componentesActivos.find(c => c.id === compId);
+                    if (comp) {
+                        let todosNodos = obtenerNodosDeConexion(comp);
+                        let nodoObjetivo = todosNodos.find(n => n.id === nodoId);
+                        if (nodoObjetivo) {
+                            if (index === 0) ctx.moveTo(nodoObjetivo.x, nodoObjetivo.y);
+                            else ctx.lineTo(nodoObjetivo.x, nodoObjetivo.y);
+                        }
+                    }
+                });
+                ctx.stroke();
+            });
+        }
+
         function cargarArmazonInicialLaboratorio() {
             componentesActivos = [];
+            cuerdasManuales = [];
             tensionOffsetM = 0; 
+            modoCuerdaActivo = false;
+            secuenciaCuerdaActual = [];
+
+            const btn = document.getElementById('btnModoCuerda');
+            if(btn) { btn.classList.remove('active'); btn.innerText = "🧵 Trazar Cuerda Dinámica"; }
+
             crearNuevoComponente('base_madera', 350, 498);
             crearNuevoComponente('varilla_vertical', VARILLA_IZQ_X, 290);
             crearNuevoComponente('varilla_vertical', VARILLA_DER_X, 290);
@@ -657,7 +768,14 @@
 
         function limpiarTodoElSistema() {
             componentesActivos = componentesActivos.filter(c => c.esFijo === true);
+            cuerdasManuales = [];
             tensionOffsetM = 0;
+            modoCuerdaActivo = false;
+            secuenciaCuerdaActual = [];
+            
+            const btn = document.getElementById('btnModoCuerda');
+            if(btn) { btn.classList.remove('active'); btn.innerText = "🧵 Trazar Cuerda Dinámica"; }
+
             actualizarBadgeAlmacen();
             resolverSistemaCientifico();
         }
@@ -667,7 +785,6 @@
             let cuerdasActivas = 0;
 
             componentesActivos.forEach(c => {
-                // Cascadas dinámicas de posicionamiento
                 if (c.tipo === 'dinamometro' && c.padreEnganchadoId) {
                     let padre = componentesActivos.find(p => p.id === c.padreEnganchadoId);
                     if (padre) {
@@ -692,7 +809,6 @@
                     }
                 }
 
-                // Cálculo de masas e hilos activos
                 if (c.tipoPolea === 'fija') { cuerdasActivas += 1; masaTotal += 0.15; }
                 if (c.tipoPolea === 'paralelo_doble') { masaTotal += 0.45; cuerdasActivas += 4; }
                 if (c.tipoPolea === 'paralelo_triple') { masaTotal += 0.60; cuerdasActivas += 6; }
@@ -700,7 +816,7 @@
                 if (c.tipoPolea === 'linea_triple') { masaTotal += 0.70; cuerdasActivas += 6; }
                 if (c.tipoPolea === 'diferencial_lateral') { cuerdasActivas += 1; masaTotal += 0.22; }
                 if (c.tipo === 'dinamometro') { masaTotal += 0.10; } 
-                if (c.tipo.startsWith('pesa_')) { masaTotal += (c.fuerza / 9.81); } // Conversión exacta N -> kg
+                if (c.tipo.startsWith('pesa_')) { masaTotal += (c.fuerza / 9.81); } 
             });
 
             const gravedad = 9.81;
@@ -714,6 +830,7 @@
             document.getElementById('lblVentaja').innerText = ventajaMecanica.toFixed(2);
             document.getElementById('lblEsfuerzo').innerText = esfuerzoF.toFixed(2) + " N";
             document.getElementById('lblCuerdas').innerText = cuerdasActivas.toString() + " hilos";
+            document.getElementById('lblCuerdasManuales').innerText = cuerdasManuales.length.toString();
 
             redibujarLaboratorio();
         }
@@ -748,7 +865,6 @@
                         din.padreEnganchadoId = poleaCercana.id;
                     }
                 } else if (tipoComponente.startsWith('pesa_')) {
-                    // Detección de acople inicial al soltar pesas sobre ganchos inferiores de poleas o del dinamómetro
                     const poleaOdinamometro = componentesActivos.find(s => (s.tipoPolea || s.tipo === 'dinamometro') && Math.abs(s.x - x) < 35 && Math.abs((s.y + s.h/2) - y) < 50);
                     if (poleaOdinamometro) {
                         const p = crearNuevoComponente(tipoComponente, poleaOdinamometro.x, poleaOdinamometro.y + 40);
@@ -775,6 +891,35 @@
             const rect = canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
+
+            // CASO DE USO MODO CUERDA: Detecta si se hace clic en cualquier anclaje de cualquier componente
+            if (modoCuerdaActivo) {
+                let nodoDetectadoId = null;
+
+                for (let c of componentesActivos) {
+                    let nodosValidos = obtenerNodosDeConexion(c);
+                    let encontrado = nodosValidos.find(n => Math.hypot(mouseX - n.x, mouseY - n.y) <= 8);
+                    if (encontrado) {
+                        nodoDetectadoId = encontrado.id;
+                        break;
+                    }
+                }
+
+                if (nodoDetectadoId) {
+                    if (!secuenciaCuerdaActual.includes(nodoDetectadoId)) {
+                        secuenciaCuerdaActual.push(nodoDetectadoId);
+                    }
+
+                    // Cada vez que se seleccionen al menos 2 ganchos/puntos secuenciales, se consolida un tramo de hilo
+                    if (secuenciaCuerdaActual.length >= 2) {
+                        cuerdasManuales.push({ puntos: [...secuenciaCuerdaActual] });
+                        secuenciaCuerdaActual = []; // Se limpia el búfer listo para el próximo hilo
+                        activarModoCuerda(); // Apagado automático del modo trazo tras cerrar enlace
+                    }
+                }
+                resolverSistemaCientifico();
+                return;
+            }
 
             const tensor = componentesActivos.find(c => c.tipo === 'tensor_m');
             if (tensor) {
@@ -880,11 +1025,9 @@
                     }
                 }
             } else if (componenteSeleccionadoParaMover.tipo.startsWith('pesa_')) {
-                // Arrastre libre de las pesas por el Canvas
                 componenteSeleccionadoParaMover.x = nx;
                 componenteSeleccionadoParaMover.y = ny;
 
-                // Si estaba enganchada, verificar si se jaló con fuerza para desengancharla
                 if (componenteSeleccionadoParaMover.padreEnganchadoId) {
                     let padre = componentesActivos.find(p => p.id === componenteSeleccionadoParaMover.padreEnganchadoId);
                     if (padre) {
@@ -894,7 +1037,6 @@
                     }
                 }
 
-                // Detección magnetica en tiempo real hacia poleas o dinamómetros
                 if (!componenteSeleccionadoParaMover.padreEnganchadoId) {
                     const objetivoCercano = componentesActivos.find(s => (s.tipoPolea || s.tipo === 'dinamometro') && Math.abs(s.x - nx) < 30 && Math.abs((s.y + s.h/2) - ny) < 45);
                     if (objetivoCercano) {
